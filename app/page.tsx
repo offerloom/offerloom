@@ -1,62 +1,33 @@
-const deals = [
-  { icon: "◫", name: "Smartphone 5G", price: "₹18,999", old: "₹24,999", off: "24% off", store: "Flipkart" },
-  { icon: "⌨", name: "Performance Laptop", price: "₹52,490", old: "₹64,990", off: "19% off", store: "Amazon" },
-  { icon: "◉", name: "Noise-cancelling Earbuds", price: "₹2,499", old: "₹4,999", off: "50% off", store: "Flipkart" },
-  { icon: "▣", name: "4K Smart Television", price: "₹31,990", old: "₹44,990", off: "29% off", store: "Amazon" },
+"use client";
+
+import { FormEvent, useMemo, useState } from "react";
+
+type Product = { id:number; icon:string; name:string; category:string; summary:string; specs:string[]; listings:{store:string;price:number}[] };
+const products:Product[] = [
+  {id:1,icon:"▯",name:"5G phone under ₹20,000",category:"Mobiles",summary:"A balanced everyday phone profile for calls, photos and streaming.",specs:["5G","128 GB","5000 mAh"],listings:[{store:"Amazon",price:18999},{store:"Flipkart",price:19499}]},
+  {id:2,icon:"▰",name:"Everyday performance laptop",category:"Laptops",summary:"A practical configuration for work, study and light creative tasks.",specs:["16 GB RAM","512 GB SSD","15.6-inch"],listings:[{store:"Flipkart",price:52490},{store:"Amazon",price:53990}]},
+  {id:3,icon:"◉",name:"Wireless earbuds with ANC",category:"Audio",summary:"Compact listening with noise cancellation and a pocketable case.",specs:["ANC","Bluetooth 5.3","Fast charge"],listings:[{store:"Amazon",price:2499},{store:"Flipkart",price:2699}]},
+  {id:4,icon:"▣",name:"55-inch 4K smart television",category:"TVs",summary:"A large-screen entertainment profile with modern streaming support.",specs:["4K UHD","HDR","Smart TV"],listings:[{store:"Flipkart",price:31990},{store:"Amazon",price:33490}]},
+  {id:5,icon:"✣",name:"Current-generation game console",category:"Gaming",summary:"A living-room gaming profile with fast storage and wireless controls.",specs:["1 TB storage","4K gaming","Wireless"],listings:[{store:"Amazon",price:44990},{store:"Flipkart",price:45990}]},
+  {id:6,icon:"⌂",name:"Energy-efficient refrigerator",category:"Appliances",summary:"A family-sized appliance profile focused on efficient everyday use.",specs:["Frost free","Convertible","3-star"],listings:[{store:"Flipkart",price:28990},{store:"Amazon",price:29990}]},
 ];
+const categories=["All","Mobiles","Laptops","Audio","TVs","Gaming","Appliances"];
+const money=new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0});
 
-const categories = ["Mobiles", "Laptops", "Audio", "TVs", "Gaming", "Appliances"];
-
-export default function Home() {
-  return (
-    <main>
-      <header className="topbar">
-        <a className="brand" href="#" aria-label="OfferLoom home">
-          <span className="brandMark">O</span><span>Offer<span>Loom</span></span>
-        </a>
-        <nav aria-label="Main navigation"><a href="#deals">Top deals</a><a href="#categories">Categories</a><a href="#how">How it works</a></nav>
-        <button className="alertButton">Get deal alerts</button>
-      </header>
-
-      <section className="hero">
-        <div className="heroCopy">
-          <span className="eyebrow">SMARTER SHOPPING STARTS HERE</span>
-          <h1>Every deal.<br /><em>One destination.</em></h1>
-          <p>Compare electronics offers across trusted stores and find the price worth buying—without opening ten tabs.</p>
-          <form className="search" action="#deals">
-            <span aria-hidden="true">⌕</span><input aria-label="Search products" placeholder="Search mobiles, laptops, headphones…" /><button type="submit">Find deals</button>
-          </form>
-          <div className="trust"><span>✓ Verified offers</span><span>↻ Prices refreshed regularly</span><span>₹ No extra cost</span></div>
-        </div>
-        <div className="heroVisual" aria-label="Illustration of comparing store prices">
-          <div className="miniCard cardBack"><small>OTHER PRICE</small><strong>₹24,999</strong></div>
-          <div className="productOrb"><span>◫</span></div>
-          <div className="miniCard cardFront"><small>BEST PRICE</small><strong>₹18,999</strong><b>You save ₹6,000</b></div>
-          <div className="spark sparkOne">✦</div><div className="spark sparkTwo">✦</div>
-        </div>
-      </section>
-
-      <section className="categoryStrip" id="categories">
-        <strong>Shop by category</strong>
-        <div>{categories.map((item, index) => <a href="#deals" key={item}><span>{["▯","▰","◉","▣","✣","⌂"][index]}</span>{item}</a>)}</div>
-      </section>
-
-      <section className="deals" id="deals">
-        <div className="sectionHead"><div><span className="eyebrow">CURATED TODAY</span><h2>Deals worth your attention</h2></div><a href="#">View all deals →</a></div>
-        <div className="dealGrid">
-          {deals.map((deal) => <article className="dealCard" key={deal.name}>
-            <div className="dealImage"><span>{deal.icon}</span><b>{deal.off}</b></div><small>Available on {deal.store}</small><h3>{deal.name}</h3>
-            <div className="price"><strong>{deal.price}</strong><s>{deal.old}</s></div><button>View deal <span>↗</span></button>
-          </article>)}
-        </div>
-        <p className="disclosure">Prices are examples for this preview. Final prices and availability are confirmed on the retailer’s website.</p>
-      </section>
-
-      <section className="how" id="how">
-        <div><span>01</span><h3>We gather</h3><p>Offers from trusted shopping partners.</p></div>
-        <div><span>02</span><h3>We compare</h3><p>Prices and discounts in one clean view.</p></div>
-        <div><span>03</span><h3>You decide</h3><p>Visit the store offering the best value.</p></div>
-      </section>
-    </main>
-  );
+export default function Home(){
+  const [category,setCategory]=useState("All"); const [query,setQuery]=useState(""); const [draft,setDraft]=useState(""); const [sort,setSort]=useState("recommended");
+  const visible=useMemo(()=>{const term=query.trim().toLowerCase();const matches=products.filter(p=>(category==="All"||p.category===category)&&(!term||`${p.name} ${p.category} ${p.summary} ${p.specs.join(" ")}`.toLowerCase().includes(term)));return [...matches].sort((a,b)=>sort==="low"?a.listings[0].price-b.listings[0].price:sort==="high"?b.listings[0].price-a.listings[0].price:a.id-b.id)},[category,query,sort]);
+  function search(e:FormEvent){e.preventDefault();setQuery(draft);document.querySelector("#catalog")?.scrollIntoView({behavior:"smooth"})}
+  function reset(){setCategory("All");setQuery("");setDraft("")}
+  return <main>
+    <header className="topbar"><a className="brand" href="#top" aria-label="OfferLoom home"><span className="brandMark">O</span><span>Offer<span>Loom</span></span></a><nav aria-label="Main navigation"><a href="#catalog">Compare products</a><a href="#categories">Categories</a><a href="#how">How it works</a></nav><a className="alertButton" href="#catalog">Browse offers</a></header>
+    <section className="hero" id="top"><div className="heroCopy"><span className="eyebrow">INDIA-FIRST ELECTRONICS COMPARISON</span><h1>Compare first.<br/><em>Choose better.</em></h1><p>Discover useful electronics, compare available merchant prices in one place, and choose where you want to shop.</p><form className="search" onSubmit={search}><span aria-hidden="true">⌕</span><input value={draft} onChange={e=>setDraft(e.target.value)} aria-label="Search products" placeholder="Try laptop, 5G phone or earbuds…"/><button>Search deals</button></form><div className="trust"><span>✓ One clean comparison</span><span>↻ Freshness shown clearly</span><span>₹ No extra cost to shoppers</span></div></div>
+      <div className="comparisonDemo" aria-label="Example merchant price comparison"><div className="demoHeading"><span>PRICE SNAPSHOT</span><b>Example comparison</b></div><div className="demoProduct"><span>▯</span><div><strong>5G phone profile</strong><small>128 GB · 5000 mAh</small></div></div><div className="demoStore best"><div><strong>Amazon</strong><small>Example price</small></div><b>₹18,999</b></div><div className="demoStore"><div><strong>Flipkart</strong><small>Example price</small></div><b>₹19,499</b></div><p>Live prices will appear only after approved partner access.</p></div></section>
+    <section className="categoryStrip" id="categories"><div className="stripHeading"><div><span className="eyebrow">START BROWSING</span><h2>Shop by category</h2></div><p>Choose a category, then compare merchant listings side by side.</p></div><div className="categoryButtons">{categories.slice(1).map((item,i)=><button onClick={()=>{setCategory(item);setQuery("")}} key={item}><span>{["▯","▰","◉","▣","✣","⌂"][i]}</span>{item}</button>)}</div></section>
+    <section className="catalog" id="catalog"><div className="catalogHead"><div><span className="eyebrow">COMPARE THE MARKET</span><h2>Electronics catalogue</h2><p>Demonstration products show how approved merchant offers will be compared.</p></div><label>Sort products<select value={sort} onChange={e=>setSort(e.target.value)}><option value="recommended">Recommended</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option></select></label></div>
+      <div className="filterRow" role="group" aria-label="Product categories">{categories.map(item=><button className={category===item?"active":""} onClick={()=>setCategory(item)} key={item}>{item}</button>)}</div>{(query||category!=="All")&&<div className="resultSummary"><span>{visible.length} result{visible.length===1?"":"s"}{query?` for “${query}”`:""}</span><button onClick={reset}>Clear filters</button></div>}
+      {visible.length?<div className="productGrid">{visible.map(product=><article className="productCard" key={product.id}><div className="productTop"><div className="productIcon" aria-hidden="true">{product.icon}</div><div><span className="categoryTag">{product.category}</span><h3>{product.name}</h3><p>{product.summary}</p></div></div><div className="specs">{product.specs.map(s=><span key={s}>{s}</span>)}</div><div className="listingTitle"><strong>Compare sellers</strong><span>Demonstration</span></div><div className="listings">{product.listings.map((listing,i)=><div className={i===0?"listing bestListing":"listing"} key={listing.store}><div><strong>{listing.store}</strong><small>Partner link pending</small></div><div><b>{money.format(listing.price)}</b>{i===0&&<span>Lowest example</span>}</div><button disabled aria-label={`${listing.store} partner link pending`}>Coming soon</button></div>)}</div></article>)}</div>:<div className="emptyState"><strong>No matching products yet</strong><p>Try a broader search or clear the selected category.</p><button onClick={reset}>Show all electronics</button></div>}
+      <p className="disclosure"><strong>Preview data:</strong> Products, stores and prices are illustrative—not live offers. Purchase links remain disabled until OfferLoom receives approved affiliate access.</p></section>
+    <section className="how" id="how"><div><span>01</span><h3>Find a product</h3><p>Search or browse electronics by category and key specifications.</p></div><div><span>02</span><h3>Compare sellers</h3><p>Review approved merchant prices, availability and refresh times together.</p></div><div><span>03</span><h3>Choose a store</h3><p>When integrations are approved, continue to the merchant to complete checkout.</p></div></section>
+  </main>
 }
