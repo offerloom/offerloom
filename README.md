@@ -1,100 +1,56 @@
-# vinext-starter
+# OfferLoom
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+**Every Deal. One Destination.**
 
-## Prerequisites
+OfferLoom is an India-first electronics deal-discovery and price-comparison platform owned by Parthsheel Enterprises. This repository contains the first responsive website prototype. Product names, prices and retailer labels are illustrative until approved affiliate feeds are connected.
 
-- Node.js `>=22.13.0`
+## Current prototype
 
-## Quick Start
+- OfferLoom brand identity and social-sharing card
+- Electronics-focused landing page
+- Product search presentation
+- Mobiles, laptops, audio, televisions, gaming and appliances categories
+- Sample Amazon and Flipkart deal cards
+- Responsive desktop and mobile layouts
+- Price and affiliate disclaimers
+- Cloudflare-compatible Vinext build
+
+Private review deployment: <https://offerloom.gdwivedi6.chatgpt.site>
+
+## Local development
+
+Requires Node.js `>=22.13.0`.
 
 ```bash
 npm install
 npm run dev
+```
+
+Open <http://localhost:3000>. Keep the Terminal process running and press `Control + C` to stop it.
+
+Create a production build:
+
+```bash
 npm run build
 ```
 
-This starter does not use `wrangler.jsonc`.
+## Main files
 
-## Included Shape
+- `app/page.tsx` — homepage structure and demonstration deals
+- `app/globals.css` — responsive OfferLoom design system
+- `app/layout.tsx` — metadata and social-sharing configuration
+- `public/og.png` — OfferLoom social-sharing card
+- `db/` and `drizzle/` — database foundation; live product schema is pending
+- `.openai/hosting.json` — Sites deployment reference
 
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+## Integration status
 
-## Workspace Auth Headers
+No live shopping partner API is connected. The planned first integrations are Flipkart Affiliate, subject to approval, followed by Amazon Associates and Product Advertising API eligibility. Use only approved affiliate links, feeds and images. Do not add unauthorized marketplace scraping.
 
-Signed-in visitors receive both `oai-authenticated-user-id` and `oai-authenticated-user-email`. Private Sites require every visitor to sign in; public Sites may also have anonymous visitors, for whom neither header is present.
+## Project handoff
 
-The user ID is stable for the same user on the same Site and different across Sites. Email and name are intended for display or contact purposes.
+See [`docs/PROJECT_HANDOFF.md`](docs/PROJECT_HANDOFF.md) for business decisions, branding, architecture, account status, security notes and prioritized next tasks.
 
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+## Security
 
-Treat the full name as optional and fall back to email when it is absent:
-
-```tsx
-import { headers } from "next/headers";
-
-export default async function Home() {
-  const requestHeaders = await headers();
-  const userId = requestHeaders.get("oai-authenticated-user-id");
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
-}
-```
-
-## Optional Dispatch-Owned ChatGPT Sign-In
-
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
-
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
-
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
-
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
-
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
-
-## Useful Commands
-
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+Never commit passwords, OTPs, personal access tokens, affiliate secrets, banking documents or populated `.env` files. A token shared during early setup was treated as exposed and must not be reused.
