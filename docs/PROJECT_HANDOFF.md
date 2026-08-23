@@ -1,6 +1,6 @@
 # OfferLoom Project Handoff
 
-Updated: 22 August 2026  
+Updated: 24 August 2026
 Business owner: Parthsheel Enterprises
 
 ## Ready-to-paste context for a new ChatGPT session
@@ -16,19 +16,19 @@ Target audience: All age groups in India
 Website language: English
 Initial advertising budget: ₹0; use organic Facebook, Instagram, WhatsApp and SEO first.
 
-The first website prototype has already been built and privately deployed.
-Live review URL: https://offerloom.gdwivedi6.chatgpt.site
+The first shopping website has been built and publicly deployed.
+Public URL: https://offerloom.gdwivedi6.chatgpt.site
 GitHub account: https://github.com/offerloom
 Private source repository: https://github.com/offerloom/offerloom
 
 Local project path on the original computer:
 /Users/gauravdwivedi/Documents/Codex/2026-08-21/if-i-have-a-shopify-website
 
-The prototype uses a Vinext/React/TypeScript website structure. It has an OfferLoom homepage, electronics categories, sample deal cards, comparison messaging, responsive mobile styling, affiliate disclaimers, and a branded social-sharing image. Sample products and prices are illustrative; no live affiliate API is connected yet.
+The site uses a Vinext/React/TypeScript structure. It has interactive search, electronics category filters, curated product groups, approved Amazon affiliate destinations, responsive styling, the required Amazon disclosure, and a branded social-sharing image. Amazon prices are not stored locally; visitors confirm current prices and availability on Amazon.in. No live affiliate API is connected yet.
 
 Important business decision: Do not use Shopify as the main platform. OfferLoom needs custom product feeds, product matching, multiple merchant prices, scheduled synchronization, price history and outbound affiliate tracking. Shopify is designed primarily for selling owned inventory and checkout.
 
-Recommended initial integration: Apply for Flipkart Affiliate access and use its official product/offer feeds if approved. Apply for Amazon Associates, initially curate Amazon links manually, and request Product Advertising API access after eligibility. Do not scrape marketplaces without permission. Myntra should be added later through an approved affiliate network or partnership.
+Amazon Associates registration is complete with Store ID `offerloom-21`, and India tax status is complete. Curate Amazon links manually until Creators API eligibility is reached. Flipkart public registration currently redirects to its existing-affiliate login, so keep Flipkart disabled until approved access is available. Do not scrape marketplaces without permission.
 
 Continue from the existing GitHub source. Preserve the current design and repository history. Never commit passwords, API tokens, affiliate secrets or OTPs. Before making changes, inspect the repository and current deployment. Help me complete the project step by step, beginning with the tasks listed in the handoff.
 ```
@@ -138,9 +138,11 @@ npm run build
 
 ## Accounts and security
 
-A new Google account for OfferLoom was created or was being finalized. The final Gmail address was not recorded in the project conversation and should be supplied in the new session.
+OfferLoom business email: `contact.offerloom@gmail.com`. Keep its recovery settings current and never publish authentication or recovery details.
 
 A GitHub personal access token was pasted into the old chat and used once to create and populate the private repository. That token must be considered exposed and revoked. Never copy it into this handoff, source code or a new chat. Create a replacement only if required and keep it in a secure password manager or GitHub credential manager.
+
+A proposed Amazon password was visible in a setup screenshot. It must be considered exposed and never reused. Amazon passwords, OTPs, signed tax-interview URLs and account identifiers must not be shared in chats, screenshots or source code.
 
 Never share or commit:
 
@@ -154,23 +156,29 @@ Never share or commit:
 
 ## Affiliate integration status
 
-- Flipkart Affiliate account: Not created yet
+- Public OfferLoom deployment: Active
+- Amazon Associates account: Active
+- Amazon Store ID: `offerloom-21`
+- Amazon India tax interview: Completed
+- Amazon affiliate disclosure: Published
+- Amazon manual affiliate destinations: Active
+- Amazon SiteStripe search links: Active for 5G phones and wireless ANC earbuds
+- Amazon Creators API: Not eligible/connected yet
+- Flipkart Affiliate account: Not available; new registration route currently returns to existing-affiliate login
 - Flipkart API credentials: Not available
-- Amazon Associates account: Not confirmed
-- Amazon Product Advertising API: Not available
 - Myntra integration: Not available
 - Live database synchronization: Not implemented
 - Product matching: Not implemented
 - Affiliate click tracking: Not implemented
 
-Recommended first partner sequence:
+Current partner sequence:
 
-1. Complete the OfferLoom business email and account recovery setup.
-2. Apply for Flipkart Affiliate access and verify that API credentials are currently obtainable.
-3. Apply for Amazon Associates.
-4. Publish original buying guides and deal content.
-5. Use manual, approved affiliate links until official API access is granted.
-6. Replace demonstration product data only after partner approval.
+1. Publish original buying guides and useful electronics content.
+2. Use approved manual Amazon links until Creators API access is granted.
+3. Implement a secure product admin workflow and outbound click tracking.
+4. Reach Amazon API eligibility through legitimate qualifying sales.
+5. Connect Amazon only through the approved Creators API.
+6. Revisit Flipkart when new affiliate enrollment is available.
 
 ## Planned technical architecture
 
@@ -184,6 +192,32 @@ The initial low-cost plan is:
 - Images: approved merchant image URLs only
 - Analytics: privacy-compliant web analytics
 - Meta measurement: Meta Pixel initially, Conversions API when useful
+
+### Admin and catalogue management
+
+The next implementation should add an owner-only admin area backed by D1. It should manage products, categories, brands, merchant listings, editorial copy, featured deals and publish/review status. Pasting an Amazon product URL should:
+
+1. Validate that the destination belongs to `amazon.in`.
+2. Extract the ASIN from supported `/dp/` or `/gp/aw/d/` formats.
+3. Remove temporary browsing and recommendation parameters.
+4. Generate a canonical destination tagged with `offerloom-21`.
+5. Store the source, review state and last-checked timestamp.
+6. Keep price display as “Check price on Amazon” until approved API data is available.
+
+Public merchant clicks should use an OfferLoom redirect endpoint that records the product, merchant, timestamp and non-sensitive attribution data before sending the visitor to the approved destination.
+
+### Scheduled synchronization
+
+Use Cloudflare Cron Triggers only after an approved merchant API or feed is connected. A background job should fetch authorized data, validate it, update D1, record synchronization errors and expire stale offers. Visitors must read cached D1 data; page requests must not wait for merchant APIs. A cron job must never scrape Amazon, Flipkart or another marketplace.
+
+Initial infrastructure:
+
+- Sites/Cloudflare Worker for the public website and server routes
+- Cloudflare D1 for catalogue, listings, review state, sync history and click events
+- Owner-only authentication for `/admin`
+- Hosted secrets for API credentials; never commit them
+- Cron Triggers for approved background synchronization
+- Merchant-hosted approved images initially; R2 only when storage rights permit it
 
 Performance rule: Visitors should read cached product data from OfferLoom’s database. The website should not wait for Amazon or Flipkart APIs during a page request.
 
@@ -250,18 +284,18 @@ Because checkout happens on the merchant website, OfferLoom may not receive comp
 
 ## Immediate next tasks
 
-1. Confirm the final OfferLoom Gmail address and recovery setup.
-2. Revoke the exposed GitHub token and create a secure replacement only if necessary.
-3. Confirm ownership and recovery settings for the `offerloom` GitHub account.
-4. Add an OfferLoom-specific README to the repository if the current README is still generic.
-5. Decide whether the private preview should remain private or become publicly accessible.
-6. Add real policy pages and footer navigation.
-7. Implement a proper electronics product database schema.
-8. Build a password-protected admin interface for manually curated deals.
-9. Apply for Flipkart and Amazon affiliate programs.
-10. Connect only approved feeds or APIs; do not implement unauthorized scraping.
-11. Add affiliate click tracking and scheduled product updates.
-12. Replace all illustrative products and prices with approved data.
+1. Revoke the exposed GitHub token and ensure the exposed Amazon password is not reused.
+2. Confirm recovery settings for the OfferLoom Google and GitHub accounts.
+3. Add the remaining public business/legal pages and footer navigation.
+4. Publish the first original electronics buying guides.
+5. Implement the D1 product, category, merchant-listing and review schema.
+6. Build an owner-only admin interface for manually curated products.
+7. Add Amazon URL validation, ASIN extraction and canonical affiliate-link generation.
+8. Add an outbound redirect endpoint and click-event tracking.
+9. Replace remaining generic Amazon search destinations with curated products where useful.
+10. Add scheduled synchronization only after approved API access exists.
+11. Apply for Amazon Creators API access after eligibility requirements are met.
+12. Monitor Flipkart for legitimate new-affiliate enrollment; do not bypass its login flow.
 
 ## Important working principles
 

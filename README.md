@@ -2,20 +2,22 @@
 
 **Every Deal. One Destination.**
 
-OfferLoom is an India-first electronics deal-discovery and price-comparison platform owned by Parthsheel Enterprises. This repository contains the first responsive website prototype. Product names, prices and retailer labels are illustrative until approved affiliate feeds are connected.
+OfferLoom is an India-first electronics product-discovery and price-comparison platform owned by Parthsheel Enterprises. This repository contains the public website and its planned catalogue-management foundation.
 
-## Current prototype
+## Current website
 
 - OfferLoom brand identity and social-sharing card
 - Electronics-focused landing page
-- Product search presentation
+- Interactive product search, category filters and sorting
 - Mobiles, laptops, audio, televisions, gaming and appliances categories
-- Sample Amazon and Flipkart deal cards
+- Amazon affiliate destinations tagged with `offerloom-21`
+- Amazon SiteStripe links for 5G phones and wireless ANC earbuds
+- Disabled Flipkart destinations pending approved affiliate access
 - Responsive desktop and mobile layouts
-- Price and affiliate disclaimers
+- Amazon affiliate disclosure and merchant checkout/returns clarification
 - Cloudflare-compatible Vinext build
 
-Private review deployment: <https://offerloom.gdwivedi6.chatgpt.site>
+Public deployment: <https://offerloom.gdwivedi6.chatgpt.site>
 
 ## Local development
 
@@ -36,16 +38,18 @@ npm run build
 
 ## Main files
 
-- `app/page.tsx` — homepage structure and demonstration deals
+- `app/page.tsx` — interactive catalogue and approved affiliate destinations
 - `app/globals.css` — responsive OfferLoom design system
 - `app/layout.tsx` — metadata and social-sharing configuration
 - `public/og.png` — OfferLoom social-sharing card
 - `db/` and `drizzle/` — database foundation; live product schema is pending
 - `.openai/hosting.json` — Sites deployment reference
 
-## Integration status
+## Affiliate and integration status
 
-No live shopping partner API is connected. The planned first integrations are Flipkart Affiliate, subject to approval, followed by Amazon Associates and Product Advertising API eligibility. Use only approved affiliate links, feeds and images. Do not add unauthorized marketplace scraping.
+Amazon Associates is active under Store ID `offerloom-21`, and the required India tax interview is complete. The site currently uses manually curated Amazon search destinations and does not display locally stored Amazon prices. No live shopping API is connected. Amazon Creators API access is planned after eligibility; Flipkart remains pending because public registration is unavailable. Use only approved affiliate links, feeds and images. Never add unauthorized marketplace scraping.
+
+The next technical milestone is a secure D1-backed admin area that accepts an Amazon product URL, extracts its ASIN, creates a canonical tagged destination, supports publish/unpublish review, and records outbound clicks. Scheduled synchronization will remain disabled until approved API credentials exist.
 
 ## Project handoff
 
