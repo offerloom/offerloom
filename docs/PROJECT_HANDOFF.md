@@ -24,7 +24,7 @@ Private source repository: https://github.com/offerloom/offerloom
 Local project path on the original computer:
 /Users/gauravdwivedi/Documents/Codex/2026-08-21/if-i-have-a-shopify-website
 
-The site uses a Vinext/React/TypeScript structure. It has interactive search, electronics category filters, curated product groups, approved Amazon affiliate destinations, responsive styling, the required Amazon disclosure, and a branded social-sharing image. Amazon prices are not stored locally; visitors confirm current prices and availability on Amazon.in. No live affiliate API is connected yet.
+The site uses a Vinext/React/TypeScript structure. It has interactive search, electronics category filters, curated product groups, approved Amazon affiliate destinations, responsive styling, the required Amazon disclosure, and a branded social-sharing image. A D1-backed owner admin can add Amazon product URLs, generate canonical tagged links, publish catalogue records and track outbound clicks. Amazon prices are not stored locally; visitors confirm current prices and availability on Amazon.in. No live affiliate API is connected yet.
 
 Important business decision: Do not use Shopify as the main platform. OfferLoom needs custom product feeds, product matching, multiple merchant prices, scheduled synchronization, price history and outbound affiliate tracking. Shopify is designed primarily for selling owned inventory and checkout.
 
@@ -105,7 +105,11 @@ The GitHub `offerloom/offerloom` repository is the preferred source for future w
 - `package.json` — project scripts and dependencies
 - `vite.config.ts` — Vinext and Cloudflare-compatible build setup
 - `worker/index.ts` — worker entry point
-- `db/` and `drizzle/` — starter database structure; no live product schema has been implemented yet
+- `app/admin/` — owner-only product manager
+- `app/api/admin/products/route.ts` — protected catalogue management API
+- `app/api/products/route.ts` — public published-product API
+- `app/go/amazon/[listingId]/route.ts` — click tracking and Amazon redirect
+- `db/` and `drizzle/` — D1 catalogue schema and migration
 
 ## Local development
 
@@ -167,7 +171,10 @@ Never share or commit:
 - Flipkart Affiliate account: Not available; new registration route currently returns to existing-affiliate login
 - Flipkart API credentials: Not available
 - Myntra integration: Not available
-- Live database synchronization: Not implemented
+- D1 catalogue and manual admin: Implemented
+- Automatic ASIN extraction/tagged-link generation: Implemented
+- Outbound affiliate click tracking: Implemented
+- Live database synchronization: Not implemented; intentionally waiting for an approved API
 - Product matching: Not implemented
 - Affiliate click tracking: Not implemented
 
@@ -175,7 +182,7 @@ Current partner sequence:
 
 1. Publish original buying guides and useful electronics content.
 2. Use approved manual Amazon links until Creators API access is granted.
-3. Implement a secure product admin workflow and outbound click tracking.
+3. Use the secure product admin workflow and review outbound click data operationally.
 4. Reach Amazon API eligibility through legitimate qualifying sales.
 5. Connect Amazon only through the approved Creators API.
 6. Revisit Flipkart when new affiliate enrollment is available.
@@ -195,16 +202,16 @@ The initial low-cost plan is:
 
 ### Admin and catalogue management
 
-The next implementation should add an owner-only admin area backed by D1. It should manage products, categories, brands, merchant listings, editorial copy, featured deals and publish/review status. Pasting an Amazon product URL should:
+The first owner-only D1 admin slice is implemented for products, categories, Amazon listings, editorial summaries and publish/review status. Pasting an Amazon product URL now:
 
-1. Validate that the destination belongs to `amazon.in`.
-2. Extract the ASIN from supported `/dp/` or `/gp/aw/d/` formats.
-3. Remove temporary browsing and recommendation parameters.
-4. Generate a canonical destination tagged with `offerloom-21`.
-5. Store the source, review state and last-checked timestamp.
-6. Keep price display as “Check price on Amazon” until approved API data is available.
+1. Validates that the destination belongs to `amazon.in`.
+2. Extracts the ASIN from supported `/dp/` or `/gp/aw/d/` formats.
+3. Removes temporary browsing and recommendation parameters.
+4. Generates a canonical destination tagged with `offerloom-21`.
+5. Stores the source, review state and last-checked timestamp.
+6. Keeps price display as “Check price on Amazon” until approved API data is available.
 
-Public merchant clicks should use an OfferLoom redirect endpoint that records the product, merchant, timestamp and non-sensitive attribution data before sending the visitor to the approved destination.
+Public merchant clicks use `/go/amazon/{listingId}`, which records the product, merchant, timestamp and referrer hostname before sending the visitor to the approved destination.
 
 ### Scheduled synchronization
 
@@ -288,11 +295,11 @@ Because checkout happens on the merchant website, OfferLoom may not receive comp
 2. Confirm recovery settings for the OfferLoom Google and GitHub accounts.
 3. Add the remaining public business/legal pages and footer navigation.
 4. Publish the first original electronics buying guides.
-5. Implement the D1 product, category, merchant-listing and review schema.
-6. Build an owner-only admin interface for manually curated products.
-7. Add Amazon URL validation, ASIN extraction and canonical affiliate-link generation.
-8. Add an outbound redirect endpoint and click-event tracking.
-9. Replace remaining generic Amazon search destinations with curated products where useful.
+5. Add the first reviewed Amazon products through `/admin` and publish them.
+6. Verify public catalogue loading and tracked redirects in production.
+7. Add an owner-only click summary/report to the admin.
+8. Replace remaining generic Amazon search destinations with curated products where useful.
+9. Add dedicated product and original buying-guide pages for SEO and affiliate review quality.
 10. Add scheduled synchronization only after approved API access exists.
 11. Apply for Amazon Creators API access after eligibility requirements are met.
 12. Monitor Flipkart for legitimate new-affiliate enrollment; do not bypass its login flow.

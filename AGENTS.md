@@ -6,13 +6,15 @@ OfferLoom is a Vinext/React/TypeScript electronics comparison site.
 
 - `app/`: pages, layout metadata, and global styles. The main shopping experience is in `app/page.tsx`.
 - `public/`: static assets such as the favicon and Open Graph image.
-- `db/` and `drizzle/`: Drizzle/D1 foundations and migrations. The live product schema is not implemented yet.
+- `db/` and `drizzle/`: Drizzle/D1 catalogue schema and migrations.
+- `app/admin/`: owner-only catalogue workflow; `app/api/`: admin/public data routes.
+- `app/go/amazon/`: tracked redirects to approved Amazon destinations.
 - `worker/`: Cloudflare Worker entry point.
 - `tests/`: Node-based rendered-output tests.
 - `docs/`: business, architecture, security, and project handoff documentation.
 - `.openai/hosting.json`: Sites deployment reference and logical resource bindings.
 
-Keep product records separate from presentation code as the catalogue grows. Do not modify `examples/` when implementing production features.
+Keep product records in D1 rather than adding more hard-coded catalogue entries. Do not modify `examples/` when implementing production features.
 
 ## Build, Test, and Development Commands
 
@@ -39,4 +41,4 @@ History uses short, imperative commit subjects, for example `Build OfferLoom ele
 
 ## Security & Affiliate Compliance
 
-Never commit `.env` files, passwords, OTPs, tokens, banking documents, tax records, or affiliate API secrets. Use only approved merchant links, feeds, and licensed images; never scrape marketplaces. Do not present illustrative prices as live or enable outbound purchase buttons without valid approved destinations.
+Never commit `.env` files, passwords, OTPs, tokens, banking documents, tax records, or affiliate API secrets. Use only approved merchant links, feeds, and licensed images; never scrape marketplaces. Do not present illustrative prices as live or enable outbound purchase buttons without valid approved destinations. Keep `/admin` restricted by the server-side email allowlist, and never expose raw click records publicly.
