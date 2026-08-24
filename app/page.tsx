@@ -28,13 +28,26 @@ const products: Product[] = [
   { id: 7, icon: "♢", name: "Everyday fashion essentials", category: "Fashion", summary: "Explore versatile clothing, footwear and accessories for everyday wardrobes.", specs: ["Men", "Women", "Accessories"], listings: [{ store: "Amazon", affiliateUrl: amazonLinks.fashion }] },
 ];
 
-const categoryIcons: Record<string, string> = { Mobiles: "▯", Laptops: "▰", Audio: "◉", TVs: "▣", Gaming: "✣", Appliances: "⌂", Fashion: "♢" };
+const electronicsCategories = ["Mobiles", "Laptops", "Audio", "TVs", "Gaming"];
+const categoryGroups = [
+  { name: "Electronics", key: "tech", description: "Mobiles, laptops, audio, TVs and gaming" },
+  { name: "Fashion", key: "fashion", description: "Clothing, footwear and accessories" },
+  { name: "Home", key: "home", description: "Appliances and everyday home essentials" },
+];
+const categoryIcons: Record<string, string> = { Electronics: "◫", Mobiles: "▯", Laptops: "▰", Audio: "◉", TVs: "▣", Gaming: "✣", Home: "⌂", Appliances: "⌂", Fashion: "♢" };
 const slides = [
   { eyebrow: "EVERY DEAL. ONE DESTINATION.", title: "Find better value without the clutter.", text: "OfferLoom brings useful products, categories and approved shopping destinations together in one simple place.", cta: "Explore today’s picks", category: "All", theme: "brand" },
-  { eyebrow: "ELECTRONICS PICKS", title: "Smarter tech choices start here.", text: "Browse phones, laptops, audio, televisions and gaming collections selected for Indian shoppers.", cta: "Browse electronics", category: "Mobiles", theme: "tech" },
+  { eyebrow: "ELECTRONICS PICKS", title: "Smarter tech choices start here.", text: "Browse phones, laptops, audio, televisions and gaming collections selected for Indian shoppers.", cta: "Browse electronics", category: "Electronics", theme: "tech" },
   { eyebrow: "FASHION FINDS", title: "Refresh your wardrobe for less.", text: "Discover everyday clothing, footwear and accessories through approved shopping destinations.", cta: "Explore fashion", category: "Fashion", theme: "fashion" },
-  { eyebrow: "HOME & APPLIANCES", title: "Make every room work better.", text: "Find practical home and appliance collections without searching across scattered pages.", cta: "Browse home picks", category: "Appliances", theme: "home" },
+  { eyebrow: "HOME & APPLIANCES", title: "Make every room work better.", text: "Find practical home and appliance collections without searching across scattered pages.", cta: "Browse home picks", category: "Home", theme: "home" },
 ];
+
+function belongsToCategory(product: Product, selected: string) {
+  if (selected === "All") return true;
+  if (selected === "Electronics") return electronicsCategories.includes(product.category);
+  if (selected === "Home") return product.category === "Appliances";
+  return product.category === selected;
+}
 
 export default function Home() {
   const [category, setCategory] = useState("All");
@@ -71,11 +84,12 @@ export default function Home() {
   }, []);
 
   const allProducts = useMemo(() => [...managedProducts, ...products], [managedProducts]);
-  const categories = useMemo(() => ["All", ...Array.from(new Set(allProducts.map((product) => product.category)))], [allProducts]);
-  const categoryCounts = useMemo(() => Object.fromEntries(categories.map((item) => [item, item === "All" ? allProducts.length : allProducts.filter((product) => product.category === item).length])), [allProducts, categories]);
+  const detailCategories = useMemo(() => Array.from(new Set(allProducts.map((product) => product.category))), [allProducts]);
+  const menuCategories = useMemo(() => ["All", ...categoryGroups.map((group) => group.name), ...detailCategories], [detailCategories]);
+  const categoryCounts = useMemo(() => Object.fromEntries(menuCategories.map((item) => [item, allProducts.filter((product) => belongsToCategory(product, item)).length])), [allProducts, menuCategories]);
   const visible = useMemo(() => {
     const term = query.trim().toLowerCase();
-    const matches = allProducts.filter((product) => (category === "All" || product.category === category) && (!term || `${product.name} ${product.category} ${product.summary} ${product.specs.join(" ")}`.toLowerCase().includes(term)));
+    const matches = allProducts.filter((product) => belongsToCategory(product, category) && (!term || `${product.name} ${product.category} ${product.summary} ${product.specs.join(" ")}`.toLowerCase().includes(term)));
     if (sort === "name") return [...matches].sort((a, b) => a.name.localeCompare(b.name));
     if (sort === "category") return [...matches].sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
     return matches;
@@ -108,7 +122,7 @@ export default function Home() {
     </header>
     <section className={`heroSlider ${slides[slide].theme}`} id="top" aria-roledescription="carousel" aria-label="OfferLoom featured categories">
       <div className="heroSlide" aria-live="polite"><span className="eyebrow">{slides[slide].eyebrow}</span><h1>{slides[slide].title}</h1><p>{slides[slide].text}</p><div className="slideActions"><button onClick={() => chooseCategory(slides[slide].category)}>{slides[slide].cta}</button><span>Curated for shoppers across India</span></div></div>
-      <div className="slideVisual" aria-hidden="true"><span>{slide === 0 ? "OL" : categoryIcons[slides[slide].category]}</span><strong>{slide === 0 ? "OfferLoom" : slides[slide].category}</strong><small>{slide === 0 ? "Compare more. Choose better." : "Featured category"}</small></div>
+      <div className={`slideVisual artwork artwork-${slides[slide].theme}`} role="img" aria-label={slide === 0 ? "Electronics, fashion and home shopping categories" : `${slides[slide].category} category collection`}><span className="visualLabel"><strong>{slide === 0 ? "OfferLoom" : slides[slide].category}</strong><small>{slide === 0 ? "Every category. One destination." : "Featured department"}</small></span></div>
       <button className="slideArrow previous" onClick={() => setSlide((slide - 1 + slides.length) % slides.length)} aria-label="Previous slide">‹</button><button className="slideArrow next" onClick={() => setSlide((slide + 1) % slides.length)} aria-label="Next slide">›</button>
       <div className="slideDots" role="group" aria-label="Choose a slide">{slides.map((item, index) => <button className={slide === index ? "active" : ""} onClick={() => setSlide(index)} aria-label={`Show ${item.eyebrow.toLowerCase()} slide`} key={item.eyebrow}/>)}</div>
     </section>
@@ -116,7 +130,7 @@ export default function Home() {
 
     <section className="categoryStrip" id="categories">
       <div className="stripHeading"><div><span className="eyebrow">BROWSE YOUR WAY</span><h2>Start with a category</h2></div><p>Jump directly to what you need instead of scrolling through everything.</p></div>
-      <div className="categoryButtons">{categories.filter((item) => item !== "All").map((item) => <button onClick={() => chooseCategory(item)} key={item}><span>{categoryIcons[item] ?? "◇"}</span><strong>{item}</strong><small>{categoryCounts[item]} collection{categoryCounts[item] === 1 ? "" : "s"}</small></button>)}</div>
+      <div className="categoryButtons departmentButtons">{categoryGroups.map((group) => <button className={`departmentCard artwork-${group.key}`} onClick={() => chooseCategory(group.name)} key={group.name}><span className="departmentShade"/><span className="departmentCopy"><strong>{group.name}</strong><small>{group.description}</small><em>{categoryCounts[group.name]} collection{categoryCounts[group.name] === 1 ? "" : "s"} →</em></span></button>)}</div>
     </section>
 
     <section className="featuredShop" id="featured">
@@ -127,9 +141,9 @@ export default function Home() {
     <section className="catalog" id="catalog">
       <div className="catalogHead"><div><span className="eyebrow">PRODUCT FINDER</span><h2>{category === "All" ? "All products" : category}</h2><p>{query ? `Showing matches for “${query}”.` : "Choose a product group, review the key features, then shop through an available merchant."}</p></div><label>Sort by<select value={sort} onChange={(event) => setSort(event.target.value)}><option value="recommended">Recommended</option><option value="name">Name: A to Z</option><option value="category">Category</option></select></label></div>
       <div className="catalogLayout">
-        <aside className="categoryMenu" aria-label="Filter by category"><strong>Categories</strong>{categories.map((item) => <button className={category === item ? "active" : ""} onClick={() => setCategory(item)} key={item}><span>{item}</span><small>{categoryCounts[item]}</small></button>)}</aside>
+        <aside className="categoryMenu" aria-label="Filter by category"><strong>Departments</strong>{["All", ...categoryGroups.map((group) => group.name)].map((item) => <button className={category === item ? "active" : ""} onClick={() => setCategory(item)} key={item}><span>{item}</span><small>{categoryCounts[item]}</small></button>)}{(category === "Electronics" || electronicsCategories.includes(category)) && <><strong className="submenuTitle">Electronics</strong>{electronicsCategories.filter((item) => detailCategories.includes(item)).map((item) => <button className={category === item ? "active" : ""} onClick={() => setCategory(item)} key={item}><span>{item}</span><small>{categoryCounts[item]}</small></button>)}</>}{(category === "Home" || category === "Appliances") && <><strong className="submenuTitle">Home</strong><button className={category === "Appliances" ? "active" : ""} onClick={() => setCategory("Appliances")}><span>Appliances</span><small>{categoryCounts.Appliances}</small></button></>}</aside>
         <div className="catalogResults">
-          <div className="mobileFilters" role="group" aria-label="Product categories">{categories.map((item) => <button className={category === item ? "active" : ""} onClick={() => setCategory(item)} key={item}>{item}</button>)}</div>
+          <div className="mobileFilters" role="group" aria-label="Product departments">{["All", ...categoryGroups.map((group) => group.name)].map((item) => <button className={category === item ? "active" : ""} onClick={() => setCategory(item)} key={item}>{item}</button>)}</div>
           <div className="resultSummary"><span>{visible.length} product collection{visible.length === 1 ? "" : "s"}</span>{(query || category !== "All") && <button onClick={reset}>Clear filters</button>}</div>
           {visible.length ? <div className="productGrid">{visible.map((product) => <article className="productCard" key={product.id}><div className="productTop"><div className="productIcon" aria-hidden="true">{product.icon}</div><div><span className="categoryTag">{product.category}</span><h3>{product.detailPath ? <Link href={product.detailPath}>{product.name}</Link> : product.name}</h3><p>{product.summary}</p></div></div><div className="specs">{product.specs.map((spec) => <span key={spec}>{spec}</span>)}</div><div className="cardActions">{product.detailPath && <Link className="compareLink" href={product.detailPath}>Compare stores</Link>}<a className="offerCta" href={product.listings[0].affiliateUrl} target="_blank" rel="sponsored noopener noreferrer" aria-label={`View current offers for ${product.name}`}>View current offers <span aria-hidden="true">↗</span></a></div><small className="priceNote">Available destination: {product.listings[0].store} · Check current price there</small></article>)}</div> : <div className="emptyState"><strong>No matching products yet</strong><p>Try another word or clear the selected category.</p><button onClick={reset}>Show all products</button></div>}
         </div>

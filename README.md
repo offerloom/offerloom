@@ -7,10 +7,12 @@ OfferLoom is an India-first electronics product-discovery and price-comparison p
 ## Current website
 
 - OfferLoom brand identity and social-sharing card
-- Electronics-focused landing page
+- Category-led landing page for Electronics, Fashion and Home
 - Interactive product search, category filters and sorting
 - Category-first product finder with desktop and mobile navigation
 - Four-slide category-led hero for OfferLoom, electronics, fashion and home
+- Original department artwork reused across the hero and category cards
+- Department hierarchy that reveals detailed categories after selection
 - Featured category shortcuts with approved affiliate destinations behind offer actions
 - Mobiles, laptops, audio, televisions, gaming and appliances categories
 - Amazon affiliate destinations tagged with `offerloom-21`
@@ -51,6 +53,7 @@ npm run build
 - `app/globals.css` — responsive OfferLoom design system
 - `app/layout.tsx` — metadata and social-sharing configuration
 - `public/og.png` — OfferLoom social-sharing card
+- `public/category-showcase-v1.png` — original department artwork
 - `app/admin/` — owner-only manual catalogue manager
 - `app/api/` — protected admin and public catalogue APIs
 - `app/go/amazon/` — tracked outbound Amazon redirects
@@ -68,7 +71,7 @@ The secure catalogue milestone includes single-product entry and CSV import for 
 
 ## Project handoff
 
-See [`docs/PROJECT_HANDOFF.md`](docs/PROJECT_HANDOFF.md) for business decisions, branding, architecture, account status, security notes and prioritized next tasks.
+Start with [`docs/PROJECT_MEMORY.md`](docs/PROJECT_MEMORY.md) for the latest checkpoint, then read [`docs/PROJECT_HANDOFF.md`](docs/PROJECT_HANDOFF.md) for business decisions, branding, architecture, account status, security notes and prioritized next tasks.
 
 ## Security
 

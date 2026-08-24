@@ -1,6 +1,6 @@
 # OfferLoom Project Handoff
 
-Updated: 24 August 2026
+Updated: 25 August 2026
 Business owner: Parthsheel Enterprises
 
 ## Ready-to-paste context for a new ChatGPT session
@@ -11,7 +11,7 @@ I am building OfferLoom, an India-first affiliate deal aggregation and price-com
 Brand name: OfferLoom
 Brand meaning: A “loom” weaves multiple threads together; OfferLoom brings offers from multiple shopping websites together in one destination.
 Tagline: Every Deal. One Destination.
-Initial category: Electronics
+Top-level categories: Electronics, Fashion and Home
 Target audience: All age groups in India
 Website language: English
 Initial advertising budget: ₹0; use organic Facebook, Instagram, WhatsApp and SEO first.
@@ -22,9 +22,9 @@ GitHub account: https://github.com/offerloom
 Private source repository: https://github.com/offerloom/offerloom
 
 Local project path on the original computer:
-/Users/gauravdwivedi/Documents/Codex/2026-08-21/if-i-have-a-shopify-website
+/Users/gauravdwivedi/Documents/gaurav/parthsheel_enterprises/offerloom
 
-The site uses a Vinext/React/TypeScript structure. It has interactive search, electronics category filters, curated product groups, approved Amazon affiliate destinations, responsive styling, the required Amazon disclosure, and a branded social-sharing image. A D1-backed owner admin can add Amazon product URLs, generate canonical tagged links, publish catalogue records and track outbound clicks. Amazon prices are not stored locally; visitors confirm current prices and availability on Amazon.in. No live affiliate API is connected yet.
+The site uses a Vinext/React/TypeScript structure. It has a four-slide category-led hero, original department artwork, interactive search, Electronics/Fashion/Home navigation, curated product groups, approved Amazon affiliate destinations, responsive styling, the required Amazon disclosure, and a branded social-sharing image. A D1-backed owner admin can add Amazon product URLs, generate canonical tagged links, publish catalogue records and track outbound clicks. Amazon prices are not stored locally; visitors confirm current prices and availability on Amazon.in. No live affiliate API is connected yet.
 
 Important business decision: Do not use Shopify as the main platform. OfferLoom needs custom product feeds, product matching, multiple merchant prices, scheduled synchronization, price history and outbound affiliate tracking. Shopify is designed primarily for selling owned inventory and checkout.
 
@@ -76,6 +76,11 @@ The current prototype includes:
 - Four-slide homepage hero promoting OfferLoom, electronics, fashion and home categories
 - Generic category and “View current offers” actions; merchant names appear only where destination clarity requires them
 - Fashion category foundation alongside the original electronics catalogue
+- Three top-level shopping departments: Electronics, Fashion and Home
+- Electronics subcategories revealed after selection: Mobiles, Laptops, Audio, TVs and Gaming
+- Home subcategory revealed after selection: Appliances
+- Original category triptych artwork at `public/category-showcase-v1.png`
+- Search placed below carousel controls so slide dots remain visible
 - Example deal cards for Amazon and Flipkart
 - Price, previous price and discount presentation
 - “Verified offers,” refresh and no-extra-cost trust messaging
@@ -95,7 +100,7 @@ The current prices, retailer labels and products are demonstration content only.
 - GitHub profile: <https://github.com/offerloom>
 - Private GitHub repository: <https://github.com/offerloom/offerloom>
 - Original Parthsheel repository also contains a copy under `website/offerloom/`: <https://github.com/parthsheelenterprises/parthsheelenterprises/tree/main/website/offerloom>
-- Local source path: `/Users/gauravdwivedi/Documents/Codex/2026-08-21/if-i-have-a-shopify-website`
+- Local source path: `/Users/gauravdwivedi/Documents/gaurav/parthsheel_enterprises/offerloom`
 
 The GitHub `offerloom/offerloom` repository is the preferred source for future work.
 
@@ -105,6 +110,7 @@ The GitHub `offerloom/offerloom` repository is the preferred source for future w
 - `app/globals.css` — complete responsive brand styling
 - `app/layout.tsx` — metadata, fonts and social-sharing configuration
 - `public/og.png` — generated OfferLoom social-sharing card
+- `public/category-showcase-v1.png` — original Electronics/Fashion/Home artwork
 - `.openai/hosting.json` — Sites deployment project reference
 - `package.json` — project scripts and dependencies
 - `vite.config.ts` — Vinext and Cloudflare-compatible build setup
@@ -120,7 +126,7 @@ The GitHub `offerloom/offerloom` repository is the preferred source for future w
 From the existing local folder:
 
 ```bash
-cd "/Users/gauravdwivedi/Documents/Codex/2026-08-21/if-i-have-a-shopify-website"
+cd "/Users/gauravdwivedi/Documents/gaurav/parthsheel_enterprises/offerloom"
 npm install
 npm run dev
 ```
@@ -172,6 +178,10 @@ Never share or commit:
 - Amazon manual affiliate destinations: Active
 - Amazon SiteStripe search links: Active for 5G phones and wireless ANC earbuds
 - Amazon Creators API: Not eligible/connected yet
+- CJ publisher account: Onboarding, tax and payment setup completed
+- CJ Dell Consumer – India application: Pending manual review at last check
+- CJ HP India application: Pending manual review at last check
+- CJ product feed/API: Not authorized or connected yet
 - Flipkart Affiliate account: Not available; new registration route currently returns to existing-affiliate login
 - Flipkart API credentials: Not available
 - Myntra integration: Not available
@@ -185,7 +195,7 @@ Never share or commit:
 - Outbound affiliate click tracking: Implemented
 - Live database synchronization: Not implemented; intentionally waiting for an approved API
 - Product matching: Not implemented
-- Affiliate click tracking: Not implemented
+- Affiliate click tracking: Implemented for managed Amazon redirect records
 
 Current partner sequence:
 
@@ -300,18 +310,16 @@ Because checkout happens on the merchant website, OfferLoom may not receive comp
 
 ## Immediate next tasks
 
-1. Revoke the exposed GitHub token and ensure the exposed Amazon password is not reused.
-2. Confirm recovery settings for the OfferLoom Google and GitHub accounts.
-3. Add the remaining public business/legal pages and footer navigation.
-4. Publish the first original electronics buying guides.
-5. Download the `/admin` CSV template, add the first reviewed product batch and import it.
-6. Verify public search, canonical product pages and tracked redirects in production.
-7. Add an owner-only click summary/report to the admin.
-8. Connect the first approved non-Amazon merchant feed to the comparison table.
-9. Add original buying-guide pages for SEO and affiliate review quality.
-10. Add scheduled synchronization only after approved API access exists.
-11. Apply for Amazon Creators API access after eligibility requirements are met.
-12. Monitor Flipkart for legitimate new-affiliate enrollment; do not bypass its login flow.
+1. Review the validated local category-led homepage and explicitly approve production deployment.
+2. Deploy and verify the public homepage, `/admin`, product pages and tracked redirects.
+3. Monitor CJ until Dell Consumer – India or HP India becomes Active; use no CJ data before approval.
+4. After advertiser approval, confirm feed/link rights and obtain authorized credentials without committing them.
+5. Build the CJ feed connector against fixtures, then enable D1 synchronization only for authorized data.
+6. Add the remaining public business/legal pages and footer navigation.
+7. Publish the first original electronics, fashion and home buying guides.
+8. Add an owner-only click summary/report to the admin.
+9. Apply for Amazon Creators API access after eligibility requirements are met.
+10. Monitor Flipkart for legitimate new-affiliate enrollment; do not bypass its login flow.
 
 ## Important working principles
 

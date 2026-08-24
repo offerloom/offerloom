@@ -7,3 +7,28 @@
 @media(max-width:900px){.heroSlider{grid-template-columns:1fr;padding:58px 72px}.slideVisual{display:none}.featuredShop{margin-left:18px;margin-right:18px;grid-template-columns:1fr;gap:28px}.finder{margin-top:-24px}}
 @media(max-width:620px){.heroSlider{min-height:540px;padding:54px 44px}.heroSlide h1{font-size:42px}.slideActions{align-items:flex-start;flex-direction:column}.slideArrow{width:34px;height:34px}.slideArrow.previous{left:8px}.slideArrow.next{right:8px}.featuredShop{padding:34px 20px}.featuredQuickLinks{grid-template-columns:1fr}.featuredQuickLinks button{min-height:105px}.finder{margin-top:-18px}.finder .search{flex-wrap:wrap}.finder .search button{width:100%}}
 @media(prefers-reduced-motion:reduce){.slideDots button{transition:none}}
+
+/* Category-led homepage refinements */
+.slideVisual.artwork{position:relative;width:390px;height:330px;overflow:hidden;border:1px solid #ffffff3d;border-radius:32px;background-image:url('/category-showcase-v1.png');background-repeat:no-repeat;background-size:300% 100%;box-shadow:0 25px 70px #06061955}
+.slideVisual.artwork-brand{background-position:50% center;background-size:cover}
+.slideVisual.artwork-tech{background-position:left center}
+.slideVisual.artwork-fashion{background-position:center center}
+.slideVisual.artwork-home{background-position:right center}
+.visualLabel{position:absolute;right:16px;bottom:16px;left:16px;display:flex;flex-direction:column;padding:14px 16px;border:1px solid #ffffff33;border-radius:16px;background:#0f1220b8;backdrop-filter:blur(10px)}
+.slideVisual .visualLabel strong{margin:0;color:#fff;font-size:21px}
+.slideVisual .visualLabel small{margin-top:4px;color:#e5e7ef}
+.finder{margin:28px auto 0}
+.departmentButtons{grid-template-columns:repeat(3,1fr);gap:18px}
+.categoryButtons .departmentCard{position:relative;min-height:250px;justify-content:flex-end;align-items:stretch;overflow:hidden;padding:0;border:0;background-image:url('/category-showcase-v1.png');background-repeat:no-repeat;background-size:300% 100%;color:#fff;text-align:left;box-shadow:0 16px 36px #20263d1f}
+.categoryButtons .departmentCard.artwork-tech{background-position:left center}
+.categoryButtons .departmentCard.artwork-fashion{background-position:center center}
+.categoryButtons .departmentCard.artwork-home{background-position:right center}
+.departmentShade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 25%,#101321e8 100%)}
+.departmentCopy{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:5px;padding:24px}
+.departmentCopy strong{font-size:24px}
+.departmentCopy small{max-width:260px;color:#e4e7ef;font-size:11px;line-height:1.45}
+.departmentCopy em{margin-top:7px;color:#fff;font-size:10px;font-style:normal;font-weight:850}
+.categoryButtons .departmentCard:hover{color:#fff;transform:translateY(-4px);box-shadow:0 22px 44px #20263d2e}
+.categoryMenu .submenuTitle{margin-top:10px;padding-top:14px;border-top:1px solid var(--line);color:#8a91a0;font-size:10px;text-transform:uppercase;letter-spacing:1px}
+@media(max-width:900px){.slideVisual.artwork{display:none}.finder{margin-top:24px}.departmentButtons{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:620px){.finder{margin-top:20px}.departmentButtons{grid-template-columns:1fr}.categoryButtons .departmentCard{min-height:220px}.heroSlider{padding-bottom:76px}.slideDots{bottom:22px}}
