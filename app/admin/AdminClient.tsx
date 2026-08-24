@@ -54,9 +54,39 @@ export default function AdminClient() {
     finally { setBusy(false); }
   }
 
+  async function bulkImport(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setBusy(true); setMessage("");
+    const form = event.currentTarget;
+    const file = new FormData(form).get("csv");
+    try {
+      if (!(file instanceof File) || !file.size) throw new Error("Choose a CSV file first.");
+      if (file.size > 1_000_000) throw new Error("The CSV must be smaller than 1 MB.");
+      const response = await fetch("/api/admin/products", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ action:"bulk_import", csv:await file.text() }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error([data.error, ...(data.errors ?? [])].join("\n"));
+      setMessage(`Bulk import complete: ${data.imported} added, ${data.skipped} duplicates skipped.`);
+      form.reset(); await load();
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Could not import CSV."); }
+    finally { setBusy(false); }
+  }
+
+  function downloadTemplate() {
+    const csv = 'amazon_url,name,category,summary,specs,publish\n"https://www.amazon.in/dp/B000000000","Example product","Mobiles","Replace this with an original summary of at least twenty characters.","5G, 128 GB, Dual SIM","false"\n';
+    const url = URL.createObjectURL(new Blob([csv], { type:"text/csv" }));
+    const link = document.createElement("a"); link.href = url; link.download = "offerloom-products-template.csv"; link.click(); URL.revokeObjectURL(url);
+  }
+
   return <div className={styles.workspace}>
+    <div className={styles.controls}>
+    <form className={styles.form} onSubmit={bulkImport}>
+      <div className={styles.formTitle}><h2>Bulk import</h2><span>Up to 500</span></div>
+      <p className={styles.help}>Upload reviewed products in one CSV. Duplicate ASINs are skipped, and every Amazon destination is normalized automatically.</p>
+      <label>Product CSV<input name="csv" type="file" accept=".csv,text/csv" required /></label>
+      <button disabled={busy}>{busy ? "Importing…" : "Import products"}</button>
+      <button className={styles.secondary} type="button" onClick={downloadTemplate}>Download CSV template</button>
+    </form>
     <form className={styles.form} onSubmit={create}>
-      <h2>Add Amazon product</h2>
+      <h2>Add one product</h2>
       <label>Amazon product URL<input name="amazonUrl" type="url" required placeholder="https://www.amazon.in/dp/B0…" /></label>
       <label>Product name<input name="name" required minLength={3} placeholder="Exact product name" /></label>
       <label>Category<input name="category" required placeholder="Mobiles" /></label>
@@ -66,6 +96,7 @@ export default function AdminClient() {
       <button disabled={busy}>{busy ? "Saving…" : "Create product"}</button>
       {message && <p className={styles.message} role="status">{message}</p>}
     </form>
+    </div>
     <section className={styles.list}>
       <div className={styles.listHead}><h2>Catalogue</h2><span>{products.length} products</span></div>
       {products.length === 0 ? <p className={styles.empty}>No database products yet. Add the first one using an Amazon product page URL.</p> : products.map((product) => <article key={product.id}>

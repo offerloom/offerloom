@@ -172,6 +172,7 @@ Never share or commit:
 - Flipkart API credentials: Not available
 - Myntra integration: Not available
 - D1 catalogue and manual admin: Implemented
+- CSV bulk import (maximum 500 reviewed rows): Implemented
 - Automatic ASIN extraction/tagged-link generation: Implemented
 - Outbound affiliate click tracking: Implemented
 - Live database synchronization: Not implemented; intentionally waiting for an approved API
@@ -295,7 +296,7 @@ Because checkout happens on the merchant website, OfferLoom may not receive comp
 2. Confirm recovery settings for the OfferLoom Google and GitHub accounts.
 3. Add the remaining public business/legal pages and footer navigation.
 4. Publish the first original electronics buying guides.
-5. Add the first reviewed Amazon products through `/admin` and publish them.
+5. Download the `/admin` CSV template, add the first reviewed product batch and import it.
 6. Verify public catalogue loading and tracked redirects in production.
 7. Add an owner-only click summary/report to the admin.
 8. Replace remaining generic Amazon search destinations with curated products where useful.
