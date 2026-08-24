@@ -1,5 +1,7 @@
 export type CsvProductRow = {
   amazonUrl: string;
+  brand: string;
+  modelNumber: string;
   name: string;
   category: string;
   summary: string;
@@ -22,6 +24,8 @@ export function parseProductCsv(input: string): CsvProductRow[] {
     .filter((record) => record.some((value) => value.trim()))
     .map((record) => ({
       amazonUrl: record[index("amazon_url")]?.trim() ?? "",
+      brand: index("brand") >= 0 ? record[index("brand")]?.trim() ?? "" : "",
+      modelNumber: index("model_number") >= 0 ? record[index("model_number")]?.trim() ?? "" : "",
       name: record[index("name")]?.trim() ?? "",
       category: record[index("category")]?.trim() ?? "",
       summary: record[index("summary")]?.trim() ?? "",

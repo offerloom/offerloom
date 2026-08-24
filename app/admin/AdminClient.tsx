@@ -71,7 +71,7 @@ export default function AdminClient() {
   }
 
   function downloadTemplate() {
-    const csv = 'amazon_url,name,category,summary,specs,publish\n"https://www.amazon.in/dp/B000000000","Example product","Mobiles","Replace this with an original summary of at least twenty characters.","5G, 128 GB, Dual SIM","false"\n';
+    const csv = 'amazon_url,brand,model_number,name,category,summary,specs,publish\n"https://www.amazon.in/dp/B000000000","Example Brand","MODEL-123","Example product","Mobiles","Replace this with an original summary of at least twenty characters.","5G, 128 GB, Dual SIM","false"\n';
     const url = URL.createObjectURL(new Blob([csv], { type:"text/csv" }));
     const link = document.createElement("a"); link.href = url; link.download = "offerloom-products-template.csv"; link.click(); URL.revokeObjectURL(url);
   }
@@ -88,6 +88,7 @@ export default function AdminClient() {
     <form className={styles.form} onSubmit={create}>
       <h2>Add one product</h2>
       <label>Amazon product URL<input name="amazonUrl" type="url" required placeholder="https://www.amazon.in/dp/B0…" /></label>
+      <div className={styles.fieldRow}><label>Brand<input name="brand" placeholder="Samsung" /></label><label>Model number<input name="modelNumber" placeholder="SM-A series" /></label></div>
       <label>Product name<input name="name" required minLength={3} placeholder="Exact product name" /></label>
       <label>Category<input name="category" required placeholder="Mobiles" /></label>
       <label>Original summary<textarea name="summary" required minLength={20} rows={4} placeholder="Why this product is useful and who it suits…" /></label>

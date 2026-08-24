@@ -11,6 +11,9 @@ export const categories = sqliteTable("categories", {
 export const products = sqliteTable("products", {
   id: text("id").primaryKey(),
   categoryId: text("category_id").references(() => categories.id),
+  brand: text("brand"),
+  modelNumber: text("model_number"),
+  imageUrl: text("image_url"),
   name: text("name").notNull(),
   slug: text("slug").notNull(),
   summary: text("summary").notNull(),
@@ -22,6 +25,7 @@ export const products = sqliteTable("products", {
   publishedAt: text("published_at"),
 }, (table) => [
   uniqueIndex("idx_products_slug").on(table.slug),
+  index("idx_products_brand_model").on(table.brand, table.modelNumber),
   index("idx_products_status_updated").on(table.status, table.updatedAt),
 ]);
 

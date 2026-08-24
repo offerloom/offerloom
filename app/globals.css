@@ -4,4 +4,5 @@
 @media(max-width:480px){.brand{font-size:20px}.brandMark{width:34px;height:34px}.alertButton{padding:10px;font-size:12px}.search{flex-wrap:wrap}.search button{width:100%}.hero{padding-top:42px}h1{font-size:43px}.categoryButtons{grid-template-columns:repeat(2,1fr)}.productTop{grid-template-columns:62px 1fr}.productIcon{height:62px}.listing{grid-template-columns:1fr auto}.listing button{grid-column:1/-1}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.categoryButtons button{transition:none}}
 .amazonDisclosure{margin:0;padding:9px 20px;background:#fff7ed;color:#7c3d12;font-size:11px;font-weight:700;text-align:center}.listingLink{padding:9px;border-radius:9px;background:var(--violet);color:#fff;font-size:10px;font-weight:800;text-align:center}.listingLink:hover{background:#4939ee}
+.compareLink{display:inline-block;margin:-4px 0 14px;color:var(--violet);font-size:11px;font-weight:850}.productCard h3 a:hover{color:var(--violet)}
 @media(max-width:480px){.listingLink{grid-column:1/-1}}

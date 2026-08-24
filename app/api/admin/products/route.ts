@@ -6,6 +6,8 @@ import { parseProductCsv, type CsvProductRow } from "../../../lib/csv";
 type CreateInput = {
   action?: "create";
   name?: string;
+  brand?: string;
+  modelNumber?: string;
   category?: string;
   summary?: string;
   specs?: string;
@@ -100,7 +102,7 @@ export async function POST(request: Request) {
     .bind(amazon.asin).first();
   if (duplicate) return Response.json({ error: "This Amazon ASIN is already in the catalogue." }, { status: 409 });
 
-  const statements = createProductStatements({ amazonUrl:body.amazonUrl ?? "", name, category, summary, specs:body.specs ?? "", publish:Boolean(body.publish) }, amazon, "manual");
+  const statements = createProductStatements({ amazonUrl:body.amazonUrl ?? "", brand:body.brand?.trim() ?? "", modelNumber:body.modelNumber?.trim() ?? "", name, category, summary, specs:body.specs ?? "", publish:Boolean(body.publish) }, amazon, "manual");
   await env.DB.batch(statements);
 
   return Response.json({ ok: true, asin: amazon.asin, affiliateUrl: amazon.affiliateUrl }, { status: 201 });
@@ -118,8 +120,8 @@ function createProductStatements(input: CsvProductRow, amazon: ReturnType<typeof
   return [
     env.DB.prepare("INSERT INTO categories (id, name, slug, position, created_at) VALUES (?, ?, ?, 0, ?) ON CONFLICT(slug) DO UPDATE SET name = excluded.name")
       .bind(categoryId, input.category, categorySlug, now),
-    env.DB.prepare("INSERT INTO products (id, category_id, name, slug, summary, specs_json, status, source, created_at, updated_at, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-      .bind(productId, categoryId, input.name, productSlug, input.summary, JSON.stringify(specs), status, source, now, now, status === "published" ? now : null),
+    env.DB.prepare("INSERT INTO products (id, category_id, brand, model_number, name, slug, summary, specs_json, status, source, created_at, updated_at, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      .bind(productId, categoryId, input.brand || null, input.modelNumber || null, input.name, productSlug, input.summary, JSON.stringify(specs), status, source, now, now, status === "published" ? now : null),
     env.DB.prepare("INSERT INTO merchant_listings (id, product_id, merchant, merchant_product_id, source_url, affiliate_url, status, last_checked_at, created_at, updated_at) VALUES (?, ?, 'amazon', ?, ?, ?, 'active', ?, ?, ?)")
       .bind(listingId, productId, amazon.asin, amazon.sourceUrl, amazon.affiliateUrl, now, now, now),
   ];

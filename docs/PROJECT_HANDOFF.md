@@ -173,6 +173,8 @@ Never share or commit:
 - Myntra integration: Not available
 - D1 catalogue and manual admin: Implemented
 - CSV bulk import (maximum 500 reviewed rows): Implemented
+- Canonical product pages and multi-merchant comparison layout: Implemented
+- Brand/model fields for future cross-merchant matching: Implemented
 - Automatic ASIN extraction/tagged-link generation: Implemented
 - Outbound affiliate click tracking: Implemented
 - Live database synchronization: Not implemented; intentionally waiting for an approved API
@@ -297,10 +299,10 @@ Because checkout happens on the merchant website, OfferLoom may not receive comp
 3. Add the remaining public business/legal pages and footer navigation.
 4. Publish the first original electronics buying guides.
 5. Download the `/admin` CSV template, add the first reviewed product batch and import it.
-6. Verify public catalogue loading and tracked redirects in production.
+6. Verify public search, canonical product pages and tracked redirects in production.
 7. Add an owner-only click summary/report to the admin.
-8. Replace remaining generic Amazon search destinations with curated products where useful.
-9. Add dedicated product and original buying-guide pages for SEO and affiliate review quality.
+8. Connect the first approved non-Amazon merchant feed to the comparison table.
+9. Add original buying-guide pages for SEO and affiliate review quality.
 10. Add scheduled synchronization only after approved API access exists.
 11. Apply for Amazon Creators API access after eligibility requirements are met.
 12. Monitor Flipkart for legitimate new-affiliate enrollment; do not bypass its login flow.
