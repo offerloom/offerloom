@@ -4,9 +4,11 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import styles from "./admin.module.css";
 
 type AdminProduct = { id:string; name:string; category:string; summary:string; status:"draft"|"published"|"archived"; asin:string; affiliateUrl:string; updatedAt:string };
+type Merchant = { id:string; name:string; status:"active"|"pending"|"paused"|"blocked"; syncMode:"manual"|"feed"|"api"; consecutiveFailures:number; lastSuccessAt:string|null; lastFailureAt:string|null; lastError:string|null };
 
 export default function AdminClient() {
   const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -15,6 +17,7 @@ export default function AdminClient() {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error ?? "Could not load products.");
     setProducts(data.products);
+    setMerchants(data.merchants ?? []);
   }, []);
 
   useEffect(() => {
@@ -23,9 +26,9 @@ export default function AdminClient() {
       .then(async (response) => {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error ?? "Could not load products.");
-        return data.products;
+        return data;
       })
-      .then((loadedProducts) => { if (active) setProducts(loadedProducts); })
+      .then((data) => { if (active) { setProducts(data.products); setMerchants(data.merchants ?? []); } })
       .catch((error) => { if (active) setMessage(error.message); });
     return () => { active = false; };
   }, []);
@@ -51,6 +54,16 @@ export default function AdminClient() {
       const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Could not update product.");
       setMessage(`Product moved to ${status}.`); await load();
     } catch (error) { setMessage(error instanceof Error ? error.message : "Could not update product."); }
+    finally { setBusy(false); }
+  }
+
+  async function changeMerchantStatus(merchantId:string, status:Merchant["status"]) {
+    setBusy(true); setMessage("");
+    try {
+      const response = await fetch("/api/admin/products", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ action:"merchant_status", merchantId, status }) });
+      const data = await response.json(); if (!response.ok) throw new Error(data.error ?? "Could not update merchant.");
+      setMessage(`${merchantId} connector moved to ${status}.`); await load();
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Could not update merchant."); }
     finally { setBusy(false); }
   }
 
@@ -99,6 +112,7 @@ export default function AdminClient() {
     </form>
     </div>
     <section className={styles.list}>
+      <div className={styles.merchantPanel}><div className={styles.listHead}><h2>Merchant health</h2><span>Emergency controls</span></div>{merchants.map((merchant) => <div className={styles.merchant} key={merchant.id}><div><span className={styles.status} data-status={merchant.status}>{merchant.status}</span><strong>{merchant.name}</strong><small>{merchant.syncMode} connector · {merchant.consecutiveFailures} consecutive failures</small></div><select disabled={busy} value={merchant.status} onChange={(event) => changeMerchantStatus(merchant.id,event.target.value as Merchant["status"])} aria-label={`${merchant.name} connector status`}><option value="active">Active</option><option value="pending">Pending</option><option value="paused">Paused</option><option value="blocked">Blocked</option></select></div>)}</div>
       <div className={styles.listHead}><h2>Catalogue</h2><span>{products.length} products</span></div>
       {products.length === 0 ? <p className={styles.empty}>No database products yet. Add the first one using an Amazon product page URL.</p> : products.map((product) => <article key={product.id}>
         <div><span className={styles.status} data-status={product.status}>{product.status}</span><h3>{product.name}</h3><p>{product.category} · ASIN {product.asin}</p></div>

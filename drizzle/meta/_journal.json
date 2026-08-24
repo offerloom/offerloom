@@ -15,6 +15,13 @@
       "when": 1787557796903,
       "tag": "0001_lowly_zodiak",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787562544387,
+      "tag": "0002_chemical_the_santerians",
+      "breakpoints": true
     }
   ]
 }

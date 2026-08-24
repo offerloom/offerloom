@@ -22,8 +22,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug:s
   if (!product) notFound();
 
   const listings = await env.DB.prepare(`
-    SELECT id, merchant, last_checked_at AS lastCheckedAt
-    FROM merchant_listings WHERE product_id = ? AND status = 'active'
+    SELECT ml.id, ml.merchant, ml.last_checked_at AS lastCheckedAt
+    FROM merchant_listings ml JOIN merchants m ON m.id = ml.merchant
+    WHERE ml.product_id = ? AND ml.status = 'active' AND m.status = 'active'
     ORDER BY merchant
   `).bind(product.id).all<ListingRow>();
   const specs = safeSpecs(product.specsJson);

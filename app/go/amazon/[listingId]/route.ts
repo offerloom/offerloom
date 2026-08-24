@@ -6,7 +6,9 @@ export async function GET(request: Request, context: { params: Promise<{ listing
     SELECT ml.id, ml.product_id AS productId, ml.affiliate_url AS affiliateUrl
     FROM merchant_listings ml
     JOIN products p ON p.id = ml.product_id
-    WHERE ml.id = ? AND ml.merchant = 'amazon' AND ml.status = 'active' AND p.status = 'published'
+    JOIN merchants m ON m.id = ml.merchant
+    WHERE ml.id = ? AND ml.merchant = 'amazon' AND ml.status = 'active'
+      AND m.status = 'active' AND p.status = 'published'
   `).bind(listingId).first<{ id: string; productId: string; affiliateUrl: string }>();
 
   if (!listing) return new Response("Offer not found", { status: 404 });

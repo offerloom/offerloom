@@ -17,6 +17,7 @@ type CreateInput = {
 
 type StatusInput = { action: "status"; productId?: string; status?: "draft" | "published" | "archived" };
 type BulkInput = { action: "bulk_import"; csv?: string };
+type MerchantStatusInput = { action: "merchant_status"; merchantId?: string; status?: "active" | "pending" | "paused" | "blocked" };
 
 export async function GET() {
   if (!await authorizeAdminApi()) return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -29,13 +30,18 @@ export async function GET() {
     LEFT JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant = 'amazon'
     ORDER BY p.updated_at DESC
   `).all();
-  return Response.json({ products: result.results });
+  const merchantResult = await env.DB.prepare(`
+    SELECT id, name, status, sync_mode AS syncMode, consecutive_failures AS consecutiveFailures,
+      last_success_at AS lastSuccessAt, last_failure_at AS lastFailureAt, last_error AS lastError
+    FROM merchants ORDER BY CASE status WHEN 'active' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END, name
+  `).all();
+  return Response.json({ products: result.results, merchants: merchantResult.results });
 }
 
 export async function POST(request: Request) {
   if (!await authorizeAdminApi()) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  let body: CreateInput | StatusInput | BulkInput;
+  let body: CreateInput | StatusInput | BulkInput | MerchantStatusInput;
   try { body = await request.json(); } catch { return Response.json({ error: "Invalid request." }, { status: 400 }); }
 
   if (body.action === "status") {
@@ -46,6 +52,15 @@ export async function POST(request: Request) {
     await env.DB.prepare("UPDATE products SET status = ?, updated_at = ?, published_at = CASE WHEN ? = 'published' THEN ? ELSE published_at END WHERE id = ?")
       .bind(body.status, now, body.status, now, body.productId).run();
     return Response.json({ ok: true });
+  }
+
+  if (body.action === "merchant_status") {
+    if (!body.merchantId || !["active", "pending", "paused", "blocked"].includes(body.status ?? "")) {
+      return Response.json({ error: "Invalid merchant status." }, { status: 400 });
+    }
+    await env.DB.prepare("UPDATE merchants SET status = ?, updated_at = ? WHERE id = ?")
+      .bind(body.status, new Date().toISOString(), body.merchantId).run();
+    return Response.json({ ok:true });
   }
 
   if (body.action === "bulk_import") {

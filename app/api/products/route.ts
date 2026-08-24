@@ -7,6 +7,7 @@ export async function GET() {
     FROM products p
     JOIN categories c ON c.id = p.category_id
     JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant = 'amazon' AND ml.status = 'active'
+    JOIN merchants m ON m.id = ml.merchant AND m.status = 'active'
     WHERE p.status = 'published'
     ORDER BY p.published_at DESC
     LIMIT 100

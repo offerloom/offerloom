@@ -175,6 +175,8 @@ Never share or commit:
 - CSV bulk import (maximum 500 reviewed rows): Implemented
 - Canonical product pages and multi-merchant comparison layout: Implemented
 - Brand/model fields for future cross-merchant matching: Implemented
+- Merchant health records and emergency connector controls: Implemented
+- Synchronization-run schema and fail-closed merchant redirects: Implemented
 - Automatic ASIN extraction/tagged-link generation: Implemented
 - Outbound affiliate click tracking: Implemented
 - Live database synchronization: Not implemented; intentionally waiting for an approved API

@@ -45,6 +45,29 @@ export const merchantListings = sqliteTable("merchant_listings", {
   index("idx_listings_product_status").on(table.productId, table.status),
 ]);
 
+export const merchants = sqliteTable("merchants", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  status: text("status", { enum: ["active", "pending", "paused", "blocked"] }).notNull().default("pending"),
+  syncMode: text("sync_mode", { enum: ["manual", "feed", "api"] }).notNull().default("manual"),
+  consecutiveFailures: integer("consecutive_failures").notNull().default(0),
+  lastSuccessAt: text("last_success_at"),
+  lastFailureAt: text("last_failure_at"),
+  lastError: text("last_error"),
+  updatedAt: text("updated_at").notNull(),
+}, (table) => [index("idx_merchants_status").on(table.status)]);
+
+export const syncRuns = sqliteTable("sync_runs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  merchantId: text("merchant_id").notNull().references(() => merchants.id),
+  status: text("status", { enum: ["running", "succeeded", "failed"] }).notNull(),
+  productsSeen: integer("products_seen").notNull().default(0),
+  productsUpdated: integer("products_updated").notNull().default(0),
+  errorMessage: text("error_message"),
+  startedAt: text("started_at").notNull(),
+  finishedAt: text("finished_at"),
+}, (table) => [index("idx_sync_runs_merchant_started").on(table.merchantId, table.startedAt)]);
+
 export const outboundClicks = sqliteTable("outbound_clicks", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   listingId: text("listing_id").notNull().references(() => merchantListings.id),
