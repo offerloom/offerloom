@@ -19,6 +19,14 @@ const SIGN_OUT_PATH = "/signout-with-chatgpt";
 const CALLBACK_PATH = "/callback";
 
 export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
+  if (process.env.NODE_ENV !== "production") {
+    return {
+      userId: "local-offerloom-owner",
+      displayName: "OfferLoom local admin",
+      email: "contact.offerloom@gmail.com",
+      fullName: "OfferLoom local admin",
+    };
+  }
   const requestHeaders = await headers();
   const userId = requestHeaders.get(USER_ID_HEADER);
   const email = requestHeaders.get(USER_EMAIL_HEADER);
