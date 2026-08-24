@@ -72,6 +72,9 @@ The current prototype includes:
 - Hero section with the confirmed tagline
 - Electronics-focused product search design
 - Category panels for mobiles, laptops, audio, televisions, gaming and appliances
+- Category-first catalogue navigation with result counts, desktop filters and compact mobile filters
+- Dedicated Amazon shopping hub with curated 5G phone, laptop and ANC-earbud destinations
+- Clear “Check on Amazon” actions with current-price and merchant-checkout clarification
 - Example deal cards for Amazon and Flipkart
 - Price, previous price and discount presentation
 - “Verified offers,” refresh and no-extra-cost trust messaging

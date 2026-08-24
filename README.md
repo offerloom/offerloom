@@ -9,6 +9,8 @@ OfferLoom is an India-first electronics product-discovery and price-comparison p
 - OfferLoom brand identity and social-sharing card
 - Electronics-focused landing page
 - Interactive product search, category filters and sorting
+- Category-first product finder with desktop and mobile navigation
+- Dedicated Amazon shopping hub and popular approved affiliate destinations
 - Mobiles, laptops, audio, televisions, gaming and appliances categories
 - Amazon affiliate destinations tagged with `offerloom-21`
 - Amazon SiteStripe links for 5G phones and wireless ANC earbuds
@@ -58,6 +60,8 @@ npm run build
 ## Affiliate and integration status
 
 Amazon Associates is active under Store ID `offerloom-21`, and the required India tax interview is complete. The site currently uses manually curated Amazon search destinations and does not display locally stored Amazon prices. No live shopping API is connected. Amazon Creators API access is planned after eligibility; Flipkart remains pending because public registration is unavailable. Use only approved affiliate links, feeds and images. Never add unauthorized marketplace scraping.
+
+The homepage treats Amazon as an explicit shopping destination, keeps every outbound link tagged with `offerloom-21`, and makes clear that current prices, availability and checkout are handled by Amazon.in. Affiliate clicks or purchases do not guarantee API access; Amazon alone determines whether activity qualifies toward Creators API eligibility.
 
 The secure catalogue milestone includes single-product entry and CSV import for up to 500 reviewed products. It extracts ASINs, creates canonical tagged destinations, rejects malformed rows, skips existing ASINs, supports publish/unpublish/archive review, and records outbound clicks. Published database products receive canonical detail pages with a multi-merchant comparison table. Merchant connectors can be paused or blocked independently; outbound redirects fail closed when a merchant is not active. Scheduled synchronization remains disabled until approved API credentials exist.
 
