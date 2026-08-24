@@ -10,7 +10,8 @@ OfferLoom is an India-first electronics product-discovery and price-comparison p
 - Electronics-focused landing page
 - Interactive product search, category filters and sorting
 - Category-first product finder with desktop and mobile navigation
-- Dedicated Amazon shopping hub and popular approved affiliate destinations
+- Four-slide category-led hero for OfferLoom, electronics, fashion and home
+- Featured category shortcuts with approved affiliate destinations behind offer actions
 - Mobiles, laptops, audio, televisions, gaming and appliances categories
 - Amazon affiliate destinations tagged with `offerloom-21`
 - Amazon SiteStripe links for 5G phones and wireless ANC earbuds

@@ -21,9 +21,11 @@ test("renders the OfferLoom shopping experience", async () => {
 
   const html = await response.text();
   assert.match(html, /OfferLoom/);
-  assert.match(html, /Find it faster\./);
+  assert.match(html, /Find better value without the clutter\./);
   assert.match(html, /Start with a category/);
-  assert.match(html, /Popular Amazon searches/);
+  assert.match(html, /Explore what interests you/);
+  assert.match(html, /fashion finds slide/i);
+  assert.match(html, /aria-roledescription="carousel"/);
   assert.match(html, /As an Amazon Associate I earn from qualifying purchases\./);
   assert.match(html, /tag=offerloom-21/);
   assert.match(html, /rel="sponsored noopener noreferrer"/);
@@ -36,8 +38,9 @@ test("keeps shopping claims and unavailable merchants compliant", async () => {
     readFile(new URL("../docs/PROJECT_HANDOFF.md", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /Current price and availability shown on Amazon\.in/);
-  assert.match(page, /Amazon handles checkout, payment, delivery and returns/);
+  assert.match(page, /Available destination:/);
+  assert.match(page, /View current offers/);
+  assert.doesNotMatch(page, /AMAZON SHOPPING ENABLED|Browse electronics on Amazon\.in/);
   assert.doesNotMatch(page, /scrape|live Amazon price/i);
   assert.match(handoff, /Do not scrape marketplaces without permission\./);
 });
