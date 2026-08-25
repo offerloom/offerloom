@@ -32,8 +32,8 @@ Read this file, `README.md`, `AGENTS.md`, and `docs/PROJECT_HANDOFF.md` before c
 
 - Latest local validation: `npm run build`, `npm run lint` and `npm test` all pass.
 - Desktop/mobile browser checks confirmed department artwork, filtering and non-overlapping carousel/search layout.
-- The current category-artwork, legal pages, guides and admin click-summary update is local until explicitly approved for production deployment.
-- Do not publish automatically. Ask for the exact confirmation: **Approve production deployment**.
+- The current category-artwork, legal pages, guides and admin click-summary update is approved for production deployment on 25 August 2026.
+- Deployment must be published through ChatGPT Sites for project `appgprj_6a88b726e64c8191820e5ed711599290` at commit `ee54e02`.
 
 ## Next concrete work
 
