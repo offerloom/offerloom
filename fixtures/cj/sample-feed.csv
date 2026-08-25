@@ -1,0 +1,3 @@
+advertiser_id,advertiser_name,sku,name,brand,category,description,affiliate_url,image_url,currency,price,availability
+12345,Dell Consumer India,DELL-XPS-9340,Dell XPS 13 laptop,Dell,Laptops,"Lightweight ultrabook suited to travel-friendly productivity with a compact footprint and long battery life for everyday work.",https://www.dell.com/en-in/example/xps-13?cjevent=fixture,https://i.dell.com/example/xps-13.jpg,INR,129990.00,in stock
+67890,HP India,HP-OMEN-16,HP OMEN 16 gaming laptop,HP,Laptops,"Performance-focused gaming laptop with a high-refresh display and dedicated graphics for modern titles at balanced settings.",https://www.hp.com/in-en/example/omen-16?cjevent=fixture,https://www.hp.com/example/omen-16.jpg,INR,104999.00,in stock

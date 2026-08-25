@@ -311,15 +311,13 @@ Because checkout happens on the merchant website, OfferLoom may not receive comp
 ## Immediate next tasks
 
 1. Review the validated local category-led homepage and explicitly approve production deployment.
-2. Deploy and verify the public homepage, `/admin`, product pages and tracked redirects.
-3. Monitor CJ until Dell Consumer – India or HP India becomes Active; use no CJ data before approval.
-4. After advertiser approval, confirm feed/link rights and obtain authorized credentials without committing them.
-5. Build the CJ feed connector against fixtures, then enable D1 synchronization only for authorized data.
-6. Add the remaining public business/legal pages and footer navigation.
-7. Publish the first original electronics, fashion and home buying guides.
-8. Add an owner-only click summary/report to the admin.
-9. Apply for Amazon Creators API access after eligibility requirements are met.
-10. Monitor Flipkart for legitimate new-affiliate enrollment; do not bypass its login flow.
+2. Push the latest commits to GitHub and deploy the public site.
+3. Verify the public homepage, legal pages, guides, `/admin`, product pages and tracked redirects.
+4. Monitor CJ until Dell Consumer – India or HP India becomes Active; use no CJ data before approval.
+5. After advertiser approval, confirm feed/link rights and obtain authorized credentials without committing them.
+6. Build the CJ feed connector sync job against fixtures, then enable D1 synchronization only for authorized data.
+7. Apply for Amazon Creators API access after eligibility requirements are met.
+8. Monitor Flipkart for legitimate new-affiliate enrollment; do not bypass its login flow.
 
 ## Important working principles
 

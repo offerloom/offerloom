@@ -15,7 +15,7 @@ export default async function AdminPage() {
     </header>
     <section className={styles.intro}>
       <p>OWNER-ONLY CATALOGUE</p><h1>Product manager</h1>
-      <span>Add a real Amazon product URL. OfferLoom extracts the ASIN, removes temporary parameters and creates the `offerloom-21` destination automatically.</span>
+      <span>Add a real Amazon product URL, review outbound click summaries, and manage merchant connector health. OfferLoom extracts the ASIN, removes temporary parameters and creates the `offerloom-21` destination automatically.</span>
     </section>
     <AdminClient />
   </main>;

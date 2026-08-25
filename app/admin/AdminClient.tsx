@@ -5,10 +5,12 @@ import styles from "./admin.module.css";
 
 type AdminProduct = { id:string; name:string; category:string; summary:string; status:"draft"|"published"|"archived"; asin:string; affiliateUrl:string; updatedAt:string };
 type Merchant = { id:string; name:string; status:"active"|"pending"|"paused"|"blocked"; syncMode:"manual"|"feed"|"api"; consecutiveFailures:number; lastSuccessAt:string|null; lastFailureAt:string|null; lastError:string|null };
+type ClickSummary = { totalClicks:number; uniqueProducts:number; lastSevenDays:number; byMerchant:Array<{ merchant:string; clicks:number }>; topProducts:Array<{ productId:string; name:string; clicks:number }>; recentDays:Array<{ day:string; clicks:number }> };
 
 export default function AdminClient() {
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [clicks, setClicks] = useState<ClickSummary | null>(null);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -18,6 +20,8 @@ export default function AdminClient() {
     if (!response.ok) throw new Error(data.error ?? "Could not load products.");
     setProducts(data.products);
     setMerchants(data.merchants ?? []);
+    const clickResponse = await fetch("/api/admin/clicks", { cache: "no-store" });
+    if (clickResponse.ok) setClicks(await clickResponse.json());
   }, []);
 
   useEffect(() => {
@@ -28,7 +32,13 @@ export default function AdminClient() {
         if (!response.ok) throw new Error(data.error ?? "Could not load products.");
         return data;
       })
-      .then((data) => { if (active) { setProducts(data.products); setMerchants(data.merchants ?? []); } })
+      .then(async (data) => {
+        if (!active) return;
+        setProducts(data.products);
+        setMerchants(data.merchants ?? []);
+        const clickResponse = await fetch("/api/admin/clicks", { cache: "no-store" });
+        if (active && clickResponse.ok) setClicks(await clickResponse.json());
+      })
       .catch((error) => { if (active) setMessage(error.message); });
     return () => { active = false; };
   }, []);
@@ -112,6 +122,19 @@ export default function AdminClient() {
     </form>
     </div>
     <section className={styles.list}>
+      <div className={styles.clickPanel}>
+        <div className={styles.listHead}><h2>Outbound click summary</h2><span>Owner report</span></div>
+        {clicks ? <>
+          <div className={styles.clickStats}>
+            <div><strong>{clicks.totalClicks}</strong><small>Total clicks</small></div>
+            <div><strong>{clicks.lastSevenDays}</strong><small>Last 7 days</small></div>
+            <div><strong>{clicks.uniqueProducts}</strong><small>Products clicked</small></div>
+          </div>
+          {clicks.byMerchant.length > 0 && <div className={styles.clickBlock}><strong>By merchant</strong>{clicks.byMerchant.map((item) => <p key={item.merchant}>{item.merchant}: {item.clicks}</p>)}</div>}
+          {clicks.topProducts.length > 0 && <div className={styles.clickBlock}><strong>Top products</strong>{clicks.topProducts.map((item) => <p key={item.productId}>{item.name} · {item.clicks}</p>)}</div>}
+          {clicks.recentDays.length > 0 && <div className={styles.clickBlock}><strong>Recent days</strong>{clicks.recentDays.slice(0, 7).map((item) => <p key={item.day}>{item.day}: {item.clicks}</p>)}</div>}
+        </> : <p className={styles.empty}>Click summary will appear after the first tracked outbound redirect.</p>}
+      </div>
       <div className={styles.merchantPanel}><div className={styles.listHead}><h2>Merchant health</h2><span>Emergency controls</span></div>{merchants.map((merchant) => <div className={styles.merchant} key={merchant.id}><div><span className={styles.status} data-status={merchant.status}>{merchant.status}</span><strong>{merchant.name}</strong><small>{merchant.syncMode} connector · {merchant.consecutiveFailures} consecutive failures</small></div><select disabled={busy} value={merchant.status} onChange={(event) => changeMerchantStatus(merchant.id,event.target.value as Merchant["status"])} aria-label={`${merchant.name} connector status`}><option value="active">Active</option><option value="pending">Pending</option><option value="paused">Paused</option><option value="blocked">Blocked</option></select></div>)}</div>
       <div className={styles.listHead}><h2>Catalogue</h2><span>{products.length} products</span></div>
       {products.length === 0 ? <p className={styles.empty}>No database products yet. Add the first one using an Amazon product page URL.</p> : products.map((product) => <article key={product.id}>

@@ -26,6 +26,10 @@ OfferLoom is an India-first electronics product-discovery and price-comparison p
 - Disabled Flipkart destinations pending approved affiliate access
 - Responsive desktop and mobile layouts
 - Amazon affiliate disclosure and merchant checkout/returns clarification
+- Public business and legal pages with footer navigation
+- Original buying guides for electronics, fashion and home
+- Owner-only outbound click summary in the admin
+- CJ fixture parser for future authorized feed synchronization
 - Cloudflare-compatible Vinext build
 
 Public deployment: <https://offerloom.gdwivedi6.chatgpt.site>

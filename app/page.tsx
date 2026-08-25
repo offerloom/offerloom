@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import SiteFooter from "./components/SiteFooter";
 
 type Listing = { store: string; affiliateUrl?: string };
 type Product = { id: string | number; icon: string; name: string; category: string; summary: string; specs: string[]; listings: Listing[]; detailPath?: string };
@@ -117,7 +118,7 @@ export default function Home() {
   return <main>
     <header className="topbar">
       <a className="brand" href="#top" aria-label="OfferLoom home"><span className="brandMark">O</span><span>Offer<span>Loom</span></span></a>
-      <nav aria-label="Main navigation"><a href="#catalog">Find products</a><a href="#categories">Categories</a><a href="#featured">Featured picks</a><a href="#how">How it works</a></nav>
+      <nav aria-label="Main navigation"><a href="#catalog">Find products</a><a href="#categories">Categories</a><a href="#featured">Featured picks</a><Link href="/guides">Buying guides</Link><a href="#how">How it works</a></nav>
       <a className="alertButton" href="#catalog">Find a deal</a>
     </header>
     <section className={`heroSlider ${slides[slide].theme}`} id="top" aria-roledescription="carousel" aria-label="OfferLoom featured categories">
@@ -152,5 +153,6 @@ export default function Home() {
     </section>
 
     <section className="how" id="how"><div><span>01</span><h3>Search or browse</h3><p>Find electronics by name, use case or category.</p></div><div><span>02</span><h3>Review the collection</h3><p>Use the summaries and specifications to narrow your choice.</p></div><div><span>03</span><h3>Shop with the merchant</h3><p>Open an approved link and confirm the live price before buying.</p></div></section>
+    <SiteFooter />
   </main>;
 }

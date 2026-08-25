@@ -6,7 +6,7 @@ OfferLoom is a Vinext/React/TypeScript product-discovery and price-comparison si
 
 Before starting work, read `docs/PROJECT_MEMORY.md`, `README.md`, and `docs/PROJECT_HANDOFF.md` completely, then inspect `git status` and preserve existing work.
 
-- `app/`: pages, layout metadata, and global styles. The main shopping experience is in `app/page.tsx`.
+- `app/`: pages, layout metadata, and global styles. The main shopping experience is in `app/page.tsx`. Legal pages, buying guides and shared footer components live under `app/about/`, `app/guides/`, and `app/components/`.
 - `public/`: static assets such as the favicon and Open Graph image.
 - `db/` and `drizzle/`: Drizzle/D1 catalogue schema and migrations.
 - `app/admin/`: owner-only catalogue workflow; `app/api/`: admin/public data routes.

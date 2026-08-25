@@ -29,7 +29,29 @@ test("renders the OfferLoom shopping experience", async () => {
   assert.match(html, /As an Amazon Associate I earn from qualifying purchases\./);
   assert.match(html, /tag=offerloom-21/);
   assert.match(html, /rel="sponsored noopener noreferrer"/);
+  assert.match(html, /Buying guides/);
+  assert.match(html, /Privacy Policy/);
   assert.doesNotMatch(html, /Your site is taking shape|codex-preview/);
+});
+
+test("renders public business and guide pages", async () => {
+  const pages = [
+    ["/about", /About OfferLoom/],
+    ["/contact", /contact\.offerloom@gmail\.com/],
+    ["/privacy", /Privacy Policy/],
+    ["/guides", /Buying guides/],
+    ["/guides/electronics", /Electronics buying guide for Indian shoppers/],
+    ["/affiliate-disclosure", /Amazon Associate/],
+    ["/grievance", /Grievance Officer/],
+  ];
+
+  for (const [path, pattern] of pages) {
+    const response = await render(path);
+    assert.equal(response.status, 200, `${path} should return 200`);
+    const html = await response.text();
+    assert.match(html, pattern, `${path} should include expected copy`);
+    assert.match(html, /As an Amazon Associate I earn from qualifying purchases\./);
+  }
 });
 
 test("keeps shopping claims and unavailable merchants compliant", async () => {

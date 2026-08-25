@@ -22,23 +22,27 @@ Read this file, `README.md`, `AGENTS.md`, and `docs/PROJECT_HANDOFF.md` before c
 - Search is positioned below the carousel controls with a verified 42px visual gap.
 - Top-level departments are Electronics, Fashion and Home. Electronics expands to Mobiles, Laptops, Audio, TVs and Gaming; Home expands to Appliances.
 - Owner-only D1 catalogue admin, reviewed CSV import, canonical product pages, multi-merchant comparison slots, tracked Amazon redirects and merchant fail-closed controls are implemented.
+- Public business and legal pages with footer navigation: About, Contact, Privacy, Cookies, Terms, Affiliate Disclosure, Price Disclaimer, Advertising Disclosure, Merchant Checkout and Grievance Officer.
+- Original buying guides for Electronics, Fashion and Home at `/guides`.
+- Owner-only outbound click summary in `/admin`.
+- CJ fixture CSV parser at `app/lib/cj/parse-fixture.ts` for future authorized feed work.
 - Required Amazon disclosure remains in the lower affiliate notice. Do not remove it without replacing it with compliant equivalent wording.
 
 ## Validation and deployment state
 
 - Latest local validation: `npm run build`, `npm run lint` and `npm test` all pass.
 - Desktop/mobile browser checks confirmed department artwork, filtering and non-overlapping carousel/search layout.
-- The current category-artwork and hierarchy update is local until explicitly approved for production deployment.
+- The current category-artwork, legal pages, guides and admin click-summary update is local until explicitly approved for production deployment.
 - Do not publish automatically. Ask for the exact confirmation: **Approve production deployment**.
 
 ## Next concrete work
 
 1. Review the local homepage and obtain production-deployment approval.
-2. Deploy the validated version and verify the public homepage, `/admin`, product pages and tracked redirects.
-3. Monitor CJ until Dell Consumer – India or HP India becomes Active.
-4. After approval, inspect the advertiser terms and obtain an authorized product feed or API credential; store credentials only as hosted secrets.
-5. Build the CJ connector against fixtures first, then enable scheduled D1 synchronization only with authorized data.
-6. Add original buying guides, remaining business/legal pages and an owner-only click summary.
+2. Push the validated branch/commits to GitHub and deploy the public site.
+3. Verify the public homepage, legal pages, guides, `/admin`, product pages and tracked redirects after deployment.
+4. Monitor CJ until Dell Consumer – India or HP India becomes Active.
+5. After approval, inspect the advertiser terms and obtain an authorized product feed or API credential; store credentials only as hosted secrets.
+6. Build the CJ connector sync job against fixtures first, then enable scheduled D1 synchronization only with authorized data.
 
 ## Non-negotiable rules
 

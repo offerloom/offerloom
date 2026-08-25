@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import SiteFooter from "../../components/SiteFooter";
 import styles from "./product.module.css";
 
 export const dynamic = "force-dynamic";
@@ -51,6 +52,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug:s
       </div>
       <p className={styles.notice}>OfferLoom does not sell this product or handle payment, delivery, cancellation, return or refund. Merchant prices can change after you leave OfferLoom.</p>
     </section>
+    <SiteFooter />
   </main>;
 }
 
