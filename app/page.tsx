@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import SiteFooter from "./components/SiteFooter";
+import ShopCategoryGrid from "./components/ShopCategoryGrid";
+import { heroCategorySlides } from "./lib/hero-categories";
 
 type Listing = { store: string; affiliateUrl?: string };
 type Product = { id: string | number; icon: string; name: string; category: string; summary: string; specs: string[]; listings: Listing[]; detailPath?: string };
@@ -36,12 +38,7 @@ const categoryGroups = [
   { name: "Home", key: "home", description: "Appliances and everyday home essentials" },
 ];
 const categoryIcons: Record<string, string> = { Electronics: "◫", Mobiles: "▯", Laptops: "▰", Audio: "◉", TVs: "▣", Gaming: "✣", Home: "⌂", Appliances: "⌂", Fashion: "♢" };
-const slides = [
-  { eyebrow: "EVERY DEAL. ONE DESTINATION.", title: "Find better value without the clutter.", text: "OfferLoom brings useful products, categories and approved shopping destinations together in one simple place.", cta: "Explore today’s picks", category: "All", theme: "brand" },
-  { eyebrow: "ELECTRONICS PICKS", title: "Smarter tech choices start here.", text: "Browse phones, laptops, audio, televisions and gaming collections selected for Indian shoppers.", cta: "Browse electronics", category: "Electronics", theme: "tech" },
-  { eyebrow: "FASHION FINDS", title: "Refresh your wardrobe for less.", text: "Discover everyday clothing, footwear and accessories through approved shopping destinations.", cta: "Explore fashion", category: "Fashion", theme: "fashion" },
-  { eyebrow: "HOME & APPLIANCES", title: "Make every room work better.", text: "Find practical home and appliance collections without searching across scattered pages.", cta: "Browse home picks", category: "Home", theme: "home" },
-];
+const slides = heroCategorySlides;
 
 function belongsToCategory(product: Product, selected: string) {
   if (selected === "All") return true;
@@ -80,14 +77,11 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setSlide((current) => (current + 1) % slides.length), 6500);
+    const timer = window.setInterval(() => setSlide((current) => (current + 1) % slides.length), 5500);
     return () => window.clearInterval(timer);
   }, []);
 
   const allProducts = useMemo(() => [...managedProducts, ...products], [managedProducts]);
-  const detailCategories = useMemo(() => Array.from(new Set(allProducts.map((product) => product.category))), [allProducts]);
-  const menuCategories = useMemo(() => ["All", ...categoryGroups.map((group) => group.name), ...detailCategories], [detailCategories]);
-  const categoryCounts = useMemo(() => Object.fromEntries(menuCategories.map((item) => [item, allProducts.filter((product) => belongsToCategory(product, item)).length])), [allProducts, menuCategories]);
   const visible = useMemo(() => {
     const term = query.trim().toLowerCase();
     const matches = allProducts.filter((product) => belongsToCategory(product, category) && (!term || `${product.name} ${product.category} ${product.summary} ${product.specs.join(" ")}`.toLowerCase().includes(term)));
@@ -121,30 +115,46 @@ export default function Home() {
       <nav aria-label="Main navigation"><a href="#catalog">Find products</a><a href="#categories">Categories</a><a href="#featured">Featured picks</a><Link href="/guides">Buying guides</Link><a href="#how">How it works</a></nav>
       <a className="alertButton" href="#catalog">Find a deal</a>
     </header>
-    <section className={`heroSlider ${slides[slide].theme}`} id="top" aria-roledescription="carousel" aria-label="OfferLoom featured categories">
-      <div className="heroSlide" aria-live="polite"><span className="eyebrow">{slides[slide].eyebrow}</span><h1>{slides[slide].title}</h1><p>{slides[slide].text}</p><div className="slideActions"><button onClick={() => chooseCategory(slides[slide].category)}>{slides[slide].cta}</button><span>Curated for shoppers across India</span></div></div>
-      <div className={`slideVisual artwork artwork-${slides[slide].theme}`} role="img" aria-label={slide === 0 ? "Electronics, fashion and home shopping categories" : `${slides[slide].category} category collection`}><span className="visualLabel"><strong>{slide === 0 ? "OfferLoom" : slides[slide].category}</strong><small>{slide === 0 ? "Every category. One destination." : "Featured department"}</small></span></div>
+    <section className={`heroSlider ${slides[slide].theme}`} id="top" aria-roledescription="carousel" aria-label="OfferLoom shop by category">
+      <div className="heroSlide" aria-live="polite"><span className="eyebrow">{slides[slide].eyebrow}</span><h1>{slides[slide].title}</h1><p>{slides[slide].text}</p><div className="slideActions"><a className="slideAmazonCta" href={slides[slide].amazonUrl} target="_blank" rel="sponsored noopener noreferrer">{slides[slide].cta}</a><span>Opens approved Amazon catalog</span></div></div>
+      <a className={`heroOfferBanner banner-${slides[slide].theme}`} href={slides[slide].amazonUrl} target="_blank" rel="sponsored noopener noreferrer" aria-label={`${slides[slide].promo.dealLine} on ${slides[slide].eyebrow.toLowerCase()}`}>
+        <div className="heroOfferArt">
+          <img className="heroOfferImage" src={slides[slide].image} alt={slides[slide].imageAlt} />
+          <span className="heroOfferCorner">{slides[slide].promo.corner}</span>
+        </div>
+        <div className="heroOfferCopy">
+          <span className="heroOfferBadge">{slides[slide].promo.badge}</span>
+          <strong className="heroOfferDeal">{slides[slide].promo.dealLine}</strong>
+          <span className="heroOfferPill">{slides[slide].promo.extraTag}</span>
+          <p className="heroOfferMeta">{slides[slide].promo.highlight}</p>
+          <span className="heroOfferCta">{slides[slide].promo.shopLabel}</span>
+          <small className="heroOfferFine">{slides[slide].promo.disclaimer}</small>
+        </div>
+      </a>
       <button className="slideArrow previous" onClick={() => setSlide((slide - 1 + slides.length) % slides.length)} aria-label="Previous slide">‹</button><button className="slideArrow next" onClick={() => setSlide((slide + 1) % slides.length)} aria-label="Next slide">›</button>
-      <div className="slideDots" role="group" aria-label="Choose a slide">{slides.map((item, index) => <button className={slide === index ? "active" : ""} onClick={() => setSlide(index)} aria-label={`Show ${item.eyebrow.toLowerCase()} slide`} key={item.eyebrow}/>)}</div>
+      <div className="slideDots" role="group" aria-label="Choose a slide">{slides.map((item, index) => <button className={slide === index ? "active" : ""} onClick={() => setSlide(index)} aria-label={`Show ${item.eyebrow.toLowerCase()} slide`} key={item.id}/>)}</div>
     </section>
     <section className="finder"><form className="search" onSubmit={search}><span aria-hidden="true">⌕</span><input value={draft} onChange={(event) => setDraft(event.target.value)} aria-label="Search products" placeholder="Search phones, fashion, appliances…"/><button>Find products</button></form><div className="popularSearches"><span>Popular:</span><button onClick={() => { setDraft("5G phone"); setQuery("5G phone"); }}>5G phones</button><button onClick={() => { setDraft("fashion"); setQuery("fashion"); }}>Fashion</button><button onClick={() => { setDraft("laptop"); setQuery("laptop"); }}>Laptops</button><button onClick={() => { setDraft("appliances"); setQuery("appliances"); }}>Appliances</button></div></section>
 
     <section className="categoryStrip" id="categories">
-      <div className="stripHeading"><div><span className="eyebrow">BROWSE YOUR WAY</span><h2>Start with a category</h2></div><p>Jump directly to what you need instead of scrolling through everything.</p></div>
-      <div className="categoryButtons departmentButtons">{categoryGroups.map((group) => <button className={`departmentCard artwork-${group.key}`} onClick={() => chooseCategory(group.name)} key={group.name}><span className="departmentShade"/><span className="departmentCopy"><strong>{group.name}</strong><small>{group.description}</small><em>{categoryCounts[group.name]} collection{categoryCounts[group.name] === 1 ? "" : "s"} →</em></span></button>)}</div>
+      <div className="stripHeading"><div><span className="eyebrow">BROWSE YOUR WAY</span><h2>Start with a category</h2></div><p>Each category opens the approved Amazon catalog in a new tab.</p></div>
+      <ShopCategoryGrid heading="Shop by category" />
     </section>
 
     <section className="featuredShop" id="featured">
       <div><span className="eyebrow">FEATURED PICKS</span><h2>Explore what interests you</h2><p>Start with a category. The available shopping destination is shown clearly before you leave OfferLoom.</p></div>
-      <div className="featuredQuickLinks"><button onClick={() => chooseCategory("Mobiles")}><span>▯</span><strong>Mobiles</strong><small>5G and everyday phones →</small></button><button onClick={() => chooseCategory("Fashion")}><span>♢</span><strong>Fashion</strong><small>Clothing and accessories →</small></button><button onClick={() => chooseCategory("Appliances")}><span>⌂</span><strong>Home</strong><small>Appliances and essentials →</small></button></div>
+      <div className="featuredQuickLinks"><a href={amazonLinks.mobiles} target="_blank" rel="sponsored noopener noreferrer"><span>▯</span><strong>Mobiles</strong><small>Shop on Amazon →</small></a><a href={amazonLinks.fashion} target="_blank" rel="sponsored noopener noreferrer"><span>♢</span><strong>Fashion</strong><small>Shop on Amazon →</small></a><a href={amazonLinks.appliances} target="_blank" rel="sponsored noopener noreferrer"><span>⌂</span><strong>Home</strong><small>Shop on Amazon →</small></a></div>
     </section>
 
     <section className="catalog" id="catalog">
       <div className="catalogHead"><div><span className="eyebrow">PRODUCT FINDER</span><h2>{category === "All" ? "All products" : category}</h2><p>{query ? `Showing matches for “${query}”.` : "Choose a product group, review the key features, then shop through an available merchant."}</p></div><label>Sort by<select value={sort} onChange={(event) => setSort(event.target.value)}><option value="recommended">Recommended</option><option value="name">Name: A to Z</option><option value="category">Category</option></select></label></div>
       <div className="catalogLayout">
-        <aside className="categoryMenu" aria-label="Filter by category"><strong>Departments</strong>{["All", ...categoryGroups.map((group) => group.name)].map((item) => <button className={category === item ? "active" : ""} onClick={() => setCategory(item)} key={item}><span>{item}</span><small>{categoryCounts[item]}</small></button>)}{(category === "Electronics" || electronicsCategories.includes(category)) && <><strong className="submenuTitle">Electronics</strong>{electronicsCategories.filter((item) => detailCategories.includes(item)).map((item) => <button className={category === item ? "active" : ""} onClick={() => setCategory(item)} key={item}><span>{item}</span><small>{categoryCounts[item]}</small></button>)}</>}{(category === "Home" || category === "Appliances") && <><strong className="submenuTitle">Home</strong><button className={category === "Appliances" ? "active" : ""} onClick={() => setCategory("Appliances")}><span>Appliances</span><small>{categoryCounts.Appliances}</small></button></>}</aside>
+        <aside className="catalogCategoryAside" aria-label="Shop by category on Amazon">
+          <ShopCategoryGrid heading="Amazon categories" variant="sidebar" />
+        </aside>
         <div className="catalogResults">
-          <div className="mobileFilters" role="group" aria-label="Product departments">{["All", ...categoryGroups.map((group) => group.name)].map((item) => <button className={category === item ? "active" : ""} onClick={() => setCategory(item)} key={item}>{item}</button>)}</div>
+          <div className="mobileFilters" role="group" aria-label="Filter demo products">{["All", ...categoryGroups.map((group) => group.name)].map((item) => <button className={category === item ? "active" : ""} onClick={() => setCategory(item)} key={item}>{item}</button>)}</div>
+          <ShopCategoryGrid heading="Shop on Amazon" variant="compact" />
           <div className="resultSummary"><span>{visible.length} product collection{visible.length === 1 ? "" : "s"}</span>{(query || category !== "All") && <button onClick={reset}>Clear filters</button>}</div>
           {visible.length ? <div className="productGrid">{visible.map((product) => <article className="productCard" key={product.id}><div className="productTop"><div className="productIcon" aria-hidden="true">{product.icon}</div><div><span className="categoryTag">{product.category}</span><h3>{product.detailPath ? <Link href={product.detailPath}>{product.name}</Link> : product.name}</h3><p>{product.summary}</p></div></div><div className="specs">{product.specs.map((spec) => <span key={spec}>{spec}</span>)}</div><div className="cardActions">{product.detailPath && <Link className="compareLink" href={product.detailPath}>Compare stores</Link>}<a className="offerCta" href={product.listings[0].affiliateUrl} target="_blank" rel="sponsored noopener noreferrer" aria-label={`View current offers for ${product.name}`}>View current offers <span aria-hidden="true">↗</span></a></div><small className="priceNote">Available destination: {product.listings[0].store} · Check current price there</small></article>)}</div> : <div className="emptyState"><strong>No matching products yet</strong><p>Try another word or clear the selected category.</p><button onClick={reset}>Show all products</button></div>}
         </div>

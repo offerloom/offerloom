@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 330" role="img" aria-label="Home, kitchen and pets">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#14532d"/><stop offset="100%" stop-color="#16a34a"/></linearGradient></defs>
+  <rect width="390" height="330" fill="url(#bg)"/>
+  <path d="M70 250 L320 250 L320 120 L195 60 L70 120 Z" fill="#ffffff22" stroke="#ffffff55" stroke-width="3"/>
+  <rect x="108" y="150" width="72" height="88" rx="8" fill="#86efac"/>
+  <rect x="210" y="132" width="88" height="56" rx="10" fill="#ffffff22" stroke="#ffffff55" stroke-width="3"/>
+  <circle cx="254" cy="160" r="16" fill="#bbf7d0"/>
+  <ellipse cx="286" cy="214" rx="34" ry="22" fill="#ffffff22" stroke="#ffffff55" stroke-width="3"/>
+  <circle cx="274" cy="208" r="8" fill="#fef08a"/><circle cx="298" cy="208" r="8" fill="#fef08a"/>
+</svg>

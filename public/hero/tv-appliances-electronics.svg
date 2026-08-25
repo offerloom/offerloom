@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 330" role="img" aria-label="TV and appliances">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0f172a"/><stop offset="100%" stop-color="#334155"/></linearGradient></defs>
+  <rect width="390" height="330" fill="url(#bg)"/>
+  <rect x="58" y="54" width="210" height="128" rx="12" fill="#ffffff22" stroke="#ffffff55" stroke-width="3"/>
+  <rect x="72" y="68" width="182" height="92" rx="6" fill="#38bdf8"/>
+  <rect x="118" y="196" width="90" height="10" rx="5" fill="#ffffff66"/>
+  <rect x="286" y="88" width="72" height="150" rx="10" fill="#ffffff22" stroke="#ffffff55" stroke-width="3"/>
+  <rect x="298" y="102" width="48" height="88" rx="4" fill="#e2e8f0"/>
+  <rect x="292" y="206" width="60" height="18" rx="4" fill="#ffffff44"/>
+</svg>

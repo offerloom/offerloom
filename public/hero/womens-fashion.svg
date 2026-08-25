@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 330" role="img" aria-label="Women's fashion">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#831843"/><stop offset="100%" stop-color="#db2777"/></linearGradient></defs>
+  <rect width="390" height="330" fill="url(#bg)"/>
+  <path d="M120 78 C150 78 170 98 195 78 C220 98 240 78 270 78 L250 250 L140 250 Z" fill="#ffffff22" stroke="#ffffff55" stroke-width="3"/>
+  <path d="M165 120 L225 120 L210 210 L180 210 Z" fill="#fbcfe8"/>
+  <rect x="68" y="168" width="58" height="72" rx="12" fill="#ffffff22" stroke="#ffffff55" stroke-width="3"/>
+  <path d="M82 180 Q97 210 82 232 Q67 210 82 180" fill="#fda4af"/>
+  <circle cx="286" cy="98" r="36" fill="#ffffff22" stroke="#ffffff55" stroke-width="3"/>
+</svg>
