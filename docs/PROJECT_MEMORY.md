@@ -7,7 +7,8 @@ Read this file, `README.md`, `AGENTS.md`, and `docs/PROJECT_HANDOFF.md` before c
 ## Current checkpoint
 
 - OfferLoom is an India-first product-discovery and price-comparison website operated by Parthsheel Enterprises.
-- Public site: <https://offerloom.gdwivedi6.chatgpt.site>
+- Public site (Workers): <https://offerloom.contact-offerloom.workers.dev>
+- Legacy ChatGPT Sites URL: <https://offerloom.gdwivedi6.chatgpt.site>
 - Local repository: `/Users/gauravdwivedi/Documents/gaurav/parthsheel_enterprises/offerloom`
 - Stack: Vinext, React, TypeScript, Cloudflare Worker, D1 and Drizzle.
 - Amazon Associates Store ID: `offerloom-21`; India tax status is complete.
@@ -31,16 +32,18 @@ Read this file, `README.md`, `AGENTS.md`, and `docs/PROJECT_HANDOFF.md` before c
 ## Validation and deployment state
 
 - Latest local validation: `npm run build`, `npm run lint` and `npm test` all pass.
-- Desktop/mobile browser checks confirmed department artwork, filtering and non-overlapping carousel/search layout.
-- The current category-artwork, legal pages, guides and admin click-summary update is approved for production deployment on 25 August 2026.
-- Deployment must be published through ChatGPT Sites for project `appgprj_6a88b726e64c8191820e5ed711599290` at commit `ee54e02`.
+- Primary production target: Cloudflare Workers via `wrangler.toml` and `npm run deploy:full`.
+- Automatic deploys: push to `main` after configuring `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in GitHub secrets.
+- Legacy ChatGPT Sites project `appgprj_6a88b726e64c8191820e5ed711599290` may remain available until DNS/links move to Workers.
+- Workers admin uses `/admin/login` with the `ADMIN_API_TOKEN` secret.
 
 ## Next concrete work
 
-1. Review the local homepage and obtain production-deployment approval.
-2. Push the validated branch/commits to GitHub and deploy the public site.
-3. Verify the public homepage, legal pages, guides, `/admin`, product pages and tracked redirects after deployment.
-4. Monitor CJ until Dell Consumer – India or HP India becomes Active.
+1. Run `npm run cf:login`, `npm run cf:setup`, and `npm run deploy:full`.
+2. Set `ADMIN_API_TOKEN` with `npx wrangler secret put ADMIN_API_TOKEN`.
+3. Add Cloudflare API secrets to GitHub for push-to-deploy.
+4. Verify the Workers URL, `/guides`, `/privacy`, `/admin`, product pages and tracked redirects.
+5. Monitor CJ until Dell Consumer – India or HP India becomes Active.
 5. After approval, inspect the advertiser terms and obtain an authorized product feed or API credential; store credentials only as hosted secrets.
 6. Build the CJ connector sync job against fixtures first, then enable scheduled D1 synchronization only with authorized data.
 

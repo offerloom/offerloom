@@ -32,7 +32,7 @@ OfferLoom is an India-first electronics product-discovery and price-comparison p
 - CJ fixture parser for future authorized feed synchronization
 - Cloudflare-compatible Vinext build
 
-Public deployment: <https://offerloom.gdwivedi6.chatgpt.site>
+Public deployment: <https://offerloom.contact-offerloom.workers.dev> (Cloudflare Workers). Legacy ChatGPT Sites URL: <https://offerloom.gdwivedi6.chatgpt.site>
 
 ## Local development
 
@@ -63,7 +63,9 @@ npm run build
 - `app/go/amazon/` — tracked outbound Amazon redirects
 - `app/products/[slug]/` — canonical product details and merchant comparison
 - `db/` and `drizzle/` — D1 schema and migrations
-- `.openai/hosting.json` — Sites deployment reference
+- `wrangler.toml` — Cloudflare Workers and D1 deployment config
+- `docs/DEPLOY_WORKERS.md` — Workers deploy and GitHub Actions setup
+- `.openai/hosting.json` — legacy ChatGPT Sites project reference
 
 ## Affiliate and integration status
 

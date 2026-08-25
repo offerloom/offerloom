@@ -1,0 +1,21 @@
+name = "offerloom"
+compatibility_date = "2026-05-15"
+compatibility_flags = ["nodejs_compat"]
+main = "dist/server/index.js"
+workers_dev = true
+
+[assets]
+directory = "dist/client"
+binding = "ASSETS"
+
+[vars]
+DEPLOYMENT_PLATFORM = "workers"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "offerloom"
+database_id = "82b0bcbe-93ac-4011-a400-52bfe6759ac1"
+migrations_dir = "drizzle"
+
+[observability]
+enabled = true
