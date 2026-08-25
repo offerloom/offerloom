@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BrandMark from "../components/BrandMark";
 import { requireOfferLoomAdmin } from "../lib/admin-auth";
 import { isWorkersDeployment } from "../lib/deployment";
 import AdminClient from "./AdminClient";
@@ -12,7 +13,7 @@ export default async function AdminPage() {
   const workers = await isWorkersDeployment();
   return <main className={styles.shell}>
     <header className={styles.header}>
-      <Link className={styles.brand} href="/">Offer<span>Loom</span></Link>
+      <Link className={styles.brand} href="/"><BrandMark />Offer<span>Loom</span></Link>
       <div>
         <span>{user.email}</span>
         {workers ? <AdminSignOut /> : <a href="/signout-with-chatgpt?return_to=/">Sign out</a>}

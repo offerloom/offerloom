@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import SiteFooter from "./components/SiteFooter";
+import BrandMark from "./components/BrandMark";
 import ShopCategoryGrid from "./components/ShopCategoryGrid";
 import { heroCategorySlides } from "./lib/hero-categories";
 
@@ -111,7 +112,7 @@ export default function Home() {
 
   return <main>
     <header className="topbar">
-      <a className="brand" href="#top" aria-label="OfferLoom home"><span className="brandMark">O</span><span>Offer<span>Loom</span></span></a>
+      <a className="brand" href="#top" aria-label="OfferLoom home"><BrandMark /><span>Offer<span>Loom</span></span></a>
       <nav aria-label="Main navigation"><a href="#catalog">Find products</a><a href="#categories">Categories</a><a href="#featured">Featured picks</a><Link href="/guides">Buying guides</Link><a href="#how">How it works</a></nav>
       <a className="alertButton" href="#catalog">Find a deal</a>
     </header>

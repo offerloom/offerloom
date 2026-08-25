@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import BrandMark from "../../components/BrandMark";
 import styles from "../admin.module.css";
 
 type AdminLoginClientProps = {
@@ -36,7 +37,7 @@ export default function AdminLoginClient({ returnTo }: AdminLoginClientProps) {
   return (
     <main className={styles.shell}>
       <header className={styles.header}>
-        <Link className={styles.brand} href="/">Offer<span>Loom</span></Link>
+        <Link className={styles.brand} href="/"><BrandMark />Offer<span>Loom</span></Link>
         <Link href="/">Back to site</Link>
       </header>
       <section className={styles.intro}>

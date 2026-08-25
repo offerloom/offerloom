@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BrandMark from "./BrandMark";
 import { FOOTER_LINKS, SITE } from "../lib/site";
 
 export default function SiteFooter() {
@@ -7,7 +8,7 @@ export default function SiteFooter() {
       <div className="footerGrid">
         <div className="footerBrand">
           <Link className="brand" href="/" aria-label={`${SITE.brand} home`}>
-            <span className="brandMark">O</span>
+            <BrandMark />
             <span>Offer<span>Loom</span></span>
           </Link>
           <p>{SITE.tagline}</p>

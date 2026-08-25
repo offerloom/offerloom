@@ -22,7 +22,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const description = "Compare electronics deals from trusted stores and shop at a price worth choosing.";
   return {
     title, description,
-    icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/favicon.svg", type: "image/svg+xml" },
+      ],
+      shortcut: "/favicon.ico",
+      apple: "/brand/apple-touch-icon.png",
+    },
     openGraph: { title, description, images: [image] },
     twitter: { card: "summary_large_image", title, description, images: [image] },
   };
@@ -35,6 +42,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

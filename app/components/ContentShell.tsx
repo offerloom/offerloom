@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ReactNode } from "react";
+import BrandMark from "./BrandMark";
 import SiteFooter from "./SiteFooter";
 
 type ContentShellProps = {
@@ -13,7 +14,7 @@ export default function ContentShell({ title, eyebrow, children }: ContentShellP
     <main className="contentShell">
       <header className="topbar">
         <Link className="brand" href="/" aria-label="OfferLoom home">
-          <span className="brandMark">O</span>
+          <BrandMark />
           <span>Offer<span>Loom</span></span>
         </Link>
         <nav aria-label="Main navigation">
