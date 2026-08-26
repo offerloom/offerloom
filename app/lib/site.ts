@@ -16,7 +16,7 @@ export const COMMUNITY = {
     cta: "Join free",
   },
   telegram: {
-    url: "https://t.me/offerloom",
+    url: "https://t.me/+918127088087",
     headline: "Daily deals on Telegram",
     subtext: "Quick alerts for flash sales, bank offers and category highlights.",
     cta: "Join channel",
