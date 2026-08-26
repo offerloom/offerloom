@@ -21,10 +21,14 @@ test("renders the OfferLoom shopping experience", async () => {
 
   const html = await response.text();
   assert.match(html, /OfferLoom/);
-  assert.match(html, /Find better value without the clutter\./);
+  assert.match(html, /Upgrade your everyday tech\./);
   assert.match(html, /Start with a category/);
+  assert.match(html, /Filter by department/);
+  assert.match(html, /Get every deal first on WhatsApp/);
+  assert.match(html, /instagram\.com\/offer\.loom/);
+  assert.match(html, /youtube\.com\/@offerloom/);
   assert.match(html, /Explore what interests you/);
-  assert.match(html, /fashion finds slide/i);
+  assert.match(html, /aria-roledescription="carousel"/);
   assert.match(html, /aria-roledescription="carousel"/);
   assert.match(html, /As an Amazon Associate I earn from qualifying purchases\./);
   assert.match(html, /tag=offerloom-21/);
