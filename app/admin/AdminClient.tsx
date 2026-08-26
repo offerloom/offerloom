@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import styles from "./admin.module.css";
+import SocialPostsPanel from "./SocialPostsPanel";
 
 type AdminProduct = { id:string; name:string; category:string; summary:string; status:"draft"|"published"|"archived"; asin:string; affiliateUrl:string; updatedAt:string };
 type Merchant = { id:string; name:string; status:"active"|"pending"|"paused"|"blocked"; syncMode:"manual"|"feed"|"api"; consecutiveFailures:number; lastSuccessAt:string|null; lastFailureAt:string|null; lastError:string|null };
@@ -99,7 +100,8 @@ export default function AdminClient() {
     const link = document.createElement("a"); link.href = url; link.download = "offerloom-products-template.csv"; link.click(); URL.revokeObjectURL(url);
   }
 
-  return <div className={styles.workspace}>
+  return <>
+  <div className={styles.workspace}>
     <div className={styles.controls}>
     <form className={styles.form} onSubmit={bulkImport}>
       <div className={styles.formTitle}><h2>Bulk import</h2><span>Up to 500</span></div>
@@ -147,5 +149,7 @@ export default function AdminClient() {
         </div>
       </article>)}
     </section>
-  </div>;
+  </div>
+  <SocialPostsPanel busy={busy} setBusy={setBusy} setMessage={setMessage} />
+  </>;
 }
