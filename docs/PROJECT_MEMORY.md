@@ -7,6 +7,7 @@ Read this file, `README.md`, `AGENTS.md`, and `docs/PROJECT_HANDOFF.md` before c
 ## Current checkpoint
 
 - OfferLoom is an India-first product-discovery and price-comparison website operated by Parthsheel Enterprises.
+- **Default development branch:** `offerloom` (tracks `origin/offerloom`). `main` remains the stable/release branch.
 - Public site (Workers): <https://offerloom.contact-offerloom.workers.dev>
 - Legacy ChatGPT Sites URL: <https://offerloom.gdwivedi6.chatgpt.site>
 - Local repository: `/Users/gauravdwivedi/Documents/gaurav/parthsheel_enterprises/offerloom`
