@@ -1,11 +1,28 @@
 const AMAZON_HOSTS = new Set(["amazon.in", "www.amazon.in"]);
-const ASSOCIATE_TAG = "offerloom-21";
+export const AMAZON_ASSOCIATE_TAG = "offerloom-21";
 
 export type AmazonDestination = {
   asin: string;
   sourceUrl: string;
   affiliateUrl: string;
 };
+
+/** Ensure every outbound Amazon.in URL carries the OfferLoom Associates tag. */
+export function withAmazonAssociateTag(value: string): string {
+  let url: URL;
+  try {
+    url = new URL(value.trim());
+  } catch {
+    return value;
+  }
+
+  if (url.protocol !== "https:" || !AMAZON_HOSTS.has(url.hostname.toLowerCase())) {
+    return value;
+  }
+
+  url.searchParams.set("tag", AMAZON_ASSOCIATE_TAG);
+  return url.toString();
+}
 
 export function normalizeAmazonProductUrl(value: string): AmazonDestination {
   const input = value.trim();
@@ -25,7 +42,7 @@ export function normalizeAmazonProductUrl(value: string): AmazonDestination {
 
   const asin = match[1].toUpperCase();
   const sourceUrl = `https://www.amazon.in/dp/${asin}`;
-  return { asin, sourceUrl, affiliateUrl: `${sourceUrl}?tag=${ASSOCIATE_TAG}` };
+  return { asin, sourceUrl, affiliateUrl: withAmazonAssociateTag(sourceUrl) };
 }
 
 export function slugify(value: string): string {
