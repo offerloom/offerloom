@@ -15,9 +15,9 @@ export const COMMUNITY = {
     via: "Instagram · Free",
   },
   whatsapp: {
-    url: "https://wa.me/message/6OEIR7RIWONYH1",
+    url: "https://whatsapp.com/channel/0029VbD63wj6RGJ94VedZ42W",
     buttonText: "Join for daily deals",
-    via: "WhatsApp · Free",
+    via: "WhatsApp Channel · Free",
     cta: "Join free",
   },
   telegram: {
