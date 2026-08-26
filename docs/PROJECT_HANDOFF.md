@@ -176,8 +176,14 @@ Never share or commit:
 - Amazon India tax interview: Completed
 - Amazon affiliate disclosure: Published
 - Amazon manual affiliate destinations: Active
-- Amazon SiteStripe search links: Active for 5G phones and wireless ANC earbuds
+- Amazon tagged redirect routes (`/go/amazon/dp/{asin}`, `/go/amazon/search`, `/go/amazon/{listingId}`): Implemented
+- Amazon SiteStripe: Not required for OfferLoom outbound links when ASIN or admin URL is known
 - Amazon Creators API: Not eligible/connected yet
+- Meesho Creator Club account: Active (affiliate.meesho.com)
+- Meesho affiliate collection links: Available from dashboard; not wired into OfferLoom yet
+- Meesho product links (`meesho.onelink.me`): Must be copied from dashboard; normal meesho.com URLs are not tracked
+- Meesho connector / redirects: Not implemented (documented plan only)
+- Meesho product API or feed: Not available; no scraping
 - CJ publisher account: Onboarding, tax and payment setup completed
 - CJ Dell Consumer – India application: Pending manual review at last check
 - CJ HP India application: Pending manual review at last check
@@ -230,7 +236,7 @@ The first owner-only D1 admin slice is implemented for products, categories, Ama
 5. Stores the source, review state and last-checked timestamp.
 6. Keeps price display as “Check price on Amazon” until approved API data is available.
 
-Public merchant clicks use `/go/amazon/{listingId}`, which records the product, merchant, timestamp and referrer hostname before sending the visitor to the approved destination.
+Public merchant clicks use `/go/amazon/{listingId}` or `/go/amazon/dp/{asin}` or `/go/amazon/search?k=...`, which record clicks (where a D1 listing exists) before sending the visitor to the approved Amazon.in destination with `tag=offerloom-21`. Meesho will use dashboard-supplied affiliate URLs only; no ASIN-style auto-tagging.
 
 ### Scheduled synchronization
 

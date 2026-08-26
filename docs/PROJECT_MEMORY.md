@@ -1,6 +1,6 @@
 # OfferLoom Project Memory
 
-Updated: 25 August 2026
+Updated: 26 August 2026
 
 Read this file, `README.md`, `AGENTS.md`, and `docs/PROJECT_HANDOFF.md` before changing the project.
 
@@ -14,8 +14,29 @@ Read this file, `README.md`, `AGENTS.md`, and `docs/PROJECT_HANDOFF.md` before c
 - Stack: Vinext, React, TypeScript, Cloudflare Worker, D1 and Drizzle.
 - Amazon Associates Store ID: `offerloom-21`; India tax status is complete.
 - Amazon destinations are manually curated and tagged. No Amazon product API is connected, and no marketplace scraping is permitted.
+- **Meesho Creator Club (affiliate)** account exists at <https://affiliate.meesho.com>. Meesho connector is **not implemented**; see planned work below.
 - CJ publisher onboarding, tax and payment setup were completed. Dell Consumer – India and HP India applications were pending manual review at the last check. Do not use CJ product data or links until a relationship is Active and the applicable feed/link rights are confirmed.
 - Flipkart, Myntra, AJIO and Optimise feeds are not connected.
+
+## Amazon affiliate (implemented August 2026)
+
+- Tagged outbound links are built server-side in `app/lib/amazon.ts` (`withAmazonAssociateTag`, `buildAmazonProductUrl`, `buildAmazonSearchUrl`).
+- Tracked redirects:
+  - `/go/amazon/dp/{asin}` → `https://www.amazon.in/dp/{asin}?tag=offerloom-21`
+  - `/go/amazon/search?k={query}` → tagged Amazon search
+  - `/go/amazon/{listingId}` → D1 `affiliate_url` with tag enforced
+- Homepage category tiles and demo collection links route through `/go/amazon/search` so the tag is always applied server-side.
+- Admin product form previews the tagged product URL when an Amazon.in URL is pasted (SiteStripe-equivalent without manual “Get Link”).
+- **Do not scrape** Amazon category or search pages for ASINs. Bulk catalogue work uses CSV import (up to 500 rows) or future **Amazon Creators API** after eligibility (~10 qualifying sales in 30 days, per current programme guidance).
+- SiteStripe in the browser is associate-only tooling; visitors never see it. OfferLoom replaces it for outbound product links when an ASIN or admin URL is known.
+
+## Meesho affiliate (researched, not built)
+
+- Meesho has **no public product API or affiliate feed**. Do not scrape `meesho.com` or reverse-engineer affiliate dashboard APIs.
+- Valid affiliate destinations come only from the Creator Dashboard:
+  - **Collection link:** `https://affiliate.meesho.com/collection/{base64-id}` (example collection id decodes to `9151525::::::normal`) — one tracked link for a product grid; share as-is on social or via a future `/go/meesho/collection/...` redirect.
+  - **Single product link:** `https://meesho.onelink.me/...` (AppsFlyer deep link). Browser may show only `OK`; the full URL must be stored unchanged. Normal `meesho.com` product URLs are **not** affiliate-tracked.
+- Planned connector (when requested): add `meesho` merchant row, admin paste of dashboard affiliate URLs, `/go/meesho/{listingId}` redirect, optional collection redirect, “View on Meesho” on product pages. No auto-sync from collection pages.
 
 ## Implemented product surface
 
@@ -40,17 +61,16 @@ Read this file, `README.md`, `AGENTS.md`, and `docs/PROJECT_HANDOFF.md` before c
 
 ## Next concrete work
 
-1. Run `npm run cf:login`, `npm run cf:setup`, and `npm run deploy:full`.
-2. Set `ADMIN_API_TOKEN` with `npx wrangler secret put ADMIN_API_TOKEN`.
-3. Add Cloudflare API secrets to GitHub for push-to-deploy.
-4. Verify the Workers URL, `/guides`, `/privacy`, `/admin`, product pages and tracked redirects.
-5. Monitor CJ until Dell Consumer – India or HP India becomes Active.
-5. After approval, inspect the advertiser terms and obtain an authorized product feed or API credential; store credentials only as hosted secrets.
-6. Build the CJ connector sync job against fixtures first, then enable scheduled D1 synchronization only with authorized data.
+1. Bulk-import curated Amazon products via `/admin` CSV (up to 500 rows per file).
+2. Drive qualifying Amazon sales toward **Creators API** eligibility; connect only through approved credentials stored as Wrangler secrets.
+3. Monitor CJ until Dell Consumer – India or HP India becomes Active; then build CJ connector against fixtures first.
+4. **Meesho connector:** implement only when explicitly requested — collection redirect, onelink product storage, admin paste/bulk import.
+5. Optional: admin “paste multiple Amazon URLs” bulk box (no scraping).
+6. Set `ADMIN_API_TOKEN`, Meta/Telegram secrets for social auto-posting, and GitHub deploy secrets if not already done.
 
 ## Non-negotiable rules
 
 - Never commit passwords, OTPs, banking details, tax documents, signed account URLs, access tokens or affiliate secrets.
-- Never scrape Amazon, Flipkart, Myntra, AJIO or other merchants without written authorization.
+- Never scrape Amazon, Meesho, Flipkart, Myntra, AJIO or other merchants without written authorization.
 - Visitors read cached OfferLoom data; merchant APIs belong in scheduled background synchronization, not page requests.
 - Keep merchant connectors independent so one disabled or closed program cannot break OfferLoom.
