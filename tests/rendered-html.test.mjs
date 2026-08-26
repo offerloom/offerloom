@@ -24,7 +24,9 @@ test("renders the OfferLoom shopping experience", async () => {
   assert.match(html, /Upgrade your everyday tech\./);
   assert.match(html, /Start with a category/);
   assert.match(html, /Filter by department/);
-  assert.match(html, /Get every deal first on WhatsApp/);
+  assert.match(html, /Join for daily deals/);
+  assert.match(html, /dealAlertsFloat/);
+  assert.match(html, /instagram\.com\/offer\.loom/);
   assert.match(html, /instagram\.com\/offer\.loom/);
   assert.match(html, /youtube\.com\/@offerloom/);
   assert.match(html, /Explore what interests you/);

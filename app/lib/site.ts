@@ -8,18 +8,23 @@ export const SITE = {
 } as const;
 
 export const COMMUNITY = {
-  quote: "Every Deal. One Destination. — get curated picks before they sell out.",
+  hook: "Join us for daily exciting deals — free alerts, zero spam.",
+  instagram: {
+    url: "https://www.instagram.com/offer.loom/",
+    buttonText: "Follow daily deals",
+    via: "Instagram · Free",
+  },
   whatsapp: {
     url: "https://wa.me/message/6OEIR7RIWONYH1",
-    headline: "Get every deal first on WhatsApp",
-    subtext: "Free channel — price drops, coupons and curated picks the moment they land.",
+    buttonText: "Join for daily deals",
+    via: "WhatsApp · Free",
     cta: "Join free",
   },
   telegram: {
     url: "https://t.me/+918127088087",
-    headline: "Daily deals on Telegram",
-    subtext: "Quick alerts for flash sales, bank offers and category highlights.",
-    cta: "Join channel",
+    buttonText: "Join for daily deals",
+    via: "Telegram · Free",
+    cta: "Join free",
   },
 } as const;
 

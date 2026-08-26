@@ -6,6 +6,7 @@ import SiteFooter from "./components/SiteFooter";
 import BrandMark from "./components/BrandMark";
 import ShopCategoryGrid from "./components/ShopCategoryGrid";
 import DealAlertsBar from "./components/DealAlertsBar";
+import DealAlertsFloat from "./components/DealAlertsFloat";
 import SocialLinks from "./components/SocialLinks";
 import { heroCategorySlides } from "./lib/hero-categories";
 
@@ -123,8 +124,7 @@ export default function Home() {
     setDraft("");
   }
 
-  return <main>
-    <DealAlertsBar />
+  return <main className="homePage">
     <header className="topbar">
       <a className="brand" href="#top" aria-label="OfferLoom home"><BrandMark /><span>Offer<span>Loom</span></span></a>
       <nav aria-label="Main navigation"><a href="#catalog">Find products</a><a href="#categories">Categories</a><a href="#featured">Featured picks</a><Link href="/guides">Buying guides</Link><a href="#how">How it works</a></nav>
@@ -133,6 +133,7 @@ export default function Home() {
         <a className="alertButton" href="#catalog">Find a deal</a>
       </div>
     </header>
+    <DealAlertsBar />
     <section className={`heroSlider ${slides[slide].theme}`} id="top" aria-roledescription="carousel" aria-label="OfferLoom shop by category">
       <div className="heroSlide" aria-live="polite"><span className="eyebrow">{slides[slide].eyebrow}</span><h1>{slides[slide].title}</h1><p>{slides[slide].text}</p><div className="slideActions"><a className="slideAmazonCta" href={slides[slide].amazonUrl} target="_blank" rel="sponsored noopener noreferrer">{slides[slide].cta}</a><span>Opens approved Amazon catalog</span></div></div>
       <a className={`heroOfferBanner banner-${slides[slide].theme}`} href={slides[slide].amazonUrl} target="_blank" rel="sponsored noopener noreferrer" aria-label={`${slides[slide].promo.dealLine} on ${slides[slide].eyebrow.toLowerCase()}`}>
@@ -211,6 +212,7 @@ export default function Home() {
     </section>
 
     <section className="how" id="how"><div><span>01</span><h3>Search or browse</h3><p>Find electronics by name, use case or category.</p></div><div><span>02</span><h3>Review the collection</h3><p>Use the summaries and specifications to narrow your choice.</p></div><div><span>03</span><h3>Shop with the merchant</h3><p>Open an approved link and confirm the live price before buying.</p></div></section>
+    <DealAlertsFloat />
     <SiteFooter />
   </main>;
 }
