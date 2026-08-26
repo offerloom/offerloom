@@ -21,10 +21,10 @@ export type HeroCategorySlide = {
   };
 };
 
-const amazonTag = "offerloom-21";
+import { offerloomAmazonSearchPath } from "./amazon";
 
 function amazonSearch(query: string) {
-  return `https://www.amazon.in/s?k=${encodeURIComponent(query)}&tag=${amazonTag}`;
+  return offerloomAmazonSearchPath(query);
 }
 
 const disclaimer = "*On selected partner store offers. Final price confirmed at checkout.";

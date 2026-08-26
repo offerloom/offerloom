@@ -9,20 +9,21 @@ import DealAlertsBar from "./components/DealAlertsBar";
 import DealAlertsFloat from "./components/DealAlertsFloat";
 import SocialLinks from "./components/SocialLinks";
 import { heroCategorySlides } from "./lib/hero-categories";
+import { offerloomAmazonSearchPath } from "./lib/amazon";
 
 type Listing = { store: string; affiliateUrl?: string };
 type Product = { id: string | number; icon: string; name: string; category: string; summary: string; specs: string[]; listings: Listing[]; detailPath?: string };
 type ManagedProduct = { id: string; name: string; category: string; summary: string; specs: string[]; outboundPath: string; detailPath: string };
 
 const amazonLinks = {
-  electronics: "https://www.amazon.in/s?k=electronics&tag=offerloom-21",
-  mobiles: "https://www.amazon.in/s?k=5g+phone+under+20000&linkCode=ll2&tag=offerloom-21&linkId=49807149200b7c8ffa3fe652d3e2734c&ref_=as_li_ss_tl",
-  laptops: "https://www.amazon.in/s?k=16gb+ram+512gb+ssd+laptop&tag=offerloom-21",
-  audio: "https://www.amazon.in/s?k=wireless+earbuds+with+anc&linkCode=ll2&tag=offerloom-21&linkId=57c27eff35deb2c3b2c1c4b1d796992d&ref_=as_li_ss_tl",
-  televisions: "https://www.amazon.in/s?k=55+inch+4k+smart+tv&tag=offerloom-21",
-  gaming: "https://www.amazon.in/s?k=gaming+console&tag=offerloom-21",
-  appliances: "https://www.amazon.in/s?k=energy+efficient+refrigerator&tag=offerloom-21",
-  fashion: "https://www.amazon.in/s?k=fashion&tag=offerloom-21",
+  electronics: offerloomAmazonSearchPath("electronics"),
+  mobiles: offerloomAmazonSearchPath("5g phone under 20000"),
+  laptops: offerloomAmazonSearchPath("16gb ram 512gb ssd laptop"),
+  audio: offerloomAmazonSearchPath("wireless earbuds with anc"),
+  televisions: offerloomAmazonSearchPath("55 inch 4k smart tv"),
+  gaming: offerloomAmazonSearchPath("gaming console"),
+  appliances: offerloomAmazonSearchPath("energy efficient refrigerator"),
+  fashion: offerloomAmazonSearchPath("fashion"),
 };
 
 const products: Product[] = [
@@ -206,7 +207,7 @@ export default function Home() {
       </div>
       <div className="catalogResults">
         <div className="resultSummary"><span>{visible.length} product collection{visible.length === 1 ? "" : "s"}</span>{(query || category !== "All") && <button onClick={reset}>Clear filters</button>}</div>
-        {visible.length ? <div className="productGrid">{visible.map((product) => <article className="productCard" key={product.id}><div className="productTop"><div className="productIcon" aria-hidden="true">{product.icon}</div><div><span className="categoryTag">{product.category}</span><h3>{product.detailPath ? <Link href={product.detailPath}>{product.name}</Link> : product.name}</h3><p>{product.summary}</p></div></div><div className="specs">{product.specs.map((spec) => <span key={spec}>{spec}</span>)}</div><div className="cardActions">{product.detailPath && <Link className="compareLink" href={product.detailPath}>Compare stores</Link>}<a className="offerCta" href={product.listings[0].affiliateUrl} target="_blank" rel="sponsored noopener noreferrer" aria-label={`View current offers for ${product.name}`}>View current offers <span aria-hidden="true">↗</span></a></div><small className="priceNote">Available destination: {product.listings[0].store} · Check current price there</small></article>)}</div> : <div className="emptyState"><strong>No matching products yet</strong><p>Try another filter or clear the selected department.</p><button onClick={reset}>Show all products</button></div>}
+        {visible.length ? <div className="productGrid">{visible.map((product) => <article className="productCard" key={product.id}><div className="productTop"><div className="productIcon" aria-hidden="true">{product.icon}</div><div><span className="categoryTag">{product.category}</span><h3>{product.detailPath ? <Link href={product.detailPath}>{product.name}</Link> : product.name}</h3><p>{product.summary}</p></div></div><div className="specs">{product.specs.map((spec) => <span key={spec}>{spec}</span>)}</div><div className="cardActions">{product.detailPath && <Link className="compareLink" href={product.detailPath}>Compare stores</Link>}<a className="offerCta" href={product.listings[0].affiliateUrl} target="_blank" rel="sponsored noopener noreferrer" aria-label={`View current offers for ${product.name}`}>{product.detailPath ? "View on Amazon" : "Browse on Amazon"} <span aria-hidden="true">↗</span></a></div><small className="priceNote">{product.detailPath ? "Tagged product link · Check current price on Amazon" : `Opens Amazon search with ${product.listings[0].store} · Pick a product there`}</small></article>)}</div> : <div className="emptyState"><strong>No matching products yet</strong><p>Try another filter or clear the selected department.</p><button onClick={reset}>Show all products</button></div>}
       </div>
       <p className="disclosure"><strong>Affiliate and price notice:</strong> OfferLoom may earn a commission when you use eligible merchant links, at no extra cost to you. As an Amazon Associate I earn from qualifying purchases. Prices and availability can change and are confirmed on the merchant website. OfferLoom does not handle checkout, payment, shipping, cancellations, returns or refunds.</p>
     </section>

@@ -3,8 +3,10 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import styles from "./admin.module.css";
 import SocialPostsPanel from "./SocialPostsPanel";
+import { normalizeAmazonProductUrl, offerloomAmazonProductPath } from "../lib/amazon";
 
-type AdminProduct = { id:string; name:string; category:string; summary:string; status:"draft"|"published"|"archived"; asin:string; affiliateUrl:string; updatedAt:string };
+type AdminProduct = { id:string; name:string; category:string; summary:string; status:"draft"|"published"|"archived"; asin:string; listingId:string|null; affiliateUrl:string; updatedAt:string };
+type LinkPreview = { asin:string; affiliateUrl:string; offerloomPath:string };
 type Merchant = { id:string; name:string; status:"active"|"pending"|"paused"|"blocked"; syncMode:"manual"|"feed"|"api"; consecutiveFailures:number; lastSuccessAt:string|null; lastFailureAt:string|null; lastError:string|null };
 type ClickSummary = { totalClicks:number; uniqueProducts:number; lastSevenDays:number; byMerchant:Array<{ merchant:string; clicks:number }>; topProducts:Array<{ productId:string; name:string; clicks:number }>; recentDays:Array<{ day:string; clicks:number }> };
 
@@ -14,6 +16,7 @@ export default function AdminClient() {
   const [clicks, setClicks] = useState<ClickSummary | null>(null);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [linkPreview, setLinkPreview] = useState<LinkPreview | null>(null);
 
   const load = useCallback(async () => {
     const response = await fetch("/api/admin/products", { cache: "no-store" });
@@ -53,6 +56,7 @@ export default function AdminClient() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Could not save product.");
       setMessage(`Saved ASIN ${data.asin}. Affiliate link created automatically.`);
+      setLinkPreview(null);
       event.currentTarget.reset(); await load();
     } catch (error) { setMessage(error instanceof Error ? error.message : "Could not save product."); }
     finally { setBusy(false); }
@@ -76,6 +80,21 @@ export default function AdminClient() {
       setMessage(`${merchantId} connector moved to ${status}.`); await load();
     } catch (error) { setMessage(error instanceof Error ? error.message : "Could not update merchant."); }
     finally { setBusy(false); }
+  }
+
+  function previewAmazonLink(value: string) {
+    try {
+      const result = normalizeAmazonProductUrl(value);
+      setLinkPreview({ asin: result.asin, affiliateUrl: result.affiliateUrl, offerloomPath: offerloomAmazonProductPath(result.asin) });
+    } catch {
+      setLinkPreview(null);
+    }
+  }
+
+  function productOutboundPath(product: AdminProduct) {
+    if (product.listingId) return `/go/amazon/${product.listingId}`;
+    if (product.asin) return offerloomAmazonProductPath(product.asin);
+    return product.affiliateUrl;
   }
 
   async function bulkImport(event: FormEvent<HTMLFormElement>) {
@@ -112,7 +131,9 @@ export default function AdminClient() {
     </form>
     <form className={styles.form} onSubmit={create}>
       <h2>Add one product</h2>
-      <label>Amazon product URL<input name="amazonUrl" type="url" required placeholder="https://www.amazon.in/dp/B0…" /></label>
+      <p className={styles.help}>Paste any Amazon.in product URL. OfferLoom extracts the ASIN and builds the same tagged link as SiteStripe — no manual “Get Link” step.</p>
+      <label>Amazon product URL<input name="amazonUrl" type="url" required placeholder="https://www.amazon.in/dp/B0…" onChange={(event) => previewAmazonLink(event.target.value)} onBlur={(event) => previewAmazonLink(event.target.value)} /></label>
+      {linkPreview && <div className={styles.linkPreview}><strong>Tagged product link ready</strong><p>ASIN {linkPreview.asin}</p><code>{linkPreview.affiliateUrl}</code><p>OfferLoom redirect: <code>{linkPreview.offerloomPath}</code></p></div>}
       <div className={styles.fieldRow}><label>Brand<input name="brand" placeholder="Samsung" /></label><label>Model number<input name="modelNumber" placeholder="SM-A series" /></label></div>
       <label>Product name<input name="name" required minLength={3} placeholder="Exact product name" /></label>
       <label>Category<input name="category" required placeholder="Mobiles" /></label>
@@ -145,7 +166,7 @@ export default function AdminClient() {
           {product.status !== "published" && <button disabled={busy} onClick={() => changeStatus(product.id,"published")}>Publish</button>}
           {product.status === "published" && <button disabled={busy} onClick={() => changeStatus(product.id,"draft")}>Unpublish</button>}
           {product.status !== "archived" && <button disabled={busy} onClick={() => changeStatus(product.id,"archived")}>Archive</button>}
-          <a href={product.affiliateUrl} target="_blank" rel="noopener noreferrer">Check Amazon ↗</a>
+          <a href={productOutboundPath(product)} target="_blank" rel="sponsored noopener noreferrer">Check Amazon ↗</a>
         </div>
       </article>)}
     </section>
