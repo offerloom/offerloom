@@ -10,7 +10,7 @@ export const SITE = {
 export const COMMUNITY = {
   quote: "Every Deal. One Destination. — get curated picks before they sell out.",
   whatsapp: {
-    url: "https://wa.me/",
+    url: "https://wa.me/message/6OEIR7RIWONYH1",
     headline: "Get every deal first on WhatsApp",
     subtext: "Free channel — price drops, coupons and curated picks the moment they land.",
     cta: "Join free",
