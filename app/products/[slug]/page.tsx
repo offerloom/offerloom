@@ -29,7 +29,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug:s
     ORDER BY merchant
   `).bind(product.id).all<ListingRow>();
   const specs = safeSpecs(product.specsJson);
-  const amazon = listings.results.find((listing) => listing.merchant === "amazon");
+  const supportedListings = listings.results.filter((listing) => ["amazon", "ajio"].includes(listing.merchant));
 
   return <main className={styles.shell}>
     <header className={styles.header}><Link className={styles.brand} href="/">Offer<span>Loom</span></Link><Link href="/#catalog">Back to catalogue</Link></header>
@@ -47,7 +47,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug:s
     <section className={styles.offers}>
       <div className={styles.title}><div><span>MERCHANT COMPARISON</span><h2>Choose where to shop</h2></div><p>Price and availability are confirmed on the merchant website.</p></div>
       <div className={styles.table}>
-        <div className={styles.row}><div><strong>Amazon</strong><small>{amazon?.lastCheckedAt ? `Link checked ${formatDate(amazon.lastCheckedAt)}` : "Approved affiliate destination"}</small></div><b>Check current price</b>{amazon ? <a href={`/go/amazon/${amazon.id}`} target="_blank" rel="sponsored noopener noreferrer">View on Amazon ↗</a> : <button disabled>Unavailable</button>}</div>
+        {supportedListings.map((listing) => <div className={styles.row} key={listing.id}><div><strong>{listing.merchant === "ajio" ? "AJIO" : "Amazon"}</strong><small>{listing.lastCheckedAt ? `Link checked ${formatDate(listing.lastCheckedAt)}` : "Affiliate destination"}</small></div><b>Check current price</b><a href={`/go/${listing.merchant}/${listing.id}`} target="_blank" rel="sponsored noopener noreferrer">View on {listing.merchant === "ajio" ? "AJIO" : "Amazon"} ↗</a></div>)}
+        {supportedListings.length === 0 && <p>No active offers available.</p>}
         {(["Flipkart","Croma","Reliance Digital"] as const).map((merchant) => <div className={styles.row} key={merchant}><div><strong>{merchant}</strong><small>Partner feed not connected</small></div><b>Not available</b><button disabled>Coming soon</button></div>)}
       </div>
       <p className={styles.notice}>OfferLoom does not sell this product or handle payment, delivery, cancellation, return or refund. Merchant prices can change after you leave OfferLoom.</p>

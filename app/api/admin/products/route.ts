@@ -27,7 +27,7 @@ export async function GET() {
       ml.affiliate_url AS affiliateUrl
     FROM products p
     LEFT JOIN categories c ON c.id = p.category_id
-    LEFT JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant = 'amazon'
+    LEFT JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant IN ('amazon', 'ajio')
     ORDER BY p.updated_at DESC
   `).all();
   const merchantResult = await env.DB.prepare(`
