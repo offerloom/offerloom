@@ -70,6 +70,7 @@ export default function Home() {
   const [draft, setDraft] = useState("");
   const [sort, setSort] = useState("recommended");
   const [slide, setSlide] = useState(0);
+  const [playing, setPlaying] = useState(false);
   const [managedProducts, setManagedProducts] = useState<Product[]>([]);
   const [catalogState, setCatalogState] = useState("loading");
 
@@ -98,9 +99,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (!playing) return;
     const timer = window.setInterval(() => setSlide((current) => (current + 1) % slides.length), 5500);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [playing]);
 
   const allProducts = useMemo(() => [...managedProducts, ...products], [managedProducts]);
   const frontProducts = managedProducts.filter((product) => product.imageUrl);
@@ -141,9 +143,19 @@ export default function Home() {
       </div>
     </header>
     <DealAlertsBar />
+    <section className="campaignHero" id="top" aria-roledescription="carousel" aria-label="OfferLoom shopping inspiration">
+      <div className="campaignCopy">
+        <span className="campaignKicker">THE OFFERLOOM EDIT · {slides[slide].eyebrow}</span>
+        <h1>{slides[slide].title}</h1>
+        <p>{slides[slide].text}</p>
+        <div className="campaignActions"><a href="#front-deals-heading">Explore product picks <span aria-hidden="true">↗</span></a><a href={slides[slide].amazonUrl} target="_blank" rel="sponsored noopener noreferrer">Browse on Amazon →</a></div>
+        <div className="campaignControls"><button onClick={() => setSlide((slide - 1 + slides.length) % slides.length)} aria-label="Previous banner">←</button><span>{String(slide + 1).padStart(2, "0")} / {slides.length}</span><button onClick={() => setSlide((slide + 1) % slides.length)} aria-label="Next banner">→</button><button aria-pressed={playing} onClick={() => setPlaying(!playing)}>{playing ? "Pause" : "Play"} banners</button></div>
+      </div>
+      <div className="campaignArtwork"><img src="/category-showcase-v1.png" width="2172" height="724" alt="Shopping inspiration featuring electronics, fashion and home essentials" fetchPriority="high"/><span>Electronics. Fashion. Home.</span><small>Category inspiration</small></div>
+    </section>
     <section className="frontDeals" aria-labelledby="front-deals-heading">
-      <div className="frontDealsIntro"><span className="eyebrow">HANDPICKED PRODUCTS</span><h1 id="front-deals-heading">Find your next great deal.</h1><p>Real products, direct merchant links. Explore our latest picks and check the current offer before you buy.</p></div>
-      <div className="frontDealsHeading"><h2>Latest product picks</h2><span>{catalogState === "loading" ? "Loading products…" : `${frontProducts.length} curated products`}</span></div>
+
+      <div className="frontDealsHeading"><h2 id="front-deals-heading">Latest product picks</h2><span>{catalogState === "loading" ? "Loading products…" : `${frontProducts.length} curated products`}</span></div>
       {catalogState === "error" && <p role="status">Product details could not be loaded. Please refresh to try again.</p>}
       {catalogState === "ready" && !frontProducts.length && <p>New product picks are being reviewed. Browse the catalogue below.</p>}
       <div className="frontDealsGrid">{frontProducts.map((product) => <article className="frontDealCard" key={product.id}>
@@ -154,25 +166,6 @@ export default function Home() {
         <div className="frontDealActions"><Link href={product.detailPath!}>Product details</Link><a className="offerCta" href={product.listings[0].affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">View deal ↗</a></div>
         <small>Confirm current price and availability on {product.listings[0].store}.</small>
       </article>)}</div>
-    </section>
-    <section className={`heroSlider ${slides[slide].theme}`} id="top" aria-roledescription="carousel" aria-label="OfferLoom shop by category">
-      <div className="heroSlide" aria-live="polite"><span className="eyebrow">{slides[slide].eyebrow}</span><h1>{slides[slide].title}</h1><p>{slides[slide].text}</p><div className="slideActions"><a className="slideAmazonCta" href={slides[slide].amazonUrl} target="_blank" rel="sponsored noopener noreferrer">{slides[slide].cta}</a><span>Opens approved Amazon catalog</span></div></div>
-      <a className={`heroOfferBanner banner-${slides[slide].theme}`} href={slides[slide].amazonUrl} target="_blank" rel="sponsored noopener noreferrer" aria-label={`${slides[slide].promo.dealLine} on ${slides[slide].eyebrow.toLowerCase()}`}>
-        <div className="heroOfferArt">
-          <img className="heroOfferImage" src={slides[slide].image} alt={slides[slide].imageAlt} />
-          <span className="heroOfferCorner">{slides[slide].promo.corner}</span>
-        </div>
-        <div className="heroOfferCopy">
-          <span className="heroOfferBadge">{slides[slide].promo.badge}</span>
-          <strong className="heroOfferDeal">{slides[slide].promo.dealLine}</strong>
-          <span className="heroOfferPill">{slides[slide].promo.extraTag}</span>
-          <p className="heroOfferMeta">{slides[slide].promo.highlight}</p>
-          <span className="heroOfferCta">{slides[slide].promo.shopLabel}</span>
-          <small className="heroOfferFine">{slides[slide].promo.disclaimer}</small>
-        </div>
-      </a>
-      <button className="slideArrow previous" onClick={() => setSlide((slide - 1 + slides.length) % slides.length)} aria-label="Previous slide">‹</button><button className="slideArrow next" onClick={() => setSlide((slide + 1) % slides.length)} aria-label="Next slide">›</button>
-      <div className="slideDots" role="group" aria-label="Choose a slide">{slides.map((item, index) => <button className={slide === index ? "active" : ""} onClick={() => setSlide(index)} aria-label={`Show ${item.eyebrow.toLowerCase()} slide`} key={item.id}/>)}</div>
     </section>
     <section className="finder"><form className="search" onSubmit={search}><span aria-hidden="true">⌕</span><input value={draft} onChange={(event) => setDraft(event.target.value)} aria-label="Search products" placeholder="Search phones, fashion, appliances…"/><button>Find products</button></form><div className="popularSearches"><span>Popular:</span><button onClick={() => { setDraft("5G phone"); setQuery("5G phone"); }}>5G phones</button><button onClick={() => { setDraft("fashion"); setQuery("fashion"); }}>Fashion</button><button onClick={() => { setDraft("laptop"); setQuery("laptop"); }}>Laptops</button><button onClick={() => { setDraft("appliances"); setQuery("appliances"); }}>Appliances</button></div></section>
 

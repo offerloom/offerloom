@@ -4,6 +4,11 @@ Updated: 11 September 2026
 
 Read this file, `README.md`, `AGENTS.md`, and `docs/PROJECT_HANDOFF.md` before changing the project.
 
+## Homepage design update — 11 September 2026
+
+- Replaced the duplicated introductory blocks with a navy shopping hero above real product picks. Reuses original category artwork; category banner copy and tagged shopping links remain available with previous/next and opt-in play/pause. One main heading, responsive stacked mobile layout, and no unverified percentage discounts in the hero.
+- Amazon credentials were created by the owner; a private local authentication test succeeded but the product API returned HTTP 403. No API product sync is connected yet. Never include credentials in this memory.
+
 ## Current checkpoint
 
 - OfferLoom is an India-first product-discovery and price-comparison website operated by Parthsheel Enterprises.

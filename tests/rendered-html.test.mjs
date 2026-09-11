@@ -22,6 +22,10 @@ test("renders the OfferLoom shopping experience", async () => {
   const html = await response.text();
   assert.match(html, /OfferLoom/);
   assert.match(html, /Upgrade your everyday tech\./);
+  assert.equal((html.match(/<h1\b/g) ?? []).length, 1);
+  assert.match(html, /Play<!-- --> banners|Play banners/);
+  assert.ok(html.indexOf('class="campaignHero"') < html.indexOf('class="frontDeals"'));
+  assert.doesNotMatch(html, /Up to 55% off/);
   assert.match(html, /Start with a category/);
   assert.match(html, /Filter by department/);
   assert.match(html, /Join for daily deals/);

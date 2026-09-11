@@ -158,3 +158,23 @@ main.homePage{padding-bottom:calc(58px + env(safe-area-inset-bottom))}
 .frontDealPrice del { color: #64748b; }
 .frontDealPrice span { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 6px; }
 .frontDealPrice small { flex-basis: 100%; }
+
+/* OfferLoom editorial shopping banners */
+.campaignHero { max-width: 1280px; margin: 28px auto 32px; display: grid; grid-template-columns: 1fr 1.1fr; background: #11152e; color: #fff; border-radius: 24px; overflow: hidden; }
+.campaignCopy { padding: 42px; align-self: center; }
+.campaignKicker { color: #a9b8ff; font-size: 12px; font-weight: 750; letter-spacing: .12em; }
+.campaignCopy h1 { font-size: clamp(2rem, 3.8vw, 3.5rem); line-height: 1.06; letter-spacing: -.045em; margin: 20px 0; max-width: 540px; color: white; }
+.campaignCopy p { color: #d0d5e6; font-size: 16px; line-height: 1.7; max-width: 440px; }
+.campaignActions { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; margin: 26px 0; }
+.campaignActions a { font-size: 14px; color: white; font-weight: 650; }
+.campaignActions a:first-child { background: #e6ff83; color: #142016; padding: 14px 20px; border-radius: 9px; }
+.campaignControls { display: flex; gap: 14px; align-items: center; color: #b7bfdc; font-size: 12px; }
+.campaignControls button { border: 1px solid #59607e; background: transparent; color: white; border-radius: 8px; padding: 8px 12px; cursor: pointer; min-height: 40px; }
+.campaignArtwork { position: relative; min-height: 340px; overflow: hidden; background: #242042; }
+.campaignArtwork img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+.campaignArtwork span { position: absolute; bottom: 44px; left: 22px; background: #11152ee8; border-radius: 8px; padding: 10px 16px; font-weight: 650; }
+.campaignArtwork small { position: absolute; bottom: 16px; left: 24px; color: white; text-shadow: 0 1px 4px black; }
+.campaignHero a:focus-visible, .campaignHero button:focus-visible { outline: 3px solid #e6ff83; outline-offset: 4px; }
+.frontDeals { padding-top: 0; }
+@media (max-width: 1320px) { .campaignHero { margin-left: 20px; margin-right: 20px; } }
+@media (max-width: 760px) { .campaignHero { grid-template-columns: 1fr; margin: 18px 16px 28px; border-radius: 18px; } .campaignCopy { padding: 26px; } .campaignArtwork { min-height: 220px; } .campaignArtwork img { object-fit: cover; } .campaignCopy h1 { font-size: 36px; } }
