@@ -66,6 +66,7 @@ function departmentLabel(selected: string) {
 
 export default function Home() {
   const [category, setCategory] = useState("All");
+  const [dealCategory, setDealCategory] = useState("All");
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState("");
   const [sort, setSort] = useState("recommended");
@@ -105,7 +106,12 @@ export default function Home() {
   }, [playing]);
 
   const allProducts = useMemo(() => [...managedProducts, ...products], [managedProducts]);
-  const frontProducts = managedProducts.filter((product) => product.imageUrl);
+  const photoProducts = managedProducts.filter((product) => product.imageUrl);
+  const dealCategories = ["All", ...new Set(photoProducts.map((product) => product.category))];
+  const frontProducts = photoProducts.filter((product) => dealCategory === "All" || product.category === dealCategory).sort((a, b) => {
+    const discount = (product: Product) => product.offer?.mrp ? 1 - product.offer.price / product.offer.mrp : 0;
+    return discount(b) - discount(a);
+  });
   const visible = useMemo(() => {
     const term = query.trim().toLowerCase();
     const matches = allProducts.filter((product) => belongsToCategory(product, category) && (!term || `${product.name} ${product.category} ${product.summary} ${product.specs.join(" ")}`.toLowerCase().includes(term)));
@@ -158,12 +164,13 @@ export default function Home() {
       <div className="frontDealsHeading"><h2 id="front-deals-heading">Latest product picks</h2><span>{catalogState === "loading" ? "Loading products…" : `${frontProducts.length} curated products`}</span></div>
       {catalogState === "error" && <p role="status">Product details could not be loaded. Please refresh to try again.</p>}
       {catalogState === "ready" && !frontProducts.length && <p>New product picks are being reviewed. Browse the catalogue below.</p>}
+      <div className="dealCategoryTabs" role="group" aria-label="Filter product deals">{dealCategories.map((item) => <button key={item} onClick={() => setDealCategory(item)} aria-pressed={dealCategory === item}>{item === "All" ? "All picks" : item}</button>)}</div>
       <div className="frontDealsGrid">{frontProducts.map((product) => <article className="frontDealCard" key={product.id}>
-        {product.imageUrl && <Link href={product.detailPath!}><img src={product.imageUrl} alt={product.name} width="320" height="320" /></Link>}
+        {product.imageUrl && <Link className="dealPhoto" href={product.detailPath!}><img src={product.imageUrl} alt={product.name} width="320" height="320" loading="lazy" />{product.offer?.mrp && product.offer.mrp > product.offer.price && <span className="dealDiscount">{Math.round((1 - product.offer.price / product.offer.mrp) * 100)}% OFF</span>}</Link>}
         <span className="categoryTag">{product.listings[0].store} · {product.category}</span>
-        <h3><Link href={product.detailPath!}>{product.name}</Link></h3><p>{product.summary}</p>
-        {product.offer && <div className="frontDealPrice"><strong>₹{(product.offer.price / 100).toLocaleString("en-IN")}</strong>{product.offer.mrp && product.offer.mrp > product.offer.price && <><del>₹{(product.offer.mrp / 100).toLocaleString("en-IN")}</del><span>{Math.round((1-product.offer.price/product.offer.mrp)*100)}% off</span></>}<small>Checked {new Date(product.offer.checkedAt).toLocaleString("en-IN")}</small></div>}
-        <div className="frontDealActions"><Link href={product.detailPath!}>Product details</Link><a className="offerCta" href={product.listings[0].affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">View deal ↗</a></div>
+        <h3><Link href={product.detailPath!}>{product.name}</Link></h3>
+        {product.offer && <div className="frontDealPrice"><strong>₹{(product.offer.price / 100).toLocaleString("en-IN")}</strong>{product.offer.mrp && product.offer.mrp > product.offer.price && <><del>₹{(product.offer.mrp / 100).toLocaleString("en-IN")}</del></>}<small>Checked {new Date(product.offer.checkedAt).toLocaleString("en-IN")}</small></div>}
+        <div className="frontDealActions"><Link href={product.detailPath!}>Product details</Link><a className="offerCta" href={product.listings[0].affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">{product.offer ? "Grab deal →" : "Check price →"}</a></div>
         <small>Confirm current price and availability on {product.listings[0].store}.</small>
       </article>)}</div>
     </section>
