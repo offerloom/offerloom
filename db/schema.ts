@@ -8,6 +8,15 @@ export const categories = sqliteTable("categories", {
   createdAt: text("created_at").notNull(),
 }, (table) => [uniqueIndex("idx_categories_slug").on(table.slug)]);
 
+export const collectedDeals = sqliteTable("collected_deals", {
+  id: text("id").primaryKey(),
+  payload: text("payload").notNull(),
+  approvedPayload: text("approved_payload"),
+  productId: text("product_id"),
+  status: text("status").notNull().default("pending"),
+  updatedAt: text("updated_at").notNull(),
+});
+
 export const products = sqliteTable("products", {
   id: text("id").primaryKey(),
   categoryId: text("category_id").references(() => categories.id),

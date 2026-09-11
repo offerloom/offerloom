@@ -136,3 +136,25 @@ main.homePage{padding-bottom:calc(58px + env(safe-area-inset-bottom))}
 @media(max-width:620px){.topbar{height:50px;padding:0 14px}.brand{font-size:18px}.brandMark{width:26px;height:26px}.brandMark svg{width:26px;height:26px}.alertButton{padding:7px 10px;font-size:10px}.finder{margin-top:20px}.shopCategoryGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.departmentButtons{grid-template-columns:1fr}.categoryButtons .departmentCard{min-height:220px}.heroSlider{padding-bottom:76px}.slideDots{bottom:22px}.dealAlertsBar{padding:5px 14px}.dealAlertsInner{flex-direction:row;align-items:center;gap:8px}.dealAlertsHook{display:none}.dealAlertsActions{flex:1;display:flex;gap:6px}.dealJoin{flex:1;justify-content:center;padding:5px 8px}.dealJoinCopy strong{font-size:9px}.dealJoinCopy small{font-size:7px}.dealJoinIcon{width:20px;height:20px;font-size:10px}.dealAlertsFloat{padding:7px 12px calc(7px + env(safe-area-inset-bottom))}.dealAlertsFloatInner{gap:8px}.dealAlertsFloatText{display:none}.dealAlertsFloat .dealAlertsActions{flex:1;gap:6px}}
 .siteFooter{margin-top:0;padding:54px max(28px,calc((100vw - 1124px)/2)) 34px;background:#101321;color:#d7dbe7}.footerGrid{display:grid;grid-template-columns:1.3fr .8fr .8fr;gap:28px}.footerBrand p{margin:14px 0 10px;max-width:360px;line-height:1.6}.footerBrand small{display:block;color:#9aa0b0;line-height:1.55}.siteFooter strong{display:block;margin-bottom:12px;color:#fff;font-size:12px;letter-spacing:1px;text-transform:uppercase}.siteFooter nav{display:flex;flex-direction:column;gap:10px;color:#c4c9d6;font-size:13px;font-weight:600}.siteFooter nav a:hover{color:#fff}.footerNotice,.footerCopy{max-width:920px;margin:24px auto 0;color:#9aa0b0;font-size:11px;line-height:1.6;text-align:center}.contentShell{min-height:100vh;background:#fff}.contentPage{max-width:760px;margin:0 auto;padding:48px 28px 72px}.contentPage h1{margin:14px 0 24px;font-size:44px;line-height:1.05;letter-spacing:-2px}.contentBody{color:#4b5563;line-height:1.7;font-size:15px}.contentBody h2{margin:34px 0 12px;color:#111827;font-size:22px}.contentBody p,.contentBody li{margin:0 0 14px}.contentBody ul,.contentBody ol{margin:0 0 18px;padding-left:22px}.contentBody a{color:#5b4cff;font-weight:700}.guideCards{display:grid;gap:18px;margin-top:28px}.guideCard{padding:22px;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:0 10px 30px #20263d08}.guideDepartment{color:var(--violet);font-size:10px;font-weight:900;letter-spacing:1px;text-transform:uppercase}.guideCard h2{margin:10px 0;font-size:24px}.guideCard h2 a:hover{color:var(--violet)}.guideCard p{margin:0;color:#6b7280}.guideCard footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;color:#8b91a0;font-size:12px;font-weight:700}.guideIntro{font-size:17px;color:#374151}.guideMeta{margin-bottom:28px;color:#8b91a0;font-size:12px;font-weight:700}.guideSection{margin-top:28px}.guideCta{margin-top:36px;padding-top:22px;border-top:1px solid var(--line);font-weight:700}
 @media(max-width:900px){.footerGrid{grid-template-columns:1fr}.contentPage h1{font-size:36px}}
+
+.frontDeals { max-width: 1240px; margin: 24px auto 48px; padding: 0 24px; }
+.frontDealsIntro { border-radius: 24px; padding: 36px; color: white; background: linear-gradient(120deg,#2563eb,#4338ca); }
+.frontDealsIntro .eyebrow { color: #dbeafe; }
+.frontDealsIntro h1 { font-size: clamp(28px,4vw,46px); margin: 12px 0; line-height: 1.15; }
+.frontDealsIntro p { max-width: 650px; color: #e0e7ff; line-height: 1.65; }
+.frontDealsHeading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 28px 0 16px; }
+.frontDealsHeading span,.frontDealCard small { color: #64748b; font-size: 13px; }
+.frontDealsGrid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
+.frontDealCard { background: #fff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.frontDealCard img { width: 100%; height: 240px; object-fit: contain; }
+.frontDealCard h3 { font-size: 19px; line-height: 1.4; margin: 0; }
+.frontDealCard p { color: #475569; line-height: 1.6; margin: 0; overflow-wrap: anywhere; }
+.frontDealActions { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.frontDealActions > a:first-child { font-size: 14px; text-decoration: underline; }
+@media(max-width:760px) { .frontDealsGrid { grid-template-columns: 1fr; } .frontDeals { padding: 0 16px; } .frontDealsIntro { padding: 24px; } }
+
+.frontDealPrice { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.frontDealPrice strong { font-size: 24px; }
+.frontDealPrice del { color: #64748b; }
+.frontDealPrice span { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 6px; }
+.frontDealPrice small { flex-basis: 100%; }

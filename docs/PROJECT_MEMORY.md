@@ -1,6 +1,6 @@
 # OfferLoom Project Memory
 
-Updated: 8 September 2026
+Updated: 11 September 2026
 
 Read this file, `README.md`, `AGENTS.md`, and `docs/PROJECT_HANDOFF.md` before changing the project.
 
@@ -13,12 +13,16 @@ Read this file, `README.md`, `AGENTS.md`, and `docs/PROJECT_HANDOFF.md` before c
 - Local repository: `/Users/gauravdwivedi/Documents/gaurav/parthsheel_enterprises/offerloom`
 - Stack: Vinext, React, TypeScript, Cloudflare Worker, D1 and Drizzle.
 - Amazon Associates Store ID: `offerloom-21`; India tax status is complete.
-- Amazon destinations are manually curated and tagged. No Amazon product API is connected, and no marketplace scraping is permitted.
+- Amazon destinations are curated and tagged. No Amazon product API is connected. On 9 September the user explicitly requested the browser collector; this request supersedes older project guidance against implementing that workflow, but does not establish merchant image licences or permit access-control bypasses.
 - **Meesho Creator Club (affiliate)** account exists at <https://affiliate.meesho.com>. Meesho connector is **not implemented**; see planned work below.
 - CJ publisher onboarding, tax and payment setup were completed. Dell Consumer – India and HP India applications were pending manual review at the last check. Do not use CJ product data or links until a relationship is Active and the applicable feed/link rights are confirmed.
 - Flipkart, Myntra and Optimise feeds are not connected. AJIO is connected as a manually curated D1 catalogue source; the Trackier deals endpoint currently returns no records.
 
 ## AJIO affiliate status (verified September 2026)
+
+- **11 September checkpoint:** both original AJIO product pages were readable in the in-app browser. Original product photos on `assets-jiocdn.ajio.com`, bag price ₹600 / MRP ₹1,999, and girls’ trouser price ₹270 / MRP ₹899 were observed and reviewed. Original summaries and product specs replaced the old undated bestseller/discount claims. These are assisted browser observations, not automatic synchronization.
+- The standalone Chromium collector still receives HTTP 403 for both AJIO pages (including a normal headed attempt). Do not claim unattended AJIO collection is working. Future prices expire after 24 hours unless a fresh observation is reviewed. Image URLs are the originals observed on the merchant page, not synthesized or a blanket assertion of reuse rights.
+- The trouser is **girls’ clothing**, not women's. On 11 September sizes 9–10Y and 11–12Y were selectable; availability is not guaranteed.
 
 - AJIO ACE publisher account is accessible for `offerloom` through Trackier.
 - Active campaign: `AJIO ACE PROGRAM(Final)`, campaign id `1`, India, sale objective.
@@ -72,13 +76,20 @@ Read this file, `README.md`, `AGENTS.md`, and `docs/PROJECT_HANDOFF.md` before c
 
 ## Validation and deployment state
 
-- Latest local validation: `npm run build` passes; remote migration `0004_ajio_deals.sql` applied successfully and Worker deployment `93332a76-ea67-4dd1-a8ad-e356bce7f897` is live.
+- Deployed 11 September 2026 to `https://offerloom.contact-offerloom.workers.dev`, version `d8ba7e0b-c20b-4cd2-99d8-aa5efaf8bb4a`. Live verification confirmed both AJIO product pages and original CDN images return 200, public catalogue contains the reviewed ₹600 bag and ₹270 girls’ trousers, and both outbound routes return 302 to `ajiotrk.vibconnect.in`. The same reviewed records are saved in local D1. Prices stop displaying after 24 hours without a fresh approved observation; unattended AJIO collection still returns 403.
+- Migration `0005_redundant_marvel_zombies.sql` adds the collector review queue and has been applied remotely. The browser collector and admin review routes are implemented. See `docs/BROWSER_COLLECTOR.md` for current operation; verify final deployment status rather than relying on older version IDs.
+- 11 September: build and lint pass (image optimization warnings only); all 21 tests pass. The rendered-output test now uses the current project memory because the handoff file was already deleted in the working tree. That unrelated deletion remains preserved.
+- Fixed duplicate DB binding in generated Vite/Wrangler configuration; local development now uses the existing Wrangler binding rather than adding a Sites placeholder with the same name.
+- `com.offerloom.browser-collector` LaunchAgent is installed for the current macOS user and runs once every six hours, with RunAtLoad. First run exited 0 and staged one Amazon observation, logging two AJIO 403 failures. This schedule survives the chat but requires the user to remain logged in and the Mac awake; it is not a cloud scheduler.
+- Recent per-merchant collection failures are visible in admin. A check older than eight hours is labelled stale rather than shown as running.
 - Primary production target: Cloudflare Workers via `wrangler.toml` and `npm run deploy:full`.
 - Automatic deploys: push to `main` after configuring `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in GitHub secrets.
 - Legacy ChatGPT Sites project `appgprj_6a88b726e64c8191820e5ed711599290` may remain available until DNS/links move to Workers.
 - Workers admin uses `/admin/login` with the `ADMIN_API_TOKEN` secret.
 
 ## Next concrete work
+
+- User wants actual photo/price cards first, not category shortcuts. Homepage now renders records with original photos in the leading section; canonical product pages also show those photos and dated prices. Unpictured records remain in the general catalogue. Do not treat browser-assisted capture as a working unattended AJIO feed.
 
 1. Bulk-import curated Amazon products via `/admin` CSV (up to 500 rows per file).
 2. Drive qualifying Amazon sales toward **Creators API** eligibility; connect only through approved credentials stored as Wrangler secrets.

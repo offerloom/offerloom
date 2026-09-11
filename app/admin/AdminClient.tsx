@@ -3,9 +3,10 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import styles from "./admin.module.css";
 import SocialPostsPanel from "./SocialPostsPanel";
+import CollectedDealsPanel from "./CollectedDealsPanel";
 import { normalizeAmazonProductUrl, offerloomAmazonProductPath } from "../lib/amazon";
 
-type AdminProduct = { id:string; name:string; category:string; summary:string; status:"draft"|"published"|"archived"; asin:string; listingId:string|null; affiliateUrl:string; updatedAt:string };
+type AdminProduct = { id:string; name:string; merchant:string; category:string; summary:string; status:"draft"|"published"|"archived"; asin:string; listingId:string|null; affiliateUrl:string; updatedAt:string };
 type LinkPreview = { asin:string; affiliateUrl:string; offerloomPath:string };
 type Merchant = { id:string; name:string; status:"active"|"pending"|"paused"|"blocked"; syncMode:"manual"|"feed"|"api"; consecutiveFailures:number; lastSuccessAt:string|null; lastFailureAt:string|null; lastError:string|null };
 type ClickSummary = { totalClicks:number; uniqueProducts:number; lastSevenDays:number; byMerchant:Array<{ merchant:string; clicks:number }>; topProducts:Array<{ productId:string; name:string; clicks:number }>; recentDays:Array<{ day:string; clicks:number }> };
@@ -92,7 +93,7 @@ export default function AdminClient() {
   }
 
   function productOutboundPath(product: AdminProduct) {
-    if (product.listingId) return `/go/amazon/${product.listingId}`;
+    if (product.listingId) return `/go/${product.merchant}/${product.listingId}`;
     if (product.asin) return offerloomAmazonProductPath(product.asin);
     return product.affiliateUrl;
   }
@@ -120,6 +121,7 @@ export default function AdminClient() {
   }
 
   return <>
+  <CollectedDealsPanel />
   <div className={styles.workspace}>
     <div className={styles.controls}>
     <form className={styles.form} onSubmit={bulkImport}>

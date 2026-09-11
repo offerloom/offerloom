@@ -61,14 +61,14 @@ test("renders public business and guide pages", async () => {
 });
 
 test("keeps shopping claims and unavailable merchants compliant", async () => {
-  const [page, handoff] = await Promise.all([
+  const [page, memory] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../docs/PROJECT_HANDOFF.md", import.meta.url), "utf8"),
+    readFile(new URL("../docs/PROJECT_MEMORY.md", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /Browse on Amazon|View on Amazon/);
   assert.match(page, /Tagged product link|Opens Amazon search/);
   assert.doesNotMatch(page, /AMAZON SHOPPING ENABLED|Browse electronics on Amazon\.in/);
   assert.doesNotMatch(page, /scrape|live Amazon price/i);
-  assert.match(handoff, /Do not scrape marketplaces without permission\./);
+  assert.match(memory, /Never scrape .*without written authorization\./);
 });

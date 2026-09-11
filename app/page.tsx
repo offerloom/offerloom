@@ -12,8 +12,9 @@ import { heroCategorySlides } from "./lib/hero-categories";
 import { offerloomAmazonSearchPath } from "./lib/amazon";
 
 type Listing = { store: string; affiliateUrl?: string };
-type Product = { id: string | number; icon: string; name: string; category: string; summary: string; specs: string[]; listings: Listing[]; detailPath?: string };
-type ManagedProduct = { merchantName: string; id: string; name: string; category: string; summary: string; specs: string[]; outboundPath: string; detailPath: string };
+type Offer = { price: number; mrp: number | null; checkedAt: string };
+type Product = { offer?: Offer | null; imageUrl?: string | null; id: string | number; icon: string; name: string; category: string; summary: string; specs: string[]; listings: Listing[]; detailPath?: string };
+type ManagedProduct = { offer?: Offer | null; imageUrl?: string | null; merchantName: string; id: string; name: string; category: string; summary: string; specs: string[]; outboundPath: string; detailPath: string };
 
 const amazonLinks = {
   electronics: offerloomAmazonSearchPath("electronics"),
@@ -70,6 +71,7 @@ export default function Home() {
   const [sort, setSort] = useState("recommended");
   const [slide, setSlide] = useState(0);
   const [managedProducts, setManagedProducts] = useState<Product[]>([]);
+  const [catalogState, setCatalogState] = useState("loading");
 
   useEffect(() => {
     let active = true;
@@ -77,7 +79,10 @@ export default function Home() {
       .then((response) => response.ok ? response.json() : Promise.reject())
       .then((data) => {
         if (!active) return;
+        setCatalogState("ready");
         setManagedProducts(data.products.map((product: ManagedProduct) => ({
+          imageUrl: product.imageUrl,
+          offer: product.offer,
           id: product.id,
           icon: categoryIcons[product.category] ?? "◇",
           name: product.name,
@@ -88,7 +93,7 @@ export default function Home() {
           detailPath: product.detailPath,
         })));
       })
-      .catch(() => undefined);
+      .catch(() => { if (active) setCatalogState("error"); });
     return () => { active = false; };
   }, []);
 
@@ -98,6 +103,7 @@ export default function Home() {
   }, []);
 
   const allProducts = useMemo(() => [...managedProducts, ...products], [managedProducts]);
+  const frontProducts = managedProducts.filter((product) => product.imageUrl);
   const visible = useMemo(() => {
     const term = query.trim().toLowerCase();
     const matches = allProducts.filter((product) => belongsToCategory(product, category) && (!term || `${product.name} ${product.category} ${product.summary} ${product.specs.join(" ")}`.toLowerCase().includes(term)));
@@ -135,6 +141,20 @@ export default function Home() {
       </div>
     </header>
     <DealAlertsBar />
+    <section className="frontDeals" aria-labelledby="front-deals-heading">
+      <div className="frontDealsIntro"><span className="eyebrow">HANDPICKED PRODUCTS</span><h1 id="front-deals-heading">Find your next great deal.</h1><p>Real products, direct merchant links. Explore our latest picks and check the current offer before you buy.</p></div>
+      <div className="frontDealsHeading"><h2>Latest product picks</h2><span>{catalogState === "loading" ? "Loading products…" : `${frontProducts.length} curated products`}</span></div>
+      {catalogState === "error" && <p role="status">Product details could not be loaded. Please refresh to try again.</p>}
+      {catalogState === "ready" && !frontProducts.length && <p>New product picks are being reviewed. Browse the catalogue below.</p>}
+      <div className="frontDealsGrid">{frontProducts.map((product) => <article className="frontDealCard" key={product.id}>
+        {product.imageUrl && <Link href={product.detailPath!}><img src={product.imageUrl} alt={product.name} width="320" height="320" /></Link>}
+        <span className="categoryTag">{product.listings[0].store} · {product.category}</span>
+        <h3><Link href={product.detailPath!}>{product.name}</Link></h3><p>{product.summary}</p>
+        {product.offer && <div className="frontDealPrice"><strong>₹{(product.offer.price / 100).toLocaleString("en-IN")}</strong>{product.offer.mrp && product.offer.mrp > product.offer.price && <><del>₹{(product.offer.mrp / 100).toLocaleString("en-IN")}</del><span>{Math.round((1-product.offer.price/product.offer.mrp)*100)}% off</span></>}<small>Checked {new Date(product.offer.checkedAt).toLocaleString("en-IN")}</small></div>}
+        <div className="frontDealActions"><Link href={product.detailPath!}>Product details</Link><a className="offerCta" href={product.listings[0].affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">View deal ↗</a></div>
+        <small>Confirm current price and availability on {product.listings[0].store}.</small>
+      </article>)}</div>
+    </section>
     <section className={`heroSlider ${slides[slide].theme}`} id="top" aria-roledescription="carousel" aria-label="OfferLoom shop by category">
       <div className="heroSlide" aria-live="polite"><span className="eyebrow">{slides[slide].eyebrow}</span><h1>{slides[slide].title}</h1><p>{slides[slide].text}</p><div className="slideActions"><a className="slideAmazonCta" href={slides[slide].amazonUrl} target="_blank" rel="sponsored noopener noreferrer">{slides[slide].cta}</a><span>Opens approved Amazon catalog</span></div></div>
       <a className={`heroOfferBanner banner-${slides[slide].theme}`} href={slides[slide].amazonUrl} target="_blank" rel="sponsored noopener noreferrer" aria-label={`${slides[slide].promo.dealLine} on ${slides[slide].eyebrow.toLowerCase()}`}>

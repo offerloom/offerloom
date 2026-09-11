@@ -1,13 +1,15 @@
 import { env } from "cloudflare:workers";
+import { publicOffer } from "../../lib/public-offer";
 
 export async function GET() {
   const result = await env.DB.prepare(`
-    SELECT p.id, p.slug, p.brand, p.model_number AS modelNumber, p.name, p.summary, p.specs_json AS specsJson,
-      c.name AS category, ml.id AS listingId, ml.merchant, m.name AS merchantName
+    SELECT p.id, p.slug, p.brand, p.image_url AS imageUrl, p.model_number AS modelNumber, p.name, p.summary, p.specs_json AS specsJson,
+      c.name AS category, ml.id AS listingId, ml.merchant, m.name AS merchantName, cd.approved_payload AS approvedPayload
     FROM products p
     JOIN categories c ON c.id = p.category_id
     JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant IN ('amazon', 'ajio') AND ml.status = 'active'
     JOIN merchants m ON m.id = ml.merchant AND m.status = 'active'
+    LEFT JOIN collected_deals cd ON cd.product_id=p.id AND cd.id=ml.merchant || '-' || ml.merchant_product_id
     WHERE p.status = 'published'
     ORDER BY p.published_at DESC
     LIMIT 100
@@ -17,6 +19,8 @@ export async function GET() {
     id: row.id,
     slug: row.slug,
     brand: row.brand,
+    imageUrl: row.imageUrl,
+    offer: publicOffer(row.approvedPayload),
     modelNumber: row.modelNumber,
     name: row.name,
     summary: row.summary,

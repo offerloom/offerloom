@@ -19,6 +19,7 @@ OfferLoom is an India-first electronics product-discovery and price-comparison p
 - Amazon SiteStripe links for 5G phones and wireless ANC earbuds
 - Owner-only product manager at `/admin`
 - D1-backed products, categories, merchant listings and outbound-click events
+- Browser-collected draft queue, original product photos, dated price cards, and per-merchant collection status
 - Automatic Amazon ASIN extraction and `offerloom-21` link generation
 - CSV bulk import for up to 500 reviewed products per upload
 - Canonical product pages with brand/model identity and multi-merchant comparison slots
@@ -35,6 +36,8 @@ OfferLoom is an India-first electronics product-discovery and price-comparison p
 Public deployment: <https://offerloom.contact-offerloom.workers.dev> (Cloudflare Workers). Legacy ChatGPT Sites URL: <https://offerloom.gdwivedi6.chatgpt.site>
 
 ## Local development
+
+Browser collector operation and its six-hour Mac schedule are documented in [docs/BROWSER_COLLECTOR.md](docs/BROWSER_COLLECTOR.md). AJIO currently requires assisted browser review: standalone Chromium receives HTTP 403.
 
 Requires Node.js `>=22.13.0`.
 
