@@ -18,11 +18,30 @@ export function productSource(value) {
   throw new Error("Only Amazon.in and AJIO product pages are supported");
 }
 
+function slugify(value) {
+  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
+}
+
+export function autoSummary(deal) {
+  const discount = deal.mrp && deal.mrp > deal.price ? ` (about ${Math.round((1 - deal.price / deal.mrp) * 100)}% off the listed MRP)` : "";
+  return `${deal.name}. Seen on Amazon.in at approximately ₹${(deal.price / 100).toFixed(0)}${discount}. Price, stock and specifications are set by Amazon and can change; confirm on the product page before buying.`.slice(0, 1000);
+}
+
 export function money(text) {
   if (typeof text !== "string" || !text.trim()) return null;
   const match = text.replace(/,/g, "").match(/(?:₹|Rs\.?|INR)?\s*(\d+(?:\.\d{1,2})?)/i);
   const value = match ? Math.round(Number(match[1]) * 100) : NaN;
   return Number.isSafeInteger(value) && value > 0 && value < 100000000 ? value : null;
+}
+
+const HOME_KEYWORDS = /\b(container|containers|bottle|bottles|cookware|kitchen|storage jar|jars?|cooktop|induction|utensil|dinnerware|cutlery|casserole|tiffin|lunch box|flask)\b/i;
+const FASHION_KEYWORDS = /\b(backpack|bag|handbag|wallet|shoe|shoes|footwear|sneaker|sandal|trouser|shirt|t-shirt|jacket|dress|saree|kurta|jeans)\b/i;
+
+export function categorize(merchant, name) {
+  if (merchant === "ajio") return "Fashion";
+  if (HOME_KEYWORDS.test(name)) return "Home";
+  if (FASHION_KEYWORDS.test(name)) return "Fashion";
+  return "Electronics";
 }
 
 export async function collect(page, sourceUrl) {
@@ -35,19 +54,34 @@ export async function collect(page, sourceUrl) {
   if (/captcha|robot check|access denied|verify you are human|automated access|enter the characters you see/i.test(text)) throw new Error("Access challenge; collection stopped");
   const selectors = source.merchant === "amazon" ? {
     title: "#productTitle", image: "#landingImage, #imgBlkFront",
-    price: "#corePriceDisplay_desktop_feature_div .a-price:not(.a-text-price) .a-offscreen, #corePrice_feature_div .a-price:not(.a-text-price) .a-offscreen",
-    mrp: "#corePriceDisplay_desktop_feature_div .a-text-price .a-offscreen",
-  } : { title: ".prod-name", image: "#myCarousel img", price: ".prod-sp", mrp: ".prod-cp" };
+    price: [
+      "#corePriceDisplay_desktop_feature_div .a-price:not(.a-text-price) .a-offscreen",
+      "#corePrice_feature_div .a-price:not(.a-text-price) .a-offscreen",
+      "#apex_desktop .a-price:not(.a-text-price) .a-offscreen",
+      "#tp_price_block_total_price_ww .a-offscreen",
+      ".priceToPay .a-offscreen",
+    ],
+    mrp: ["#corePriceDisplay_desktop_feature_div .a-text-price .a-offscreen", "#apex_desktop .a-text-price .a-offscreen"],
+  } : { title: ".prod-name", image: "#myCarousel img", price: [".prod-sp"], mrp: [".prod-cp"] };
   await page.locator(selectors.title).first().waitFor({ state: "visible", timeout: 15000 });
   let name = (await page.locator(selectors.title).first().innerText()).trim();
   const read = async (selector) => await page.locator(selector).first().textContent({ timeout: 3000 }).catch(() => "");
+  // Try each candidate selector in order and use the first one with real (non-blank) text —
+  // a single comma-joined selector's .first() can land on an earlier, blank placeholder match.
+  const readFirst = async (candidates) => {
+    for (const selector of candidates) {
+      const text = await read(selector);
+      if (text && text.trim()) return text;
+    }
+    return "";
+  };
   if (source.merchant === "ajio") name = `${await read(".brand-name")} ${name}`.trim();
   const imageUrl = await page.locator(selectors.image).first().getAttribute("src", { timeout: 3000 }).catch(() => null);
-  const price = money(await read(selectors.price));
-  const mrp = money(await read(selectors.mrp));
+  const price = money(await readFirst(selectors.price));
+  const mrp = money(await readFirst(selectors.mrp));
   if (name.length < 3 || !price || !imageUrl?.startsWith("https://")) throw new Error("Missing product title, image or price; no draft created");
   return { sourceUrl: source.url, merchant: source.merchant, merchantProductId: source.id, name: name.slice(0, 300), imageUrl,
-    price, mrp: mrp && mrp >= price ? mrp : null, currency: "INR", checkedAt: new Date().toISOString(), category: source.merchant === "ajio" ? "Fashion" : "Electronics" };
+    price, mrp: mrp && mrp >= price ? mrp : null, currency: "INR", checkedAt: new Date().toISOString(), category: categorize(source.merchant, name) };
 }
 
 async function main() {
@@ -84,6 +118,8 @@ async function main() {
           results.push(await collect(page, url));
         } catch (error) { errors.push({ sourceUrl: productSource(url).url, error: error.message.startsWith("Page unavailable") || error.message.startsWith("Access challenge") ? error.message : "Product could not be collected; review source or selectors" }); }
         finally { await page.close(); }
+        // Space out requests so a multi-product run reads like ordinary browsing, not a scraping burst.
+        if (url !== config.urls[config.urls.length - 1]) await new Promise((resolve) => setTimeout(resolve, 4000 + Math.random() * 4000));
       }
     } finally { await browser.close(); }
     await writeFile("outputs/collector/latest.json", JSON.stringify({ deals: results }, null, 2), { mode: 0o600 });
@@ -94,8 +130,27 @@ async function main() {
     }
     if (process.argv.includes("--d1-remote")) {
       // Owner-operated alternative when Wrangler is already authenticated. Only stage drafts.
+      const autoApprove = process.argv.includes("--auto-approve");
       const quote = (value) => `'${String(value).replaceAll("'", "''")}'`;
-      const statements = results.map((deal) => `INSERT INTO collected_deals (id,payload,status,updated_at) VALUES (${quote(`${deal.merchant}-${deal.merchantProductId}`)},${quote(JSON.stringify(deal))},'pending',${quote(new Date().toISOString())}) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,status='pending',updated_at=excluded.updated_at;`);
+      const statements = results.map((deal) => {
+        const dealId = `${deal.merchant}-${deal.merchantProductId}`;
+        const now = new Date().toISOString();
+        if (deal.merchant !== "amazon" || !autoApprove) {
+          return `INSERT INTO collected_deals (id,payload,status,updated_at) VALUES (${quote(dealId)},${quote(JSON.stringify(deal))},'pending',${quote(now)}) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,status='pending',updated_at=excluded.updated_at;`;
+        }
+        // Amazon only: the tagged affiliate URL is deterministic from the ASIN, so it is safe to
+        // auto-generate. AJIO needs a per-product ACE dashboard deep link and stays in review.
+        const productId = `amazon-${deal.merchantProductId.toLowerCase()}`;
+        const categorySlug = slugify(deal.category);
+        const affiliateUrl = `https://www.amazon.in/dp/${deal.merchantProductId}?tag=offerloom-21`;
+        const summary = autoSummary(deal);
+        return [
+          `INSERT INTO collected_deals (id,payload,approved_payload,product_id,status,updated_at) VALUES (${quote(dealId)},${quote(JSON.stringify(deal))},${quote(JSON.stringify(deal))},${quote(productId)},'approved',${quote(now)}) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,approved_payload=excluded.approved_payload,product_id=excluded.product_id,status='approved',updated_at=excluded.updated_at;`,
+          `INSERT INTO categories (id,name,slug,position,created_at) VALUES (${quote(`cat-${categorySlug}`)},${quote(deal.category)},${quote(categorySlug)},0,${quote(now)}) ON CONFLICT(slug) DO NOTHING;`,
+          `INSERT INTO products (id,category_id,name,slug,summary,image_url,specs_json,status,source,created_at,updated_at,published_at) VALUES (${quote(productId)},(SELECT id FROM categories WHERE slug=${quote(categorySlug)}),${quote(deal.name)},${quote(`${slugify(deal.name)}-${productId.slice(0, 8)}`)},${quote(summary)},${quote(deal.imageUrl)},'[]','published','browser_auto',${quote(now)},${quote(now)},${quote(now)}) ON CONFLICT(id) DO UPDATE SET name=excluded.name,summary=excluded.summary,image_url=excluded.image_url,status='published',source='browser_auto',updated_at=excluded.updated_at,published_at=excluded.published_at;`,
+          `INSERT INTO merchant_listings (id,product_id,merchant,merchant_product_id,source_url,affiliate_url,status,last_checked_at,created_at,updated_at) VALUES (${quote(crypto.randomUUID())},${quote(productId)},'amazon',${quote(deal.merchantProductId)},${quote(deal.sourceUrl)},${quote(affiliateUrl)},'active',${quote(deal.checkedAt)},${quote(now)},${quote(now)}) ON CONFLICT(merchant,merchant_product_id) DO UPDATE SET product_id=excluded.product_id,affiliate_url=excluded.affiliate_url,last_checked_at=excluded.last_checked_at,updated_at=excluded.updated_at;`,
+        ].join("\n");
+      });
       for (const merchant of new Set(config.urls.map((url) => productSource(url).merchant))) {
         const failures = errors.filter((error) => productSource(error.sourceUrl).merchant === merchant);
         const count = results.filter((deal) => deal.merchant === merchant).length;
@@ -104,7 +159,7 @@ async function main() {
       }
       const sql = statements.join("\n");
       await writeFile("outputs/collector/drafts.sql", sql, { mode: 0o600 });
-      await promisify(execFile)("npx", ["--no-install", "wrangler", "d1", "execute", "offerloom", "--remote", "--file", "outputs/collector/drafts.sql"], { timeout: 60000 });
+      await promisify(execFile)("npx", ["--no-install", "wrangler", "d1", "execute", "offerloom", "--remote", "--file", "outputs/collector/drafts.sql"], { timeout: 180000 });
     }
     console.log(JSON.stringify({ collected: results.length, blockedOrUnavailable: errors.length, draftsSent: Boolean((endpoint || process.argv.includes("--d1-remote")) && results.length) }));
     if (!process.argv.includes("--watch")) break;
@@ -112,4 +167,9 @@ async function main() {
   } while (process.argv.includes("--watch"));
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main().catch(() => { console.error("Collector failed. Check configuration, browser installation and endpoint access. No credentials logged."); process.exitCode = 1; });
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main().catch(async (error) => {
+  console.error("Collector failed. Check configuration, browser installation and endpoint access. No credentials logged.");
+  // Local-only diagnostic (gitignored, never printed to the console log above) — no credentials pass through this code path.
+  await writeFile("outputs/collector/last-error.log", `${new Date().toISOString()} ${error?.message ?? error}\n`, { mode: 0o600 }).catch(() => {});
+  process.exitCode = 1;
+});

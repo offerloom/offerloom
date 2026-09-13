@@ -1,10 +1,17 @@
 /** Cloudflare Worker entry point for the vinext-starter template. */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
+import { runAutoSocialPost } from "../app/lib/social/auto-post";
 
 interface Env {
   ASSETS: Fetcher;
   DB: D1Database;
+  META_PAGE_ACCESS_TOKEN?: string;
+  META_PAGE_ID?: string;
+  META_INSTAGRAM_USER_ID?: string;
+  TELEGRAM_BOT_TOKEN?: string;
+  TELEGRAM_CHANNEL_ID?: string;
+  PUBLIC_SITE_URL?: string;
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
@@ -41,6 +48,12 @@ const worker = {
     }
 
     return handler.fetch(request, env, ctx);
+  },
+
+  async scheduled(_event: unknown, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(runAutoSocialPost(env).catch((error) => {
+      console.error("Auto social post failed:", error instanceof Error ? error.message : error);
+    }));
   },
 };
 

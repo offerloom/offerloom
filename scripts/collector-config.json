@@ -1,7 +1,25 @@
 {
-  "intervalHours": 6,
+  "intervalHours": 1,
   "urls": [
     "https://www.amazon.in/dp/B07PPS3ZZY",
+    "https://www.amazon.in/dp/B0DGTTKCJX",
+    "https://www.amazon.in/dp/B0DG2WDRCM",
+    "https://www.amazon.in/dp/B0DSFQ2RLV",
+    "https://www.amazon.in/dp/B0CQ4KTCH1",
+    "https://www.amazon.in/dp/B0F9YGQT22",
+    "https://www.amazon.in/dp/B0C7QS9M38",
+    "https://www.amazon.in/dp/B0DGTTP1K4",
+    "https://www.amazon.in/dp/B0FP2D6Z16",
+    "https://www.amazon.in/dp/B0CMF25TKG",
+    "https://www.amazon.in/dp/B0DCZH69PP",
+    "https://www.amazon.in/dp/B0971GJ915",
+    "https://www.amazon.in/dp/B0D2M39ZVZ",
+    "https://www.amazon.in/dp/B09W39H3F9",
+    "https://www.amazon.in/dp/B0BY956ZX3",
+    "https://www.amazon.in/dp/B0C4DMRHYG",
+    "https://www.amazon.in/dp/B0827ZD5HW",
+    "https://www.amazon.in/dp/B08YYQ3WFG",
+    "https://www.amazon.in/dp/B01M9C51T9",
     "https://www.ajio.com/altheory-by-azorte-rigid-crossbody-bag/p/442710962_offwhite",
     "https://www.ajio.com/outryt-by-azorte-rib-flared-trouser/p/443118370_jetblack"
   ]

@@ -29,6 +29,7 @@ type SocialPostRow = {
   published_at: string | null;
   publish_results_json: string | null;
   last_error: string | null;
+  product_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -61,6 +62,7 @@ function mapRow(row: SocialPostRow): SocialPostRecord {
     publishedAt: row.published_at,
     publishResults,
     lastError: row.last_error,
+    productId: row.product_id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -69,7 +71,7 @@ function mapRow(row: SocialPostRow): SocialPostRecord {
 export async function listSocialPosts(db: DbLike) {
   const result = await db.prepare(`
     SELECT id, headline, body, link_url, image_url, platforms_json, caption, status,
-      scheduled_at, published_at, publish_results_json, last_error, created_at, updated_at
+      scheduled_at, published_at, publish_results_json, last_error, product_id, created_at, updated_at
     FROM social_posts
     ORDER BY COALESCE(scheduled_at, created_at) DESC
     LIMIT 50
@@ -81,7 +83,7 @@ export async function listSocialPosts(db: DbLike) {
 export async function getSocialPost(db: DbLike, id: string) {
   const row = await db.prepare(`
     SELECT id, headline, body, link_url, image_url, platforms_json, caption, status,
-      scheduled_at, published_at, publish_results_json, last_error, created_at, updated_at
+      scheduled_at, published_at, publish_results_json, last_error, product_id, created_at, updated_at
     FROM social_posts WHERE id = ?
   `).bind(id).first<SocialPostRow>();
 
@@ -96,6 +98,9 @@ export type CreateSocialPostInput = {
   platforms: SocialPlatform[];
   scheduledAt?: string | null;
   mode: "schedule" | "publish_now";
+  productId?: string;
+  captionOverride?: string;
+  platformCaptions?: Partial<Record<SocialPlatform, string>>;
 };
 
 export async function createSocialPost(env: EnvLike, input: CreateSocialPostInput) {
@@ -108,6 +113,7 @@ export async function createSocialPost(env: EnvLike, input: CreateSocialPostInpu
     siteOrigin: secrets.publicSiteUrl,
   });
 
+  const caption = input.captionOverride?.trim() || composed.caption;
   const now = new Date().toISOString();
   const id = crypto.randomUUID();
   const scheduledAt = input.mode === "schedule" ? input.scheduledAt ?? null : null;
@@ -117,7 +123,8 @@ export async function createSocialPost(env: EnvLike, input: CreateSocialPostInpu
   let lastError: string | null = null;
 
   if (input.mode === "publish_now") {
-    publishResults = await publishToPlatforms(input.platforms, composed.caption, composed.imageUrl, secrets);
+    const captionFor = (platform: SocialPlatform) => input.platformCaptions?.[platform] ?? caption;
+    publishResults = await publishToPlatforms(input.platforms, captionFor, composed.imageUrl, secrets);
     lastError = summarizePublishResults(publishResults);
     if (isPublishSuccessful(publishResults)) {
       status = "published";
@@ -130,8 +137,8 @@ export async function createSocialPost(env: EnvLike, input: CreateSocialPostInpu
   await env.DB.prepare(`
     INSERT INTO social_posts (
       id, headline, body, link_url, image_url, platforms_json, caption, status,
-      scheduled_at, published_at, publish_results_json, last_error, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      scheduled_at, published_at, publish_results_json, last_error, product_id, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id,
     input.headline.trim(),
@@ -139,12 +146,13 @@ export async function createSocialPost(env: EnvLike, input: CreateSocialPostInpu
     input.linkUrl?.trim() || null,
     composed.imageUrl,
     JSON.stringify(input.platforms),
-    composed.caption,
+    caption,
     status,
     scheduledAt,
     publishedAt,
     publishResults ? JSON.stringify(publishResults) : null,
     lastError,
+    input.productId ?? null,
     now,
     now,
   ).run();

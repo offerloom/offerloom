@@ -9,3 +9,12 @@
 .linkPreview strong{display:block;font-size:12px;margin-bottom:6px}
 .linkPreview p{margin:4px 0;color:#687082;font-size:11px}
 .linkPreview code{display:block;word-break:break-all;font-size:10px;color:#4338ca}
+.platformResults{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.platformResult{padding:9px 10px;border:1px solid #eceef3;border-radius:9px;background:#fafafd;font-size:11px;display:flex;flex-direction:column;gap:5px}
+.platformResult strong{font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+.platformResult[data-status="published"] strong{color:#0b9560}
+.platformResult[data-status="failed"] strong{color:#b3482f}
+.platformResult[data-status="manual"] strong{color:#a86a00}
+.platformResult span{color:#687082}
+.platformResult pre{margin:0;padding:8px;border-radius:7px;background:#fff;border:1px solid #e3e5ed;white-space:pre-wrap;font-size:10px;color:#111827;max-height:180px;overflow:auto}
+.platformResult button{align-self:flex-start;padding:6px 10px;border:1px solid #dedfea;border-radius:7px;background:#fff;color:#5b4cff;font-size:10px;font-weight:800;cursor:pointer}

@@ -17,7 +17,7 @@ type SocialPost = {
   status: "draft" | "scheduled" | "published" | "failed" | "cancelled";
   scheduledAt: string | null;
   publishedAt: string | null;
-  publishResults: Array<{ platform: string; status: string; message: string }> | null;
+  publishResults: Array<{ platform: string; status: string; message: string; caption?: string }> | null;
   lastError: string | null;
   createdAt: string;
 };
@@ -35,6 +35,8 @@ const platformLabels: Record<SocialPlatform, string> = {
   facebook: "Facebook (Meta)",
   telegram: "Telegram",
   whatsapp_channel: "WhatsApp Channel",
+  x: "X (Twitter)",
+  youtube_community: "YouTube Community",
 };
 
 export default function SocialPostsPanel({ busy, setBusy, setMessage }: SocialPostsPanelProps) {
@@ -136,6 +138,15 @@ export default function SocialPostsPanel({ busy, setBusy, setMessage }: SocialPo
     }
   }
 
+  async function copyCaption(caption: string) {
+    try {
+      await navigator.clipboard.writeText(caption);
+      setMessage("Caption copied to clipboard.");
+    } catch {
+      setMessage("Could not copy automatically — select and copy the caption text manually.");
+    }
+  }
+
   async function cancelScheduled(postId: string) {
     setBusy(true);
     setMessage("");
@@ -219,6 +230,22 @@ export default function SocialPostsPanel({ busy, setBusy, setMessage }: SocialPo
                 <h3>{post.headline}</h3>
                 <p>{post.platforms.join(", ")} · {post.scheduledAt ? `Scheduled ${new Date(post.scheduledAt).toLocaleString()}` : post.publishedAt ? `Published ${new Date(post.publishedAt).toLocaleString()}` : "Draft"}</p>
                 {post.lastError ? <p>{post.lastError}</p> : null}
+                {post.publishResults?.length ? (
+                  <div className={styles.platformResults}>
+                    {post.publishResults.map((result) => (
+                      <div key={result.platform} className={styles.platformResult} data-status={result.status}>
+                        <strong>{platformLabels[result.platform as SocialPlatform] ?? result.platform}</strong>
+                        <span>{result.message}</span>
+                        {result.status === "manual" && result.caption ? (
+                          <>
+                            <pre>{result.caption}</pre>
+                            <button type="button" onClick={() => copyCaption(result.caption!)}>Copy caption</button>
+                          </>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
               <div className={styles.actions}>
                 {post.status === "scheduled" ? <>

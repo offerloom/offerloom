@@ -43,6 +43,13 @@
       "when": 1788945614706,
       "tag": "0005_redundant_marvel_zombies",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1789152600000,
+      "tag": "0006_social_posts_product",
+      "breakpoints": true
     }
   ]
 }

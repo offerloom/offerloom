@@ -43,7 +43,7 @@ export const SOCIAL_LINKS = [
   {
     id: "facebook",
     label: "OfferLoom on Facebook",
-    href: "https://www.facebook.com/profile.php?id=61593570969974",
+    href: "https://www.facebook.com/1220668387806265",
   },
   {
     id: "x",

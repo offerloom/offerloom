@@ -1,8 +1,30 @@
 # OfferLoom Project Memory
 
-Updated: 11 September 2026
+Updated: 13 September 2026
 
-Read this file, `README.md`, `AGENTS.md`, and `docs/PROJECT_HANDOFF.md` before changing the project.
+## Homepage rework, catalogue categorization and multi-platform posting — 13 September 2026
+
+- **Homepage layout**: removed the duplicate plain "Product Finder" list (icon-only cards with no photos, no real products) that showed under the real photo-grid "Latest product picks" section — search and category filtering now operate on the one real product grid only. Also removed the "Start with a category" section (12 generic Amazon-search tiles) since the real category tabs in "Latest product picks" (All picks / Home / Fashion / Electronics) already cover this; the `ShopCategoryGrid` component and its data were deleted as now-unused. The search bar (`.finder` section) was moved to sit directly under the hero banner rather than further down the page.
+- **Hero banner is now dynamic and data-driven**: it shows a real-photo collage (up to 3 products) of the current best deals for whichever category the active slide represents, with a live "Up to X% off" headline, instead of one static stock photo. It also now only rotates through slides for categories that actually have real published products (`app/page.tsx` filters `heroCategorySlides` by `photoProducts` categories each render) — so it automatically grows from 4 to 5+ slides as more categories get real inventory, with no manual code change needed.
+- **Product categorization bug fixed**: the browser collector was tagging every Amazon product as "Electronics" regardless of what it actually was. `scripts/browser-collector.mjs` now has a `categorize(merchant, name)` keyword matcher (containers/bottles/cookware → Home; bags/clothing/footwear → Fashion; AJIO → Fashion; else Electronics). The 5 already-published products that were wrong (Prestige cooktop, 3 MILTON kitchen items, Wildcraft backpack) were re-tagged directly in D1 to Home/Fashion. A `Home` category row now exists in D1 (`cat-home`).
+- **Collector reliability**: fixed a real bug where a comma-joined CSS selector's `.first()` could land on an earlier blank placeholder element instead of the actual price, silently dropping valid prices — selectors are now tried in priority order for the first non-blank match. Added a 4–8s randomized delay between products in one collector run (a 19-in-a-row burst was triggering Amazon's soft rate-limiting, causing most products in a run to fail even though each succeeds fine in isolation). Raised the `wrangler d1 execute` timeout from 60s to 180s (was timing out as the catalogue grew). The scheduled sync interval was reduced from 6 hours to 1 hour per owner request, balanced against bot-detection risk (rejected an earlier ask for a 10-minute interval as too risky for the Associates account).
+- **Multi-platform social posting is live**: every daily auto-post (Cloudflare Cron, `0 13 * * *`) now targets Facebook, Instagram, WhatsApp Channel, X and YouTube Community simultaneously. Facebook and Instagram post automatically via the Graph API (see the "Social publishing live" section below for credentials/setup). WhatsApp Channel, X and YouTube Community have **no public posting API** — for these three, the run instead generates a ready-to-paste caption (X's is shortened to fit the 280-character limit; the other two use the long-form caption) shown in `/admin` under each post's "Recent posts" entry with a **Copy caption** button (`app/admin/SocialPostsPanel.tsx`). This was a deliberate choice after the owner confirmed X's $100/month paid API tier and YouTube/WhatsApp Channel's total lack of a posting API were not worth pursuing right now.
+- **Cloudflare deploy propagation anomaly**: during this session, `wrangler deploy` reported 100% successful rollout on every call, but production traffic kept serving stale code for a period of roughly 20–30 minutes across many rapid deploys (confirmed independently via two different network paths — not a local caching or DNS issue). It resolved on its own after waiting; no code change fixed it. If a future deploy "isn't showing up" despite a clean build and a successful `wrangler deploy`, wait and re-check before assuming the code is wrong — don't rapid-fire more deploys, which may have caused it in the first place.
+
+Read this file and `README.md`/`AGENTS.md` before changing the project — `docs/PROJECT_HANDOFF.md` no longer exists.
+
+## Social publishing live — 13 September 2026
+
+- Amazon/AJIO auto-post to Facebook and Instagram is live and verified. See `docs/AMAZON_SOCIAL_PILOT.md` for full details.
+- The correct, working Facebook Page is https://www.facebook.com/1220668387806265 (name "OfferLoom", Page ID `1220668387806265`) and the connected Instagram Business Account ID is `17841432278236615`. Two older Facebook profile.php IDs referenced in earlier notes (`61593570969974` in `app/lib/site.ts`, `61594517871499` in this file and `docs/AMAZON_SOCIAL_PILOT.md`) were **not** this Page — `app/lib/site.ts`'s `SOCIAL_LINKS.facebook.href` has been corrected to the verified URL above.
+- META_PAGE_ACCESS_TOKEN, META_PAGE_ID, META_INSTAGRAM_USER_ID are set as Worker secrets (non-expiring System User token, "OfferLoom Automation" Meta app).
+- A Cloudflare Cron Trigger (`0 13 * * *`) auto-picks the single best current discount not posted to either platform in the last 30 days and publishes it to both. Product images are served through `/api/social-image` (a same-origin proxy) because Instagram's crawler was being blocked directly on Amazon's CDN.
+
+## Social publishing checkpoint — 12 September 2026 (superseded by the entry above)
+
+- Owner now wants an Amazon social publishing pilot managed by OfferLoom backend. See `docs/AMAZON_SOCIAL_PILOT.md` for the first unpublished product draft and exact remaining setup.
+- Production Worker secret-name check returned only ADMIN_API_TOKEN; Meta publishing credentials are not configured. No social post has been published or scheduled in this pilot.
+- Amazon support confirms the store lacks 10 eligible separate orders in the preceding 30 days. The reply uses PA API terminology despite the Creators API question; do not claim API access has been enabled.
 
 ## Homepage design update — 11 September 2026
 
@@ -101,7 +123,7 @@ Read this file, `README.md`, `AGENTS.md`, and `docs/PROJECT_HANDOFF.md` before c
 3. Monitor CJ until Dell Consumer – India or HP India becomes Active; then build CJ connector against fixtures first.
 4. **Meesho connector:** implement only when explicitly requested — collection redirect, onelink product storage, admin paste/bulk import.
 5. Optional: admin “paste multiple Amazon URLs” bulk box (no scraping).
-6. Set `ADMIN_API_TOKEN`, Meta/Telegram secrets for social auto-posting, and GitHub deploy secrets if not already done.
+6. ~~Set `ADMIN_API_TOKEN`, Meta secrets for social auto-posting~~ — done 13 September 2026; see "Social publishing live" above. Telegram secrets (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHANNEL_ID`) and GitHub deploy secrets are still not confirmed set.
 
 ## Non-negotiable rules
 

@@ -19,3 +19,6 @@ migrations_dir = "drizzle"
 
 [observability]
 enabled = true
+
+[triggers]
+crons = ["0 13 * * *"]

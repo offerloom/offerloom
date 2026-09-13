@@ -17,7 +17,7 @@ const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>Label</key><string>${label}</string>
-<key>ProgramArguments</key><array><string>${xml(process.execPath)}</string><string>${xml(resolve(root,"scripts/browser-collector.mjs"))}</string><string>${xml(resolve(root,"scripts/collector-config.json"))}</string><string>--d1-remote</string></array>
+<key>ProgramArguments</key><array><string>${xml(process.execPath)}</string><string>${xml(resolve(root,"scripts/browser-collector.mjs"))}</string><string>${xml(resolve(root,"scripts/collector-config.json"))}</string><string>--d1-remote</string>${process.argv.includes("--auto-approve") ? "<string>--auto-approve</string>" : ""}</array>
 <key>WorkingDirectory</key><string>${xml(root)}</string>
 <key>StartInterval</key><integer>${seconds}</integer><key>RunAtLoad</key><true/>
 <key>EnvironmentVariables</key><dict><key>PATH</key><string>${xml(`${dirname(process.execPath)}:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin`)}</string><key>OFFERLOOM_CHROME_CHANNEL</key><string>chrome</string></dict>

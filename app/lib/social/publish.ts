@@ -80,24 +80,46 @@ function publishWhatsAppChannel(caption: string): PublishResult {
   return {
     platform: "whatsapp_channel",
     status: "manual",
-    message: "WhatsApp Channel has no public auto-post API. Copy the prepared caption into WhatsApp Channel admin.",
-    externalId: caption.slice(0, 120),
+    message: "WhatsApp Channel has no public auto-post API. Copy this caption into WhatsApp Channel admin.",
+    caption,
+  };
+}
+
+function publishX(caption: string): PublishResult {
+  return {
+    platform: "x",
+    status: "manual",
+    message: "X's posting API requires a paid developer tier. Copy this caption and post it manually.",
+    caption,
+  };
+}
+
+function publishYouTubeCommunity(caption: string): PublishResult {
+  return {
+    platform: "youtube_community",
+    status: "manual",
+    message: "YouTube has no public API for Community posts. Copy this caption into a new Community post.",
+    caption,
   };
 }
 
 export async function publishToPlatforms(
   platforms: SocialPlatform[],
-  caption: string,
+  captionFor: string | ((platform: SocialPlatform) => string),
   imageUrl: string,
   secrets: SocialSecrets,
 ): Promise<PublishResult[]> {
   const results: PublishResult[] = [];
+  const getCaption = typeof captionFor === "function" ? captionFor : () => captionFor;
 
   for (const platform of platforms) {
+    const caption = getCaption(platform);
     if (platform === "facebook") results.push(await publishFacebook(caption, imageUrl, secrets));
     if (platform === "instagram") results.push(await publishInstagram(caption, imageUrl, secrets));
     if (platform === "telegram") results.push(await publishTelegram(caption, imageUrl, secrets));
     if (platform === "whatsapp_channel") results.push(publishWhatsAppChannel(caption));
+    if (platform === "x") results.push(publishX(caption));
+    if (platform === "youtube_community") results.push(publishYouTubeCommunity(caption));
   }
 
   return results;

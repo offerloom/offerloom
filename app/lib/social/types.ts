@@ -1,4 +1,4 @@
-export const SOCIAL_PLATFORMS = ["instagram", "facebook", "telegram", "whatsapp_channel"] as const;
+export const SOCIAL_PLATFORMS = ["instagram", "facebook", "telegram", "whatsapp_channel", "x", "youtube_community"] as const;
 
 export type SocialPlatform = (typeof SOCIAL_PLATFORMS)[number];
 
@@ -9,6 +9,8 @@ export type PublishResult = {
   status: "published" | "manual" | "failed";
   externalId?: string;
   message: string;
+  /** Ready-to-paste caption text for platforms with no posting API (manual status). */
+  caption?: string;
 };
 
 export type SocialPostRecord = {
@@ -24,6 +26,7 @@ export type SocialPostRecord = {
   publishedAt: string | null;
   publishResults: PublishResult[] | null;
   lastError: string | null;
+  productId: string | null;
   createdAt: string;
   updatedAt: string;
 };

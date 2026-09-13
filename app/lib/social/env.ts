@@ -26,5 +26,7 @@ export function socialConnectorStatus(secrets: SocialSecrets) {
     instagram: Boolean(secrets.metaPageAccessToken && secrets.metaInstagramUserId),
     telegram: Boolean(secrets.telegramBotToken && secrets.telegramChannelId),
     whatsapp_channel: true,
+    x: true,
+    youtube_community: true,
   };
 }
