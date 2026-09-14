@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { publicOffer } from "../../../lib/public-offer";
+import { publicOffer } from "../../lib/public-offer";
 
 export async function GET() {
   const row = await env.DB.prepare(`
