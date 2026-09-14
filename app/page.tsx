@@ -8,18 +8,11 @@ import DealAlertsBar from "./components/DealAlertsBar";
 import DealAlertsFloat from "./components/DealAlertsFloat";
 import SocialLinks from "./components/SocialLinks";
 import { heroCategorySlides } from "./lib/hero-categories";
-import { offerloomAmazonSearchPath } from "./lib/amazon";
 
 type Listing = { store: string; affiliateUrl?: string };
 type Offer = { price: number; mrp: number | null; checkedAt: string };
 type Product = { offer?: Offer | null; imageUrl?: string | null; id: string | number; name: string; category: string; summary: string; specs: string[]; listings: Listing[]; detailPath?: string };
 type ManagedProduct = { offer?: Offer | null; imageUrl?: string | null; merchantName: string; id: string; name: string; category: string; summary: string; specs: string[]; outboundPath: string; detailPath: string };
-
-const amazonLinks = {
-  mobiles: offerloomAmazonSearchPath("5g phone under 20000"),
-  appliances: offerloomAmazonSearchPath("energy efficient refrigerator"),
-  fashion: offerloomAmazonSearchPath("fashion"),
-};
 
 export default function Home() {
   const [dealCategory, setDealCategory] = useState("All");
@@ -92,7 +85,7 @@ export default function Home() {
   return <main className="homePage">
     <header className="topbar">
       <a className="brand" href="#top" aria-label="OfferLoom home"><BrandMark /><span>Offer<span>Loom</span></span></a>
-      <nav aria-label="Main navigation"><a href="#front-deals-heading">Find products</a><a href="#featured">Featured picks</a><Link href="/guides">Buying guides</Link><a href="#how">How it works</a></nav>
+      <nav aria-label="Main navigation"><a href="#front-deals-heading">Find products</a><Link href="/guides">Buying guides</Link><a href="#how">How it works</a></nav>
       <div className="topbarActions">
         <SocialLinks variant="header" />
         <a className="alertButton" href="#front-deals-heading">Find a deal</a>
@@ -105,6 +98,11 @@ export default function Home() {
         <h1>{activeSlide.title}</h1>
         <p>{activeSlide.text}</p>
         <div className="campaignActions"><a href="#front-deals-heading">Explore product picks <span aria-hidden="true">↗</span></a><a href={activeSlide.amazonUrl} target="_blank" rel="sponsored noopener noreferrer">Browse on Amazon →</a></div>
+        <ul className="campaignTrust">
+          <li>✓ Prices refreshed every 3 hours, not stale screenshots</li>
+          <li>✓ Every link goes straight to the seller — no middleman checkout</li>
+          <li>✓ Clear affiliate disclosure, always</li>
+        </ul>
         <div className="campaignControls"><button onClick={() => setSlide((activeSlideIndex - 1 + slides.length) % slides.length)} aria-label="Previous banner">←</button><span>{String(activeSlideIndex + 1).padStart(2, "0")} / {slides.length}</span><button onClick={() => setSlide((activeSlideIndex + 1) % slides.length)} aria-label="Next banner">→</button><button aria-pressed={playing} onClick={() => setPlaying(!playing)}>{playing ? "Pause" : "Play"} banners</button></div>
       </div>
       <div className="campaignArtwork">
@@ -137,11 +135,6 @@ export default function Home() {
         <small>Confirm current price and availability on {product.listings[0].store}.</small>
       </article>)}</div>
       <p className="disclosure"><strong>Affiliate and price notice:</strong> OfferLoom may earn a commission when you use eligible merchant links, at no extra cost to you. As an Amazon Associate I earn from qualifying purchases. Prices and availability can change and are confirmed on the merchant website. OfferLoom does not handle checkout, payment, shipping, cancellations, returns or refunds.</p>
-    </section>
-
-    <section className="featuredShop" id="featured">
-      <div><span className="eyebrow">FEATURED PICKS</span><h2>Explore what interests you</h2><p>The available shopping destination is shown clearly before you leave OfferLoom.</p></div>
-      <div className="featuredQuickLinks"><a href={amazonLinks.mobiles} target="_blank" rel="sponsored noopener noreferrer"><span>▯</span><strong>Mobiles</strong><small>Shop on Amazon →</small></a><a href={amazonLinks.fashion} target="_blank" rel="sponsored noopener noreferrer"><span>♢</span><strong>Fashion</strong><small>Shop on Amazon →</small></a><a href={amazonLinks.appliances} target="_blank" rel="sponsored noopener noreferrer"><span>⌂</span><strong>Home</strong><small>Shop on Amazon →</small></a></div>
     </section>
 
     <section className="how" id="how"><div><span>01</span><h3>Search or browse</h3><p>Find electronics by name, use case or category.</p></div><div><span>02</span><h3>Review the collection</h3><p>Use the summaries and specifications to narrow your choice.</p></div><div><span>03</span><h3>Shop with the merchant</h3><p>Open an approved link and confirm the live price before buying.</p></div></section>
