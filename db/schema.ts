@@ -8,6 +8,15 @@ export const categories = sqliteTable("categories", {
   createdAt: text("created_at").notNull(),
 }, (table) => [uniqueIndex("idx_categories_slug").on(table.slug)]);
 
+export const collectedDeals = sqliteTable("collected_deals", {
+  id: text("id").primaryKey(),
+  payload: text("payload").notNull(),
+  approvedPayload: text("approved_payload"),
+  productId: text("product_id"),
+  status: text("status").notNull().default("pending"),
+  updatedAt: text("updated_at").notNull(),
+});
+
 export const products = sqliteTable("products", {
   id: text("id").primaryKey(),
   categoryId: text("category_id").references(() => categories.id),
@@ -76,3 +85,20 @@ export const outboundClicks = sqliteTable("outbound_clicks", {
   referrerHost: text("referrer_host"),
   clickedAt: text("clicked_at").notNull(),
 }, (table) => [index("idx_clicks_listing_time").on(table.listingId, table.clickedAt)]);
+
+export const socialPosts = sqliteTable("social_posts", {
+  id: text("id").primaryKey(),
+  headline: text("headline").notNull(),
+  body: text("body").notNull().default(""),
+  linkUrl: text("link_url"),
+  imageUrl: text("image_url").notNull(),
+  platformsJson: text("platforms_json").notNull(),
+  caption: text("caption").notNull(),
+  status: text("status", { enum: ["draft", "scheduled", "published", "failed", "cancelled"] }).notNull().default("draft"),
+  scheduledAt: text("scheduled_at"),
+  publishedAt: text("published_at"),
+  publishResultsJson: text("publish_results_json"),
+  lastError: text("last_error"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+}, (table) => [index("idx_social_posts_status_scheduled").on(table.status, table.scheduledAt)]);

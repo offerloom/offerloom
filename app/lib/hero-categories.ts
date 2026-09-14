@@ -21,10 +21,10 @@ export type HeroCategorySlide = {
   };
 };
 
-const amazonTag = "offerloom-21";
+import { offerloomAmazonSearchPath } from "./amazon";
 
 function amazonSearch(query: string) {
-  return `https://www.amazon.in/s?k=${encodeURIComponent(query)}&tag=${amazonTag}`;
+  return offerloomAmazonSearchPath(query);
 }
 
 const disclaimer = "*On selected partner store offers. Final price confirmed at checkout.";
@@ -109,7 +109,7 @@ export const heroCategorySlides: HeroCategorySlide[] = [
     theme: "beauty",
     image: "/hero/beauty-health-grocery.svg",
     imageAlt: "Beauty, health and grocery products",
-    filterCategory: "All",
+    filterCategory: "Beauty",
     searchTerm: "beauty health grocery",
     amazonUrl: amazonSearch("beauty health grocery"),
     promo: { corner: "CARE", badge: "Daily Essentials", dealLine: "Up to 50% off", extraTag: "Beauty, wellness & grocery", highlight: "Skincare · Wellness · Pantry", shopLabel: "SHOP NOW", disclaimer },
@@ -123,7 +123,7 @@ export const heroCategorySlides: HeroCategorySlide[] = [
     theme: "sports",
     image: "/hero/sports-fitness-bags.svg",
     imageAlt: "Sports gear, fitness equipment and bags",
-    filterCategory: "All",
+    filterCategory: "Sports",
     searchTerm: "sports fitness bags luggage",
     amazonUrl: amazonSearch("sports fitness bags luggage"),
     promo: { corner: "FIT", badge: "Active Lifestyle", dealLine: "Up to 40% off", extraTag: "Sports gear & travel bags", highlight: "Fitness · Sports · Luggage", shopLabel: "SHOP NOW", disclaimer },
@@ -151,7 +151,7 @@ export const heroCategorySlides: HeroCategorySlide[] = [
     theme: "auto",
     image: "/hero/car-motorbike-industrial.svg",
     imageAlt: "Car, motorbike and industrial products",
-    filterCategory: "All",
+    filterCategory: "Auto",
     searchTerm: "car motorbike industrial",
     amazonUrl: amazonSearch("car motorbike industrial"),
     promo: { corner: "AUTO", badge: "Ride & Tools", dealLine: "Top deals", extraTag: "Car care & industrial picks", highlight: "Car care · Bike · Tools", shopLabel: "SHOP NOW", disclaimer },
@@ -165,7 +165,7 @@ export const heroCategorySlides: HeroCategorySlide[] = [
     theme: "books",
     image: "/hero/books.svg",
     imageAlt: "Books and reading collections",
-    filterCategory: "All",
+    filterCategory: "Books",
     searchTerm: "books",
     amazonUrl: amazonSearch("books"),
     promo: { corner: "READ", badge: "Book Bazaar", dealLine: "Up to 60% off", extraTag: "Bestsellers & study picks", highlight: "Fiction · Study · Bestsellers", shopLabel: "SHOP NOW", disclaimer },
@@ -186,44 +186,3 @@ export const heroCategorySlides: HeroCategorySlide[] = [
   },
 ];
 
-export type ShopCategoryTile = {
-  id: string;
-  name: string;
-  icon: string;
-  theme: string;
-  image: string;
-  amazonUrl: string;
-};
-
-const shopTileMeta: Record<string, { name: string; icon: string; keywords: string[] }> = {
-  "mobiles-computers": { name: "Mobiles & PCs", icon: "▯", keywords: ["mobile", "phone", "laptop", "computer", "tablet"] },
-  "tv-appliances-electronics": { name: "TVs & appliances", icon: "▣", keywords: ["tv", "television", "appliance", "audio", "gaming", "console"] },
-  "mens-fashion": { name: "Men's fashion", icon: "♂", keywords: ["men", "fashion", "shirt", "shoe"] },
-  "womens-fashion": { name: "Women's fashion", icon: "♢", keywords: ["women", "fashion", "dress", "handbag"] },
-  "home-kitchen-pets": { name: "Home & kitchen", icon: "⌂", keywords: ["home", "kitchen", "appliance", "pet"] },
-  "beauty-health-grocery": { name: "Beauty & grocery", icon: "✿", keywords: ["beauty", "health", "grocery", "skincare"] },
-  "sports-fitness-bags": { name: "Sports & bags", icon: "⚡", keywords: ["sport", "fitness", "bag", "luggage"] },
-  "toys-baby-kids": { name: "Toys & baby", icon: "★", keywords: ["toy", "baby", "kids", "kid"] },
-  "car-motorbike-industrial": { name: "Auto & tools", icon: "⚙", keywords: ["car", "bike", "motorbike", "industrial", "tool"] },
-  books: { name: "Books", icon: "≡", keywords: ["book", "read", "novel"] },
-  "movies-music-games": { name: "Movies & games", icon: "✣", keywords: ["game", "gaming", "movie", "music", "console"] },
-};
-
-export const shopCategoryTiles: ShopCategoryTile[] = [
-  ...heroCategorySlides.map((slide) => ({
-    id: slide.id,
-    name: shopTileMeta[slide.id]?.name ?? slide.eyebrow,
-    icon: shopTileMeta[slide.id]?.icon ?? "◇",
-    theme: slide.theme,
-    image: slide.image,
-    amazonUrl: slide.amazonUrl,
-  })),
-  {
-    id: "all-deals",
-    name: "All deals",
-    icon: "✦",
-    theme: "brand",
-    image: "/hero/mobiles-computers.svg",
-    amazonUrl: amazonSearch("deals"),
-  },
-];

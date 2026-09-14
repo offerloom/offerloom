@@ -19,3 +19,7 @@ migrations_dir = "drizzle"
 
 [observability]
 enabled = true
+
+[triggers]
+# 6:00 AM IST (UTC+5:30) daily
+crons = ["30 0 * * *"]

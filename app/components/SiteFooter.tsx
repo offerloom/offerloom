@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BrandMark from "./BrandMark";
+import SocialLinks from "./SocialLinks";
 import { FOOTER_LINKS, SITE } from "../lib/site";
 
 export default function SiteFooter() {
@@ -12,6 +13,7 @@ export default function SiteFooter() {
             <span>Offer<span>Loom</span></span>
           </Link>
           <p>{SITE.tagline}</p>
+          <SocialLinks variant="footer" />
           <small>Operated by {SITE.legalEntity}. Product discovery and price comparison for shoppers in {SITE.country}.</small>
         </div>
         <div>

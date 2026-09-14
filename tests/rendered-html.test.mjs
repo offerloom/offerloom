@@ -21,13 +21,23 @@ test("renders the OfferLoom shopping experience", async () => {
 
   const html = await response.text();
   assert.match(html, /OfferLoom/);
-  assert.match(html, /Find better value without the clutter\./);
+  assert.match(html, /Upgrade your everyday tech\./);
+  assert.equal((html.match(/<h1\b/g) ?? []).length, 1);
+  assert.match(html, /Play<!-- --> banners|Play banners/);
+  assert.ok(html.indexOf('class="campaignHero"') < html.indexOf('class="frontDeals"'));
+  assert.doesNotMatch(html, /Up to 55% off/);
   assert.match(html, /Start with a category/);
+  assert.match(html, /Filter by department/);
+  assert.match(html, /Join for daily deals/);
+  assert.match(html, /dealAlertsFloat/);
+  assert.match(html, /instagram\.com\/offer\.loom/);
+  assert.match(html, /instagram\.com\/offer\.loom/);
+  assert.match(html, /youtube\.com\/@offerloom/);
   assert.match(html, /Explore what interests you/);
-  assert.match(html, /fashion finds slide/i);
+  assert.match(html, /aria-roledescription="carousel"/);
   assert.match(html, /aria-roledescription="carousel"/);
   assert.match(html, /As an Amazon Associate I earn from qualifying purchases\./);
-  assert.match(html, /tag=offerloom-21/);
+  assert.match(html, /\/go\/amazon\/search\?k=/);
   assert.match(html, /rel="sponsored noopener noreferrer"/);
   assert.match(html, /Buying guides/);
   assert.match(html, /Privacy Policy/);
@@ -55,14 +65,14 @@ test("renders public business and guide pages", async () => {
 });
 
 test("keeps shopping claims and unavailable merchants compliant", async () => {
-  const [page, handoff] = await Promise.all([
+  const [page, memory] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../docs/PROJECT_HANDOFF.md", import.meta.url), "utf8"),
+    readFile(new URL("../docs/PROJECT_MEMORY.md", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /Available destination:/);
-  assert.match(page, /View current offers/);
+  assert.match(page, /Browse on Amazon|View on Amazon/);
+  assert.match(page, /Tagged product link|Opens Amazon search/);
   assert.doesNotMatch(page, /AMAZON SHOPPING ENABLED|Browse electronics on Amazon\.in/);
   assert.doesNotMatch(page, /scrape|live Amazon price/i);
-  assert.match(handoff, /Do not scrape marketplaces without permission\./);
+  assert.match(memory, /Never scrape .*without written authorization\./);
 });

@@ -23,11 +23,11 @@ export async function GET() {
   if (!await authorizeAdminApi()) return Response.json({ error: "Unauthorized" }, { status: 401 });
   const result = await env.DB.prepare(`
     SELECT p.id, p.name, p.summary, p.status, p.updated_at AS updatedAt,
-      c.name AS category, ml.id AS listingId, ml.merchant_product_id AS asin,
+      c.name AS category, ml.id AS listingId, ml.merchant, ml.merchant_product_id AS asin,
       ml.affiliate_url AS affiliateUrl
     FROM products p
     LEFT JOIN categories c ON c.id = p.category_id
-    LEFT JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant = 'amazon'
+    LEFT JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant IN ('amazon', 'ajio')
     ORDER BY p.updated_at DESC
   `).all();
   const merchantResult = await env.DB.prepare(`

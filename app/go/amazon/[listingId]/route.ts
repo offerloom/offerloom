@@ -1,4 +1,5 @@
 import { env } from "cloudflare:workers";
+import { buildAmazonProductUrl, parseAmazonAsin, withAmazonAssociateTag } from "../../../lib/amazon";
 
 export async function GET(request: Request, context: { params: Promise<{ listingId: string }> }) {
   const { listingId } = await context.params;
@@ -16,7 +17,12 @@ export async function GET(request: Request, context: { params: Promise<{ listing
   await env.DB.prepare("INSERT INTO outbound_clicks (listing_id, product_id, merchant, referrer_host, clicked_at) VALUES (?, ?, 'amazon', ?, ?)")
     .bind(listing.id, listing.productId, referrerHost, new Date().toISOString()).run();
 
-  return Response.redirect(listing.affiliateUrl, 302);
+  return Response.redirect(resolveTaggedAffiliateUrl(listing.affiliateUrl), 302);
+}
+
+function resolveTaggedAffiliateUrl(affiliateUrl: string): string {
+  const asin = parseAmazonAsin(affiliateUrl);
+  return asin ? buildAmazonProductUrl(asin) : withAmazonAssociateTag(affiliateUrl);
 }
 
 function safeReferrerHost(value: string | null): string | null {
