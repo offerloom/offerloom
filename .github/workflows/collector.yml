@@ -16,6 +16,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # GitHub only runs schedule/workflow_dispatch triggers from the default branch,
+          # but the current app code and collector config live on "offerloom" (the dev
+          # branch) — pin the checkout there so scheduled runs use current code, not main.
+          ref: offerloom
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
