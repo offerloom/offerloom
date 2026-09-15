@@ -96,7 +96,7 @@ async function main() {
   const configPath = process.argv[2];
   if (!configPath) throw new Error("Usage: node scripts/browser-collector.mjs config.json [--watch]");
   const config = JSON.parse(await readFile(configPath, "utf8"));
-  if (!Array.isArray(config.urls) || !config.urls.length || config.urls.length > 25) throw new Error("Configure 1–25 product URLs");
+  if (!Array.isArray(config.urls) || !config.urls.length) throw new Error("Configure at least 1 product URL");
   config.urls.forEach(productSource);
   const intervalHours = Number(config.intervalHours ?? 6);
   if (!Number.isFinite(intervalHours) || intervalHours < 1 || intervalHours > 168) throw new Error("intervalHours must be 1–168");

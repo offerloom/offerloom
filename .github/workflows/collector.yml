@@ -2,9 +2,12 @@ name: Sync product deals
 
 on:
   schedule:
-    # Every 3 hours. Kept off :00/:30 to avoid piling onto GitHub's busiest minutes,
-    # and spaced to stay comfortably inside the free 2,000 min/month Actions budget
-    # for a private repo (~5-6 min per run × 8 runs/day × 30 days ≈ 1,200-1,440 min/month).
+    # Every 3 hours. Kept off :00/:30 to avoid piling onto GitHub's busiest minutes.
+    # Runtime scales with scripts/collector-config.json's URL count (no cap as of
+    # 2026-09-15) — at 25 URLs this was ~5-6 min/run (~1,200-1,440 min/month, inside
+    # the free 2,000 min/month budget for a private repo); adding more URLs raises
+    # both run time and total monthly minutes roughly linearly, so re-check usage
+    # (Settings → Billing → Actions) after growing the list a lot.
     - cron: "7 */3 * * *"
   workflow_dispatch: {}
 
