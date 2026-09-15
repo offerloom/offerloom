@@ -54,7 +54,7 @@ export function categorize(merchant, name) {
 
 export async function collect(page, sourceUrl) {
   const source = productSource(sourceUrl);
-  const response = await page.goto(source.url, { waitUntil: "domcontentloaded", timeout: 30000 });
+  const response = await page.goto(source.url, { waitUntil: "domcontentloaded", timeout: 45000 });
   if (!response || !response.ok()) throw new Error(`Page unavailable (${response?.status() ?? "no response"})`);
   const final = productSource(page.url());
   if (final.id !== source.id || final.merchant !== source.merchant) throw new Error("Unexpected product redirect");
@@ -71,7 +71,9 @@ export async function collect(page, sourceUrl) {
     ],
     mrp: ["#corePriceDisplay_desktop_feature_div .a-text-price .a-offscreen", "#apex_desktop .a-text-price .a-offscreen"],
   } : { title: ".prod-name", image: "#myCarousel img", price: [".prod-sp"], mrp: [".prod-cp"] };
-  await page.locator(selectors.title).first().waitFor({ state: "visible", timeout: 15000 });
+  // Amazon sometimes gates first paint behind a bot-mitigation JS challenge that resolves on
+  // its own after several seconds — give it real time before treating a slow page as a failure.
+  await page.locator(selectors.title).first().waitFor({ state: "visible", timeout: 35000 });
   let name = (await page.locator(selectors.title).first().innerText()).trim();
   const read = async (selector) => await page.locator(selector).first().textContent({ timeout: 3000 }).catch(() => "");
   // Try each candidate selector in order and use the first one with real (non-blank) text —
