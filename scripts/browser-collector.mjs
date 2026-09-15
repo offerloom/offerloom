@@ -136,10 +136,21 @@ async function main() {
       const response = await fetch(endpoint, { method: "POST", redirect: "error", signal: AbortSignal.timeout(30000), headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.OFFERLOOM_ADMIN_TOKEN}` }, body: JSON.stringify({ action: "ingest", deals: results }) });
       if (!response.ok) throw new Error(`Draft ingestion failed (${response.status})`);
     }
+    let newlyAdded = [];
     if (process.argv.includes("--d1-remote")) {
       // Owner-operated alternative when Wrangler is already authenticated. Only stage drafts.
       const autoApprove = process.argv.includes("--auto-approve");
       const quote = (value) => `'${String(value).replaceAll("'", "''")}'`;
+
+      // Figure out which of this run's Amazon deals are brand-new products (not already in
+      // the catalog) before upserting, so the sync summary can report "added" vs "refreshed".
+      const candidateIds = results.filter((deal) => deal.merchant === "amazon" && autoApprove).map((deal) => `amazon-${deal.merchantProductId.toLowerCase()}`);
+      const existingIds = new Set();
+      if (candidateIds.length) {
+        const { stdout } = await promisify(execFile)("npx", ["--no-install", "wrangler", "d1", "execute", "offerloom", "--remote", "--json", "--command", `SELECT id FROM products WHERE id IN (${candidateIds.map(quote).join(",")});`], { timeout: 60000 });
+        for (const row of JSON.parse(stdout)[0]?.results ?? []) existingIds.add(row.id);
+      }
+
       const statements = results.map((deal) => {
         const dealId = `${deal.merchant}-${deal.merchantProductId}`;
         const now = new Date().toISOString();
@@ -152,6 +163,7 @@ async function main() {
         const categorySlug = slugify(deal.category);
         const affiliateUrl = `https://www.amazon.in/dp/${deal.merchantProductId}?tag=offerloom-21`;
         const summary = autoSummary(deal);
+        if (!existingIds.has(productId)) newlyAdded.push({ name: deal.name, price: deal.price, mrp: deal.mrp, category: deal.category, productId });
         return [
           `INSERT INTO collected_deals (id,payload,approved_payload,product_id,status,updated_at) VALUES (${quote(dealId)},${quote(JSON.stringify(deal))},${quote(JSON.stringify(deal))},${quote(productId)},'approved',${quote(now)}) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,approved_payload=excluded.approved_payload,product_id=excluded.product_id,status='approved',updated_at=excluded.updated_at;`,
           `INSERT INTO categories (id,name,slug,position,created_at) VALUES (${quote(`cat-${categorySlug}`)},${quote(deal.category)},${quote(categorySlug)},0,${quote(now)}) ON CONFLICT(slug) DO NOTHING;`,
@@ -169,6 +181,13 @@ async function main() {
       await writeFile("outputs/collector/drafts.sql", sql, { mode: 0o600 });
       await promisify(execFile)("npx", ["--no-install", "wrangler", "d1", "execute", "offerloom", "--remote", "--file", "outputs/collector/drafts.sql"], { timeout: 180000 });
     }
+    await writeFile("outputs/collector/summary.json", JSON.stringify({
+      checkedAt: new Date().toISOString(),
+      collected: results.length,
+      errors: errors.length,
+      newlyAdded,
+      refreshed: results.length - newlyAdded.length,
+    }, null, 2), { mode: 0o600 });
     console.log(JSON.stringify({ collected: results.length, blockedOrUnavailable: errors.length, draftsSent: Boolean((endpoint || process.argv.includes("--d1-remote")) && results.length) }));
     if (!process.argv.includes("--watch")) break;
     await new Promise((resolve) => setTimeout(resolve, intervalHours * 3600000));
