@@ -34,6 +34,48 @@ type SocialPostRow = {
   updated_at: string;
 };
 
+// Meta restricted this app's Graph API access once after several manual retries fired
+// facebook/instagram publish calls seconds apart while debugging — their abuse detection
+// reads that burst pattern as automated/unusual activity. This spaces out real Graph API
+// calls regardless of which code path triggers them (auto cron, admin retry, scheduled drain).
+const META_PLATFORMS: SocialPlatform[] = ["facebook", "instagram"];
+const META_COOLDOWN_MS = 2 * 60 * 1000;
+
+async function metaCooldownRemainingMs(env: EnvLike): Promise<number> {
+  const row = await env.DB.prepare(`
+    SELECT MAX(ts) AS lastAt FROM (
+      SELECT created_at AS ts FROM social_posts WHERE platforms_json LIKE '%facebook%' OR platforms_json LIKE '%instagram%'
+      UNION ALL
+      SELECT updated_at AS ts FROM social_posts WHERE platforms_json LIKE '%facebook%' OR platforms_json LIKE '%instagram%'
+    )
+  `).first<{ lastAt: string | null }>();
+  if (!row?.lastAt) return 0;
+  return Math.max(0, META_COOLDOWN_MS - (Date.now() - new Date(row.lastAt).getTime()));
+}
+
+async function publishWithMetaCooldown(
+  env: EnvLike,
+  platforms: SocialPlatform[],
+  captionFor: string | ((platform: SocialPlatform) => string),
+  imageUrl: string,
+  secrets: ReturnType<typeof socialSecretsFromEnv>,
+): Promise<PublishResult[]> {
+  const remaining = await metaCooldownRemainingMs(env);
+  if (remaining <= 0) return publishToPlatforms(platforms, captionFor, imageUrl, secrets);
+
+  const retryAfterSeconds = Math.ceil(remaining / 1000);
+  const skipped: PublishResult[] = platforms
+    .filter((platform) => META_PLATFORMS.includes(platform))
+    .map((platform) => ({
+      platform,
+      status: "skipped" as const,
+      message: `Skipped for ${retryAfterSeconds}s to avoid rapid repeat calls to Meta's Graph API — Meta previously restricted this app after back-to-back retries were read as unusual activity. Retry from the admin panel once the cooldown clears.`,
+    }));
+  const remainder = platforms.filter((platform) => !META_PLATFORMS.includes(platform));
+  const remainderResults = await publishToPlatforms(remainder, captionFor, imageUrl, secrets);
+  return [...skipped, ...remainderResults];
+}
+
 export function parsePlatforms(value: unknown): SocialPlatform[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is SocialPlatform => SOCIAL_PLATFORMS.includes(item as SocialPlatform));
@@ -124,7 +166,7 @@ export async function createSocialPost(env: EnvLike, input: CreateSocialPostInpu
 
   if (input.mode === "publish_now") {
     const captionFor = (platform: SocialPlatform) => input.platformCaptions?.[platform] ?? caption;
-    publishResults = await publishToPlatforms(input.platforms, captionFor, composed.imageUrl, secrets);
+    publishResults = await publishWithMetaCooldown(env, input.platforms, captionFor, composed.imageUrl, secrets);
     lastError = summarizePublishResults(publishResults);
     if (isPublishSuccessful(publishResults)) {
       status = "published";
@@ -166,7 +208,7 @@ export async function publishSocialPostNow(env: EnvLike, id: string) {
   if (post.status === "published") throw new Error("This post is already published.");
 
   const secrets = socialSecretsFromEnv(env);
-  const publishResults = await publishToPlatforms(post.platforms, post.caption, post.imageUrl, secrets);
+  const publishResults = await publishWithMetaCooldown(env, post.platforms, post.caption, post.imageUrl, secrets);
   const lastError = summarizePublishResults(publishResults);
   const now = new Date().toISOString();
   const status: SocialPostStatus = isPublishSuccessful(publishResults) ? "published" : "failed";

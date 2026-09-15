@@ -6,7 +6,7 @@ export type SocialPostStatus = "draft" | "scheduled" | "published" | "failed" | 
 
 export type PublishResult = {
   platform: SocialPlatform;
-  status: "published" | "manual" | "failed";
+  status: "published" | "manual" | "failed" | "skipped";
   externalId?: string;
   message: string;
   /** Ready-to-paste caption text for platforms with no posting API (manual status). */

@@ -126,10 +126,9 @@ export async function publishToPlatforms(
 }
 
 export function summarizePublishResults(results: PublishResult[]) {
-  const failed = results.filter((item) => item.status === "failed");
-  if (failed.length === results.length) return failed.map((item) => `${item.platform}: ${item.message}`).join(" | ");
-  if (failed.length > 0) return failed.map((item) => `${item.platform}: ${item.message}`).join(" | ");
-  return "";
+  const notable = results.filter((item) => item.status === "failed" || item.status === "skipped");
+  if (!notable.length) return "";
+  return notable.map((item) => `${item.platform}: ${item.message}`).join(" | ");
 }
 
 export function isPublishSuccessful(results: PublishResult[]) {
