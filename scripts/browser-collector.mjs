@@ -124,7 +124,13 @@ async function main() {
             return route.continue();
           });
           results.push(await collect(page, url));
-        } catch (error) { errors.push({ sourceUrl: productSource(url).url, error: error.message.startsWith("Page unavailable") || error.message.startsWith("Access challenge") ? error.message : "Product could not be collected; review source or selectors" }); }
+        } catch (error) {
+          // Keep the real reason (timeout, missing selector, etc.) instead of a generic
+          // message — when every URL fails identically it's the only way to tell "Amazon
+          // changed the page" from "this runner's IP is being challenged" from a real bug.
+          const known = error.message.startsWith("Page unavailable") || error.message.startsWith("Access challenge") || error.message.startsWith("Missing product title");
+          errors.push({ sourceUrl: productSource(url).url, error: known ? error.message : `Product could not be collected: ${error.message}`.slice(0, 300) });
+        }
         finally { await page.close(); }
         // Space out requests so a multi-product run reads like ordinary browsing, not a scraping burst.
         if (url !== config.urls[config.urls.length - 1]) await new Promise((resolve) => setTimeout(resolve, 4000 + Math.random() * 4000));
