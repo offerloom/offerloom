@@ -17,10 +17,10 @@ const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>Label</key><string>${label}</string>
-<key>ProgramArguments</key><array><string>${xml(process.execPath)}</string><string>${xml(resolve(root,"scripts/browser-collector.mjs"))}</string><string>${xml(resolve(root,"scripts/collector-config.json"))}</string><string>--d1-remote</string>${process.argv.includes("--auto-approve") ? "<string>--auto-approve</string>" : ""}</array>
+<key>ProgramArguments</key><array><string>/bin/bash</string><string>${xml(resolve(root,"scripts/run-collector-and-notify.sh"))}</string></array>
 <key>WorkingDirectory</key><string>${xml(root)}</string>
 <key>StartInterval</key><integer>${seconds}</integer><key>RunAtLoad</key><true/>
-<key>EnvironmentVariables</key><dict><key>PATH</key><string>${xml(`${dirname(process.execPath)}:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin`)}</string><key>OFFERLOOM_CHROME_CHANNEL</key><string>chrome</string></dict>
+<key>EnvironmentVariables</key><dict><key>PATH</key><string>${xml(`${dirname(process.execPath)}:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin`)}</string><key>OFFERLOOM_CHROME_CHANNEL</key><string>chrome</string><key>GMAIL_USER</key><string>${xml(process.env.GMAIL_USER ?? "contact.offerloom@gmail.com")}</string><key>GMAIL_APP_PASSWORD</key><string>${xml(process.env.GMAIL_APP_PASSWORD ?? "")}</string></dict>
 <key>StandardOutPath</key><string>${xml(resolve(logs,"scheduler.log"))}</string>
 <key>StandardErrorPath</key><string>${xml(resolve(logs,"scheduler-error.log"))}</string>
 </dict></plist>`;

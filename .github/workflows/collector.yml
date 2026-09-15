@@ -1,14 +1,12 @@
 name: Sync product deals
 
 on:
-  schedule:
-    # Every 3 hours. Kept off :00/:30 to avoid piling onto GitHub's busiest minutes.
-    # Runtime scales with scripts/collector-config.json's URL count (no cap as of
-    # 2026-09-15) — at 25 URLs this was ~5-6 min/run (~1,200-1,440 min/month, inside
-    # the free 2,000 min/month budget for a private repo); adding more URLs raises
-    # both run time and total monthly minutes roughly linearly, so re-check usage
-    # (Settings → Billing → Actions) after growing the list a lot.
-    - cron: "7 */3 * * *"
+  # Schedule disabled 2026-09-15: Amazon's bot-mitigation blocks/challenges GitHub Actions'
+  # shared runner IPs almost entirely (22-24 of 25 URLs failed on #productTitle never
+  # rendering, even after raising timeouts) — a residential/business IP doesn't hit this.
+  # Collection now runs from the owner's Mac via a LaunchAgent instead (see
+  # scripts/install-collector-schedule.mjs). workflow_dispatch is kept for manual runs
+  # only (e.g. to re-test whether GitHub's IP range is still blocked).
   workflow_dispatch: {}
 
 jobs:
