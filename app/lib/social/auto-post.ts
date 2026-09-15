@@ -73,8 +73,8 @@ export async function runAutoSocialPost(env: EnvLike) {
     `${priceLine} on ${merchantLabel}.`,
     row.summary,
     `👉 ${linkUrl}`,
-    disclosure,
     buildHashtagLine(["OfferLoomIndia", "DealsToday"]),
+    disclosure,
   ].filter(Boolean).join("\n\n");
 
   // X (Twitter) has a 280-character hard limit — build a short variant instead of
