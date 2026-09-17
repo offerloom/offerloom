@@ -46,6 +46,11 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
+        {/* Meta Business Suite domain verification (Instagram Shopping). Written as a literal
+            tag, not via generateMetadata's `other` field, which streams into a hidden <div> in
+            <body> rather than a static <head> tag — Meta's crawler doesn't execute JS and
+            requires the tag to be literally inside <head>. */}
+        <meta name="facebook-domain-verification" content="x6oxq00cx794ej5w6owznl1syz6ygt" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
