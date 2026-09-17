@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import SiteFooter from "../../components/SiteFooter";
 import styles from "./product.module.css";
 import { publicOffer } from "../../lib/public-offer";
+import { SITE } from "../../lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,28 @@ type ProductRow = {
   summary:string; specsJson:string; category:string; updatedAt:string; imageUrl:string|null;
 };
 type ListingRow = { id:string; merchant:string; lastCheckedAt:string|null; approvedPayload:string|null };
+
+// Feeds link-preview cards (Facebook feed posts, WhatsApp, Telegram, iMessage, etc.) so a
+// shared product link shows the real photo/title instead of a blank or generic preview.
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const product = await env.DB.prepare(`SELECT name, summary, image_url AS imageUrl FROM products WHERE slug = ? AND status = 'published'`)
+    .bind(slug).first<{ name: string; summary: string; imageUrl: string | null }>();
+  if (!product) return {};
+  const url = `${SITE.publicUrl}/products/${slug}`;
+  return {
+    title: `${product.name} | ${SITE.brand}`,
+    description: product.summary,
+    openGraph: {
+      title: product.name,
+      description: product.summary,
+      url,
+      siteName: SITE.brand,
+      images: product.imageUrl ? [{ url: product.imageUrl }] : undefined,
+    },
+    twitter: { card: "summary_large_image", title: product.name, description: product.summary, images: product.imageUrl ? [product.imageUrl] : undefined },
+  };
+}
 
 export default async function ProductPage({ params }: { params: Promise<{ slug:string }> }) {
   const { slug } = await params;

@@ -59,9 +59,10 @@ async function publishWithMetaCooldown(
   captionFor: string | ((platform: SocialPlatform) => string),
   imageUrl: string,
   secrets: ReturnType<typeof socialSecretsFromEnv>,
+  linkUrl?: string,
 ): Promise<PublishResult[]> {
   const remaining = await metaCooldownRemainingMs(env);
-  if (remaining <= 0) return publishToPlatforms(platforms, captionFor, imageUrl, secrets);
+  if (remaining <= 0) return publishToPlatforms(platforms, captionFor, imageUrl, secrets, linkUrl);
 
   const retryAfterSeconds = Math.ceil(remaining / 1000);
   const skipped: PublishResult[] = platforms
@@ -72,7 +73,7 @@ async function publishWithMetaCooldown(
       message: `Skipped for ${retryAfterSeconds}s to avoid rapid repeat calls to Meta's Graph API — Meta previously restricted this app after back-to-back retries were read as unusual activity. Retry from the admin panel once the cooldown clears.`,
     }));
   const remainder = platforms.filter((platform) => !META_PLATFORMS.includes(platform));
-  const remainderResults = await publishToPlatforms(remainder, captionFor, imageUrl, secrets);
+  const remainderResults = await publishToPlatforms(remainder, captionFor, imageUrl, secrets, linkUrl);
   return [...skipped, ...remainderResults];
 }
 
@@ -166,7 +167,7 @@ export async function createSocialPost(env: EnvLike, input: CreateSocialPostInpu
 
   if (input.mode === "publish_now") {
     const captionFor = (platform: SocialPlatform) => input.platformCaptions?.[platform] ?? caption;
-    publishResults = await publishWithMetaCooldown(env, input.platforms, captionFor, composed.imageUrl, secrets);
+    publishResults = await publishWithMetaCooldown(env, input.platforms, captionFor, composed.imageUrl, secrets, input.linkUrl);
     lastError = summarizePublishResults(publishResults);
     if (isPublishSuccessful(publishResults)) {
       status = "published";
@@ -208,7 +209,7 @@ export async function publishSocialPostNow(env: EnvLike, id: string) {
   if (post.status === "published") throw new Error("This post is already published.");
 
   const secrets = socialSecretsFromEnv(env);
-  const publishResults = await publishWithMetaCooldown(env, post.platforms, post.caption, post.imageUrl, secrets);
+  const publishResults = await publishWithMetaCooldown(env, post.platforms, post.caption, post.imageUrl, secrets, post.linkUrl ?? undefined);
   const lastError = summarizePublishResults(publishResults);
   const now = new Date().toISOString();
   const status: SocialPostStatus = isPublishSuccessful(publishResults) ? "published" : "failed";

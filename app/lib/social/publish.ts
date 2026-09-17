@@ -1,16 +1,21 @@
 import type { PublishResult, SocialPlatform, SocialSecrets } from "./types";
 
-async function publishFacebook(caption: string, imageUrl: string, secrets: SocialSecrets): Promise<PublishResult> {
+async function publishFacebook(caption: string, imageUrl: string, secrets: SocialSecrets, linkUrl?: string): Promise<PublishResult> {
   if (!secrets.metaPageAccessToken || !secrets.metaPageId) {
     return { platform: "facebook", status: "failed", message: "Meta Page token or Page ID is not configured." };
   }
 
-  const endpoint = `https://graph.facebook.com/v21.0/${secrets.metaPageId}/photos`;
-  const body = new URLSearchParams({
-    url: imageUrl,
-    caption,
-    access_token: secrets.metaPageAccessToken,
-  });
+  // A /photos post's caption text isn't reliably clickable — readers reported the product
+  // link in the caption couldn't be tapped. /feed with a `link` param instead renders Facebook's
+  // own clickable link-preview card (pulling og:image/title from the product page), so the link
+  // itself is the tappable element rather than plain caption text. Falls back to a plain photo
+  // post when there's no link to attach (e.g. a generic announcement with no product page).
+  const endpoint = linkUrl
+    ? `https://graph.facebook.com/v21.0/${secrets.metaPageId}/feed`
+    : `https://graph.facebook.com/v21.0/${secrets.metaPageId}/photos`;
+  const body = linkUrl
+    ? new URLSearchParams({ message: caption, link: linkUrl, access_token: secrets.metaPageAccessToken })
+    : new URLSearchParams({ url: imageUrl, caption, access_token: secrets.metaPageAccessToken });
   const response = await fetch(endpoint, { method: "POST", body });
   const data = await response.json() as { id?: string; error?: { message?: string } };
   if (!response.ok) {
@@ -108,13 +113,14 @@ export async function publishToPlatforms(
   captionFor: string | ((platform: SocialPlatform) => string),
   imageUrl: string,
   secrets: SocialSecrets,
+  linkUrl?: string,
 ): Promise<PublishResult[]> {
   const results: PublishResult[] = [];
   const getCaption = typeof captionFor === "function" ? captionFor : () => captionFor;
 
   for (const platform of platforms) {
     const caption = getCaption(platform);
-    if (platform === "facebook") results.push(await publishFacebook(caption, imageUrl, secrets));
+    if (platform === "facebook") results.push(await publishFacebook(caption, imageUrl, secrets, linkUrl));
     if (platform === "instagram") results.push(await publishInstagram(caption, imageUrl, secrets));
     if (platform === "telegram") results.push(await publishTelegram(caption, imageUrl, secrets));
     if (platform === "whatsapp_channel") results.push(publishWhatsAppChannel(caption));
