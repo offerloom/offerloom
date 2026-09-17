@@ -17,7 +17,7 @@ const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>Label</key><string>${label}</string>
-<key>ProgramArguments</key><array><string>/bin/bash</string><string>${xml(resolve(root,"scripts/run-collector-and-notify.sh"))}</string></array>
+<key>ProgramArguments</key><array><string>${xml(process.execPath)}</string><string>${xml(resolve(root,"scripts/run-collector-and-notify.mjs"))}</string></array>
 <key>WorkingDirectory</key><string>${xml(root)}</string>
 <key>StartInterval</key><integer>${seconds}</integer><key>RunAtLoad</key><true/>
 <key>EnvironmentVariables</key><dict><key>PATH</key><string>${xml(`${dirname(process.execPath)}:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin`)}</string><key>OFFERLOOM_CHROME_CHANNEL</key><string>chrome</string><key>GMAIL_USER</key><string>${xml(process.env.GMAIL_USER ?? "contact.offerloom@gmail.com")}</string><key>GMAIL_APP_PASSWORD</key><string>${xml(process.env.GMAIL_APP_PASSWORD ?? "")}</string></dict>
@@ -29,4 +29,22 @@ execFileSync("plutil",["-lint",agent],{stdio:"pipe"});
 const domain=`gui/${process.getuid()}`;
 try { execFileSync("launchctl",["bootout",`${domain}/${label}`],{stdio:"pipe"}); } catch { /* First install. */ }
 execFileSync("launchctl",["bootstrap",domain,agent],{stdio:"pipe"});
-console.log(`Installed ${label}; runs every ${seconds/3600} hours while logged in and awake.`);
+console.log(`Installed ${label}; runs every ${seconds/3600} hours while logged in.`);
+
+// Also install a keep-awake agent so scheduled runs aren't delayed by the Mac sleeping —
+// caffeinate -s only holds off sleep while on AC power, so battery life is unaffected.
+const awakeLabel = "com.offerloom.keepawake";
+const awakeAgent = resolve(homedir(),"Library/LaunchAgents",`${awakeLabel}.plist`);
+const awakePlist = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>Label</key><string>${awakeLabel}</string>
+<key>ProgramArguments</key><array><string>/usr/bin/caffeinate</string><string>-s</string></array>
+<key>RunAtLoad</key><true/><key>KeepAlive</key><true/>
+<key>StandardOutPath</key><string>/dev/null</string><key>StandardErrorPath</key><string>/dev/null</string>
+</dict></plist>`;
+await writeFile(awakeAgent,awakePlist,{mode:0o644});
+execFileSync("plutil",["-lint",awakeAgent],{stdio:"pipe"});
+try { execFileSync("launchctl",["bootout",`${domain}/${awakeLabel}`],{stdio:"pipe"}); } catch { /* First install. */ }
+execFileSync("launchctl",["bootstrap",domain,awakeAgent],{stdio:"pipe"});
+console.log(`Installed ${awakeLabel}; keeps the Mac awake on AC power so schedules aren't delayed.`);
