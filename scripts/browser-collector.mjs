@@ -34,12 +34,13 @@ export function money(text) {
   return Number.isSafeInteger(value) && value > 0 && value < 100000000 ? value : null;
 }
 
-const HOME_KEYWORDS = /\b(container|containers|bottle|bottles|cookware|kitchen|storage jar|jars?|cooktop|induction|utensil|dinnerware|cutlery|casserole|tiffin|lunch box|flask)\b/i;
+const HOME_KEYWORDS = /\b(container|containers|bottle|bottles|cookware|kitchen|storage jar|jars?|cooktop|induction|utensil|dinnerware|cutlery|casserole|tiffin|lunch box|flask|garbage bags?|trash bags?|weighing (machine|scale))\b/i;
 const FASHION_KEYWORDS = /\b(backpack|bag|handbag|wallet|shoe|shoes|footwear|sneaker|sandal|trouser|shirt|t-shirt|jacket|dress|saree|kurta|jeans)\b/i;
 const BEAUTY_KEYWORDS = /\b(sunscreen|face ?wash|skincare|moisturi[sz]er|serum|shampoo|conditioner|lipstick|makeup|cosmetic|spf)\b/i;
 const SPORTS_KEYWORDS = /\b(yoga mat|resistance band|dumbbell|gym|fitness|foam roller|exercise|workout)\b/i;
 const BOOKS_KEYWORDS = /\b(paperback|hardcover|hardback|a novel by|book set|books?:)\b/i;
 const AUTO_KEYWORDS = /\b(car mount|dashboard|car holder|car mobile holder|windshield|dash ?cam|car accessor)\b/i;
+const TOYS_KEYWORDS = /\b(board game|card game|strategy game|puzzle|jigsaw|action figure|building blocks|soft toy|stuffed toy|remote control car|rc car)\b/i;
 
 export function categorize(merchant, name) {
   if (merchant === "ajio") return "Fashion";
@@ -49,6 +50,7 @@ export function categorize(merchant, name) {
   if (SPORTS_KEYWORDS.test(name)) return "Sports";
   if (BOOKS_KEYWORDS.test(name)) return "Books";
   if (AUTO_KEYWORDS.test(name)) return "Auto";
+  if (TOYS_KEYWORDS.test(name)) return "Toys";
   return "Electronics";
 }
 
