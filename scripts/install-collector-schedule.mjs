@@ -7,19 +7,30 @@ if (process.platform !== "darwin") throw new Error("This installer targets macOS
 const label = "com.offerloom.browser-collector";
 const root = resolve(import.meta.dirname, "..");
 const config = JSON.parse(await readFile(resolve(root,"scripts/collector-config.json"),"utf8"));
-const seconds = Number(config.intervalHours ?? 6)*3600;
-if (!Number.isInteger(seconds) || seconds < 3600 || seconds > 604800) throw new Error("Invalid schedule interval");
+const intervalHours = Number(config.intervalHours ?? 6);
+if (!Number.isInteger(intervalHours) || intervalHours < 1 || intervalHours > 168) throw new Error("Invalid schedule interval");
 const xml = (s) => String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 const agent = resolve(homedir(),"Library/LaunchAgents",`${label}.plist`);
 const logs = resolve(root,"outputs/collector");
 await mkdir(dirname(agent),{recursive:true}); await mkdir(logs,{recursive:true});
+// StartInterval (elapsed-time-since-last-run) is known to be unreliable for LaunchAgents that
+// stay running for many hours — observed missing 3+ scheduled runs in a row in practice despite
+// the Mac never sleeping. StartCalendarInterval (fixed wall-clock times) is macOS's more
+// dependable primitive for "run at these times every day," so use it whenever intervalHours
+// divides evenly into 24; otherwise fall back to StartInterval.
+const calendarEntries = 24 % intervalHours === 0
+  ? Array.from({ length: 24 / intervalHours }, (_, i) => `<dict><key>Hour</key><integer>${i * intervalHours}</integer><key>Minute</key><integer>5</integer></dict>`).join("")
+  : null;
+const scheduleXml = calendarEntries
+  ? `<key>StartCalendarInterval</key><array>${calendarEntries}</array>`
+  : `<key>StartInterval</key><integer>${intervalHours * 3600}</integer>`;
 const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>Label</key><string>${label}</string>
 <key>ProgramArguments</key><array><string>${xml(process.execPath)}</string><string>${xml(resolve(root,"scripts/run-collector-and-notify.mjs"))}</string></array>
 <key>WorkingDirectory</key><string>${xml(root)}</string>
-<key>StartInterval</key><integer>${seconds}</integer><key>RunAtLoad</key><true/>
+${scheduleXml}<key>RunAtLoad</key><true/>
 <key>EnvironmentVariables</key><dict><key>PATH</key><string>${xml(`${dirname(process.execPath)}:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin`)}</string><key>OFFERLOOM_CHROME_CHANNEL</key><string>chrome</string><key>GMAIL_USER</key><string>${xml(process.env.GMAIL_USER ?? "contact.offerloom@gmail.com")}</string><key>GMAIL_APP_PASSWORD</key><string>${xml(process.env.GMAIL_APP_PASSWORD ?? "")}</string></dict>
 <key>StandardOutPath</key><string>${xml(resolve(logs,"scheduler.log"))}</string>
 <key>StandardErrorPath</key><string>${xml(resolve(logs,"scheduler-error.log"))}</string>
@@ -29,7 +40,7 @@ execFileSync("plutil",["-lint",agent],{stdio:"pipe"});
 const domain=`gui/${process.getuid()}`;
 try { execFileSync("launchctl",["bootout",`${domain}/${label}`],{stdio:"pipe"}); } catch { /* First install. */ }
 execFileSync("launchctl",["bootstrap",domain,agent],{stdio:"pipe"});
-console.log(`Installed ${label}; runs every ${seconds/3600} hours while logged in.`);
+console.log(`Installed ${label}; runs every ${intervalHours} hours while logged in.`);
 
 // Also install a keep-awake agent so scheduled runs aren't delayed by the Mac sleeping —
 // caffeinate -s only holds off sleep while on AC power, so battery life is unaffected.
