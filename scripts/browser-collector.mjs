@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, appendFile, mkdir } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -111,11 +111,23 @@ async function main() {
     if (!process.env.OFFERLOOM_ADMIN_TOKEN) throw new Error("OFFERLOOM_ADMIN_TOKEN is required for server ingestion");
   }
   await mkdir("outputs/collector", { recursive: true });
+  const progressLog = "outputs/collector/progress.log";
+  const logProgress = async (line) => {
+    const stamped = `${new Date().toISOString()} ${line}`;
+    console.error(stamped); // visible when run in the foreground or tailed via 2>&1
+    await appendFile(progressLog, stamped + "\n", { mode: 0o600 }).catch(() => {});
+  };
   do {
+    await writeFile(progressLog, "", { mode: 0o600 }).catch(() => {}); // reset at the start of each run
+    await logProgress(`Starting run: ${config.urls.length} URLs`);
     const browser = await chromium.launch({ headless: !process.argv.includes("--headed"), ...(process.env.OFFERLOOM_CHROME_CHANNEL ? { channel: process.env.OFFERLOOM_CHROME_CHANNEL } : {}) });
     const results = [], errors = [];
     try {
+      let index = 0;
       for (const url of config.urls) {
+        index += 1;
+        const label = `[${index}/${config.urls.length}] ${url}`;
+        await logProgress(`${label} - fetching...`);
         const page = await browser.newPage();
         try {
           // Never follow navigations outside the merchant's public web domain.
@@ -127,19 +139,24 @@ async function main() {
             }
             return route.continue();
           });
-          results.push(await collect(page, url));
+          const deal = await collect(page, url);
+          results.push(deal);
+          await logProgress(`${label} - OK: "${deal.name.slice(0, 60)}" ${deal.price ? `Rs.${(deal.price / 100).toFixed(0)}` : "(no price)"}`);
         } catch (error) {
           // Keep the real reason (timeout, missing selector, etc.) instead of a generic
           // message — when every URL fails identically it's the only way to tell "Amazon
           // changed the page" from "this runner's IP is being challenged" from a real bug.
           const known = error.message.startsWith("Page unavailable") || error.message.startsWith("Access challenge") || error.message.startsWith("Missing product title");
-          errors.push({ sourceUrl: productSource(url).url, error: known ? error.message : `Product could not be collected: ${error.message}`.slice(0, 300) });
+          const message = known ? error.message : `Product could not be collected: ${error.message}`.slice(0, 300);
+          errors.push({ sourceUrl: productSource(url).url, error: message });
+          await logProgress(`${label} - FAILED: ${message}`);
         }
         finally { await page.close(); }
         // Space out requests so a multi-product run reads like ordinary browsing, not a scraping burst.
         if (url !== config.urls[config.urls.length - 1]) await new Promise((resolve) => setTimeout(resolve, 4000 + Math.random() * 4000));
       }
     } finally { await browser.close(); }
+    await logProgress(`Run finished: ${results.length} collected, ${errors.length} failed`);
     await writeFile("outputs/collector/latest.json", JSON.stringify({ deals: results }, null, 2), { mode: 0o600 });
     await writeFile("outputs/collector/status.json", JSON.stringify({ checkedAt: new Date().toISOString(), collected: results.length, errors }, null, 2), { mode: 0o600 });
     if (endpoint && results.length) {
