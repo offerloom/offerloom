@@ -45,7 +45,7 @@ jobs:
       - name: Run Claude
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # Cap the work per run. CLAUDE.md ("Automated maintenance rules") sets what Claude may change.
           claude_args: |
             --max-turns 30
