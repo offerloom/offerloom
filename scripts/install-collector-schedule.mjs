@@ -24,6 +24,8 @@ const calendarEntries = 24 % intervalHours === 0
 const scheduleXml = calendarEntries
   ? `<key>StartCalendarInterval</key><array>${calendarEntries}</array>`
   : `<key>StartInterval</key><integer>${intervalHours * 3600}</integer>`;
+// Optional: GitHub issue reporting (fine-grained token, Issues read/write on this repo only) and auto-update.
+const optionalEnv = ["GITHUB_ISSUES_TOKEN", "OFFERLOOM_AUTO_UPDATE"].filter((name) => process.env[name]).map((name) => `<key>${name}</key><string>${xml(process.env[name])}</string>`).join("");
 const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
@@ -31,7 +33,7 @@ const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <key>ProgramArguments</key><array><string>${xml(process.execPath)}</string><string>${xml(resolve(root,"scripts/run-collector-and-notify.mjs"))}</string></array>
 <key>WorkingDirectory</key><string>${xml(root)}</string>
 ${scheduleXml}<key>RunAtLoad</key><true/>
-<key>EnvironmentVariables</key><dict><key>PATH</key><string>${xml(`${dirname(process.execPath)}:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin`)}</string><key>OFFERLOOM_CHROME_CHANNEL</key><string>chrome</string><key>GMAIL_USER</key><string>${xml(process.env.GMAIL_USER ?? "contact.offerloom@gmail.com")}</string><key>GMAIL_APP_PASSWORD</key><string>${xml(process.env.GMAIL_APP_PASSWORD ?? "")}</string></dict>
+<key>EnvironmentVariables</key><dict><key>PATH</key><string>${xml(`${dirname(process.execPath)}:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin`)}</string><key>OFFERLOOM_CHROME_CHANNEL</key><string>chrome</string><key>GMAIL_USER</key><string>${xml(process.env.GMAIL_USER ?? "contact.offerloom@gmail.com")}</string><key>GMAIL_APP_PASSWORD</key><string>${xml(process.env.GMAIL_APP_PASSWORD ?? "")}</string>${optionalEnv}</dict>
 <key>StandardOutPath</key><string>${xml(resolve(logs,"scheduler.log"))}</string>
 <key>StandardErrorPath</key><string>${xml(resolve(logs,"scheduler-error.log"))}</string>
 </dict></plist>`;

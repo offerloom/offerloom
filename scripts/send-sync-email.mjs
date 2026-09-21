@@ -19,6 +19,10 @@ function buildBody(summary) {
   } else {
     lines.push("No new products this run — only existing listings were refreshed.");
   }
+  if (summary.failed?.length) {
+    lines.push("", `Could not collect ${summary.failed.length} product${summary.failed.length === 1 ? "" : "s"} (previous data kept; details in outputs/collector/failures/):`);
+    for (const failure of summary.failed) lines.push(`- ${failure.asin}: ${failure.error}`);
+  }
   return lines.join("\n");
 }
 

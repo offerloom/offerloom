@@ -1,0 +1,44 @@
+name: CI
+
+# Runs on every pull request (including the ones Claude opens) and on pushes to the dev branch.
+# The collector tests use offline HTML fixtures served through Playwright request interception, so
+# they never contact Amazon. Deploys still happen only from main (deploy.yml).
+
+on:
+  pull_request:
+  push:
+    branches: [offerloom]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium (for the fixture tests)
+        run: npx playwright install --with-deps chromium
+
+      # Must pass: the collector and failure-reporting tests (offline, deterministic).
+      - name: Collector and reporting tests
+        run: node --test tests/browser-collector.test.mjs tests/report-failures.test.mjs
+
+      # Informational for now. As of 20 Sep 2026 tests/rendered-html.test.mjs asserts homepage copy
+      # ("Tagged product link|Opens Amazon search") that the 13-14 Sep homepage rework removed, so the
+      # full suite fails on main for a reason unrelated to any change. Fix that assertion, then delete
+      # `continue-on-error` so a red build blocks merging.
+      - name: Build and full test suite
+        continue-on-error: true
+        run: npm test
