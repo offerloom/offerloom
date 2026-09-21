@@ -44,4 +44,6 @@ try {
 }
 // Open a GitHub issue for failures that persist across runs (no-op without GITHUB_ISSUES_TOKEN). Never blocks the email.
 try { execFileSync(process.execPath, ["scripts/report-failures.mjs"], { stdio: "inherit", timeout: 120000 }); } catch { /* reporting is best effort */ }
+// Email a reminder when the Claude token behind @claude is within 60 days of its one-year expiry (no-op otherwise; never blocks the sync email).
+try { execFileSync(process.execPath, ["scripts/send-reminders.mjs"], { stdio: "inherit", timeout: 60000 }); } catch { /* reminders are best effort */ }
 execFileSync(process.execPath, ["scripts/send-sync-email.mjs"], { stdio: "inherit" });

@@ -1,0 +1,8 @@
+{
+  "claudeOauthToken": {
+    "what": "GitHub Actions secret CLAUDE_CODE_OAUTH_TOKEN on offerloom/offerloom (lets @claude run on the owner's Claude plan)",
+    "createdOn": "2026-09-21",
+    "validDays": 365,
+    "reminderWindowDays": 60
+  }
+}

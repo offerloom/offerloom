@@ -33,11 +33,11 @@ jobs:
 
       # Must pass: the collector and failure-reporting tests (offline, deterministic).
       - name: Collector and reporting tests
-        run: node --test tests/browser-collector.test.mjs tests/report-failures.test.mjs
+        run: node --test tests/browser-collector.test.mjs tests/report-failures.test.mjs tests/send-reminders.test.mjs
 
-      # Informational for now. As of 20 Sep 2026 tests/rendered-html.test.mjs asserts homepage copy
-      # ("Tagged product link|Opens Amazon search") that the 13-14 Sep homepage rework removed, so the
-      # full suite fails on main for a reason unrelated to any change. Fix that assertion, then delete
+      # Informational until this step has been seen green once. The stale homepage-copy assertion in
+      # tests/rendered-html.test.mjs was fixed on 21 Sep 2026 but the full suite (which needs a build)
+      # could not be run in the session that fixed it. When this step passes on main, delete
       # `continue-on-error` so a red build blocks merging.
       - name: Build and full test suite
         continue-on-error: true

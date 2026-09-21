@@ -5,7 +5,8 @@ name: Claude
 # merges. Only users with write access can trigger it (enforced by the action itself).
 #
 # One-time setup (repo admin): install the Claude GitHub App (https://github.com/apps/claude) and add
-# ONE repository secret: ANTHROPIC_API_KEY, or CLAUDE_CODE_OAUTH_TOKEN (then swap the input below).
+# ONE repository secret: CLAUDE_CODE_OAUTH_TOKEN (Claude plan token from `claude setup-token`, expires yearly; see the
+# renewal steps in docs/BROWSER_COLLECTOR.md). To use a Console API key instead, swap the input below to anthropic_api_key.
 # Issue/comment triggers only run from the default branch, so this file must be on main.
 
 on:

@@ -57,7 +57,7 @@ Privacy and safety: the repository is public, so issues never contain page text 
 One-time setup (repository admin, done by the owner):
 
 1. Install the Claude GitHub App on `offerloom/offerloom` (https://github.com/apps/claude), or run `/install-github-app` in Claude Code.
-2. Add ONE repository secret: `ANTHROPIC_API_KEY` (Claude Console) or `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`; then change the input name in `.github/workflows/claude.yml`).
+2. Add ONE repository secret. Offerloom uses `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`, runs on the owner's Claude Pro/Max plan, no per-use billing; the workflow's `claude_code_oauth_token` input reads it). An `ANTHROPIC_API_KEY` from the Claude Console also works if `.github/workflows/claude.yml` is switched back to the `anthropic_api_key` input. Save the token with the guarded block under "Renewing the Claude token" below, never by copying blindly: on 21 Sep 2026 two setup attempts failed with `401 Invalid bearer token` because the clipboard held more than the token.
 3. Merge these files to `main` (issue and comment triggers only run from the default branch).
 4. Create a fine-grained personal access token limited to this repository with "Issues: Read and write" and nothing else, and add it to the collector's LaunchAgent environment as `GITHUB_ISSUES_TOKEN`. Do NOT re-run `install-collector-schedule.mjs` to do this: it rewrites the whole plist and would drop the Cloudflare token and any other value that was added by hand. Use PlistBuddy on the existing plist instead:
 
@@ -71,6 +71,36 @@ launchctl bootout gui/$(id -u)/com.offerloom.browser-collector; launchctl bootst
 5. Optional auto-update: add `OFFERLOOM_AUTO_UPDATE` = `1` the same way, and keep this checkout on `main` with no uncommitted changes. Before each run the collector then fast-forwards to `origin/main`. Merged code runs with the job's credentials, so the review before merging is the safety gate. It skips (and logs) if the checkout is not on main or is dirty, and prints a note when `package-lock.json` changed and `npm ci` is needed.
 
 Test: open an issue by hand titled `[collector] TEST: hello`, with `@claude say hello` in the body, and check that the Claude workflow replies.
+
+Status: live since 21 Sep 2026. The GitHub App is installed, the workflow is on `main`, and `@claude` answered a test issue (#2). The `GITHUB_ISSUES_TOKEN` was added to the LaunchAgent the same day.
+
+### Renewing the Claude token (expires about 21 Sep 2027)
+
+`claude setup-token` tokens last one year and cannot be inspected or revoked from the CLI, so the expiry date is recorded (creation date plus 365 days) in `scripts/maintenance-reminders.json`. `scripts/send-reminders.mjs` runs after every scheduled collector run and emails the owner (same Gmail settings as the sync email) starting 60 days before expiry: weekly at first, every 3 days in the last two weeks, daily in the last week and after expiry, until the renewal is recorded. Nothing else stops when the token expires; the live site and the collector keep working and only `@claude` on GitHub stops.
+
+To renew, from the Offerloom folder in Terminal:
+
+1. Run `claude setup-token` and approve in the browser.
+2. Triple-click only the `sk-ant-oat01-...` line and press Cmd+C.
+3. Paste this block. It saves the secret and the renewal date only if the clipboard holds a real token and Claude accepts it (never paste a token into chat or email):
+
+```
+T="$(pbpaste | tr -d '[:space:]')"
+case "$T" in
+  sk-ant-oat01-*)
+    if [ ${#T} -lt 120 ]; then
+      CLAUDE_CODE_OAUTH_TOKEN="$T" claude -p "Reply with the single word OK" && printf %s "$T" | gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo offerloom/offerloom && date +%F > outputs/collector/token-renewed-on.txt
+    else
+      echo "Too long: the clipboard has extra text. Nothing was saved."
+    fi;;
+  *) echo "The clipboard does not hold a token. Nothing was saved.";;
+esac
+unset T
+```
+
+4. Re-run any failed `Claude` workflow run on GitHub, or comment `@claude hello` on an issue, to confirm.
+
+`outputs/collector/token-renewed-on.txt` (gitignored) holds the renewal date and overrides the date in the config, so no git commit is needed. Optionally update `createdOn` in `scripts/maintenance-reminders.json` in a later commit. Reminder state is in `outputs/collector/reminder-state.json`.
 
 ## Verified first run
 

@@ -71,7 +71,9 @@ test("keeps shopping claims and unavailable merchants compliant", async () => {
   ]);
 
   assert.match(page, /Browse on Amazon|View on Amazon/);
-  assert.match(page, /Tagged product link|Opens Amazon search/);
+  // The 13-14 Sep 2026 homepage rework replaced the old "Tagged product link" copy; the compliance signals now are a sponsored rel on outbound Amazon links and the affiliate notice.
+  assert.match(page, /rel="sponsored noopener noreferrer"/);
+  assert.match(page, /may earn a commission/);
   assert.doesNotMatch(page, /AMAZON SHOPPING ENABLED|Browse electronics on Amazon\.in/);
   assert.doesNotMatch(page, /scrape|live Amazon price/i);
   assert.match(memory, /Never scrape .*without written authorization\./);
