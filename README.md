@@ -78,6 +78,10 @@ The homepage treats Amazon as an explicit shopping destination, keeps every outb
 
 The secure catalogue milestone includes single-product entry and CSV import for up to 500 reviewed products. It extracts ASINs, creates canonical tagged destinations, rejects malformed rows, skips existing ASINs, supports publish/unpublish/archive review, and records outbound clicks. Published database products receive canonical detail pages with a multi-merchant comparison table. Merchant connectors can be paused or blocked independently; outbound redirects fail closed when a merchant is not active. Scheduled synchronization remains disabled until approved API credentials exist.
 
+## Daily cloud browser collection
+
+The daily workflow uses the existing browser collector on a GitHub-hosted runner at approximately 07:00 IST, independent of the owner’s laptop. It discovers bestseller candidates, validates prices, publishes up to ten new discounted products and refreshes existing active listings with `offerloom-21`. See [operation and live verification status](docs/CLOUD_BROWSER_COLLECTOR.md). Creators API access is not required by this browser workflow.
+
 ## Project handoff
 
 Start with [`docs/PROJECT_MEMORY.md`](docs/PROJECT_MEMORY.md) for the latest checkpoint, then read [`docs/PROJECT_HANDOFF.md`](docs/PROJECT_HANDOFF.md) for business decisions, branding, architecture, account status, security notes and prioritized next tasks.

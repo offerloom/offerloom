@@ -26,4 +26,10 @@ References: [GitHub scheduled workflow behavior](https://docs.github.com/en/acti
 
 ## Live preflight — 23 September 2026
 
-[Hosted runner probe](https://github.com/offerloom/offerloom/actions/runs/35805884817) succeeded: 30 bestseller product URLs discovered and one product observation validated without database writes. Full publication verification is the next activation step.
+[Hosted runner probe](https://github.com/offerloom/offerloom/actions/runs/35805884817) succeeded: 30 bestseller product URLs discovered and one product observation validated without database writes. Full publication and the automatic schedule have now been verified; see below.
+
+## Live publication and schedule verified — 23 September 2026
+
+PR #3 is merged and `CLOUD_COLLECTOR_ENABLED=true`. The [first publication run](https://github.com/offerloom/offerloom/actions/runs/35806347704) added 10 products and refreshed 45, with 5 unvalidated products skipped. The subsequent [automatic scheduled run](https://github.com/offerloom/offerloom/actions/runs/35827491789) added another 10 and refreshed 56, with 4 skipped. The public catalogue now contains 71 products, including all 20 cloud additions with fresh prices. A new detail page returns 200 and its tracked redirect returns 302 to Amazon.in with `tag=offerloom-21`.
+
+The automatic run started at 12:05 IST, over five hours after its configured 07:00 IST schedule. Treat this as a daily scheduler, not a punctual service. Exact-time requirements would need another scheduler. Partial collection failures appear in the summary and D1 sync history; they do not replace a missing observation with invented data. The existing Mac collector remains installed and unchanged.
