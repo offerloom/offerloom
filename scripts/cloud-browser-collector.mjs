@@ -102,7 +102,7 @@ async function main() {
       return ["media", "font"].includes(request.resourceType()) ? route.abort() : route.continue();
     });
     for (const url of probe ? SOURCES.slice(0, 1) : SOURCES) {
-      discovered.push(...await discover(page, url));
+      discovered.push(...(await discover(page, url)).filter((candidate) => !existing.has(productSource(candidate).id)).slice(0, 5));
       await pause(5000);
     }
     discovered = uniqueProductUrls(discovered);
