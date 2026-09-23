@@ -37,7 +37,12 @@ export async function discover(page, url) {
   if (destination.hostname !== "www.amazon.in" || !destination.pathname.startsWith("/gp/bestsellers")) throw new Error("Unexpected discovery redirect");
   if (challenge.test((await page.locator("body").innerText()).slice(0, 12000))) throw new Error("Access challenge; cloud run stopped");
   const cards = page.locator('#zg-ordered-list a[href], #gridItemRoot a[href], .zg-grid-general-faceout a[href]');
-  await cards.first().waitFor({ state: "attached", timeout: 15000 });
+  try { await cards.first().waitFor({ state: "attached", timeout: 15000 }); }
+  catch {
+    if (challenge.test((await page.locator("body").innerText()).slice(0, 12000))) throw new Error("Access challenge; cloud run stopped");
+    const title = (await page.title()).replace(/[\r\n]/g, " ").slice(0, 100);
+    throw new Error(`Discovery cards unavailable (page title: ${title})`);
+  }
   const urls = uniqueProductUrls(await cards.evaluateAll((elements) => elements.map((element) => element.href)));
   if (!urls.length) throw new Error("Discovery returned no product links");
   return urls;
@@ -102,18 +107,19 @@ async function main() {
       return ["media", "font"].includes(request.resourceType()) ? route.abort() : route.continue();
     });
     for (const url of probe ? SOURCES.slice(0, 1) : SOURCES) {
-      discovered.push(...(await discover(page, url)).filter((candidate) => !existing.has(productSource(candidate).id)).slice(0, 5));
+      discovered.push(...(await withRetry(() => discover(page, url), { maxAttempts: 2, retryable: (message) => /Discovery cards unavailable|Timeout|net::/.test(message) })).filter((candidate) => !existing.has(productSource(candidate).id)).slice(0, 5));
       await pause(5000);
     }
     discovered = uniqueProductUrls(discovered);
     const refresh = [...existing.entries()].filter(([, row]) => row.status === "published" && row.listingStatus === "active").slice(0, 100).map(([asin]) => `https://www.amazon.in/dp/${asin}`);
     const newUrls = discovered.filter((url) => !existing.has(productSource(url).id)).slice(0, 30);
-    const urls = probe ? discovered.slice(0, 1) : uniqueProductUrls([...newUrls, ...refresh]);
+    const urls = probe ? discovered.slice(0, 3) : uniqueProductUrls([...newUrls, ...refresh]);
     for (const url of urls) {
       if (Date.now() - started > 20 * 60000) throw new Error("Cloud run exceeded its collection budget; no publication");
       try {
         deals.push(await withRetry(() => collect(page, url), { maxAttempts: 2 }));
         console.log(`Collected ${productSource(url).id}`);
+        if (probe) break;
       } catch (error) {
         if (/Access challenge|Page unavailable \((403|429)\)/i.test(error.message)) throw new Error("Amazon blocked the cloud browser; no publication");
         failures.push({ asin: productSource(url).id, reason: "Product unavailable or could not be validated" });
