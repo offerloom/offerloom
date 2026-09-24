@@ -12,3 +12,11 @@ export function matchesCollection(approvedPayload: string | null, collectionKey:
 export function matchesMerchant(merchant: string, merchantFilter?: string): boolean {
   return !merchantFilter || merchant === merchantFilter;
 }
+
+export function matchesDealListing(
+  row: { merchant: string; approvedPayload: string | null },
+  filters: { merchant?: string; collection?: string },
+): boolean {
+  return matchesMerchant(row.merchant, filters.merchant)
+    && (!filters.collection || matchesCollection(row.approvedPayload, filters.collection));
+}
