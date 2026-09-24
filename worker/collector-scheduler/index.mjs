@@ -33,7 +33,7 @@ export async function dispatchDaily(env, { now = Date.now(), fetcher = fetch, wi
   const today = data.workflow_runs.filter((run) => run.display_title === slotTitle && Date.parse(run.created_at) >= start);
   if (today.some((run) => ACTIVE.has(run.status))) return { status: "skipped", reason: `${window} publication is queued or running`, day, window };
   if (today.some((run) => run.conclusion === "success")) return { status: "skipped", reason: `${window} publication completed today`, day, window };
-  if (today.length >= 3) throw new Error(`${window} publication retry limit reached; inspect GitHub Actions`);
+  if (today.length >= 2) throw new Error(`${window} publication retry limit reached; inspect GitHub Actions`);
   await github("/dispatches", env.GITHUB_ACTIONS_TOKEN, fetcher, { ref: "main", inputs: { probe: false, force: false, window } });
   return { status: "dispatched", day, window };
 }

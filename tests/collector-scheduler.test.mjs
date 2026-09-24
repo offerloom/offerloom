@@ -23,7 +23,7 @@ test("skips successful or active publication and caps retries", async () => {
     assert.equal((await dispatchDaily(env, { now, fetcher: transport([record], calls) })).status, "skipped");
     assert.equal(calls.length, 1);
   }
-  await assert.rejects(dispatchDaily(env, { now, fetcher: transport(Array(3).fill(run({ conclusion: "failure" })), []) }), /retry limit/);
+  await assert.rejects(dispatchDaily(env, { now, fetcher: transport(Array(2).fill(run({ conclusion: "failure" })), []) }), /retry limit/);
 });
 test("morning and evening have separate completion guards", async () => {
   const calls = [];
