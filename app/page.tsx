@@ -11,8 +11,8 @@ import { heroCategorySlides } from "./lib/hero-categories";
 
 type Listing = { store: string; affiliateUrl?: string };
 type Offer = { price: number; mrp: number | null; checkedAt: string };
-type Product = { offer?: Offer | null; imageUrl?: string | null; id: string | number; name: string; category: string; summary: string; specs: string[]; listings: Listing[]; detailPath?: string };
-type ManagedProduct = { offer?: Offer | null; imageUrl?: string | null; merchantName: string; id: string; name: string; category: string; summary: string; specs: string[]; outboundPath: string; detailPath: string };
+type Product = { offer?: Offer | null; imageUrl?: string | null; id: string | number; name: string; category: string; summary: string; specs: string[]; listings: Listing[]; detailPath?: string; collectionSources?: string[] };
+type ManagedProduct = { offer?: Offer | null; imageUrl?: string | null; merchantName: string; id: string; name: string; category: string; summary: string; specs: string[]; outboundPath: string; detailPath: string; collectionSources?: string[] };
 
 export default function Home() {
   const [dealCategory, setDealCategory] = useState("All");
@@ -33,6 +33,7 @@ export default function Home() {
         setManagedProducts(data.products.map((product: ManagedProduct) => ({
           imageUrl: product.imageUrl,
           offer: product.offer,
+          collectionSources: product.collectionSources ?? [],
           id: product.id,
           name: product.name,
           category: product.category,
@@ -50,13 +51,19 @@ export default function Home() {
   const photoProducts = managedProducts.filter((product) => product.imageUrl);
   const availableCategories = new Set(photoProducts.map((product) => product.category));
   // Only rotate hero banners for categories we currently have real, in-stock deals for.
-  const slides = availableCategories.size ? heroCategorySlides.filter((item) => availableCategories.has(item.filterCategory)) : heroCategorySlides;
+  const slides = (availableCategories.size ? heroCategorySlides.filter((item) => availableCategories.has(item.filterCategory)) : heroCategorySlides)
+    .filter((item, index, all) => all.findIndex((candidate) => candidate.filterCategory === item.filterCategory) === index);
   const dealCategories = ["All", ...new Set(photoProducts.map((product) => product.category))];
   const term = query.trim().toLowerCase();
   const frontProducts = photoProducts
     .filter((product) => dealCategory === "All" || product.category === dealCategory)
     .filter((product) => !term || `${product.name} ${product.category} ${product.summary}`.toLowerCase().includes(term))
     .sort((a, b) => discountOf(b) - discountOf(a));
+  const productShelves = [
+    { key: "new_releases", title: "Amazon New Releases", description: "Recently released finds", id: "new-releases" },
+    { key: "bestsellers", title: "Amazon Bestsellers", description: "Popular picks from bestseller lists", id: "bestsellers" },
+    { key: "todays_deals", title: "Today’s Deals", description: "Current deals checked by OfferLoom", id: "todays-deals" },
+  ].map((shelf) => ({ ...shelf, products: frontProducts.filter((product) => product.collectionSources?.includes(shelf.key)).slice(0, 16) }));
 
   useEffect(() => {
     if (!playing) return;
@@ -95,7 +102,7 @@ export default function Home() {
     <section className="campaignHero" id="top" aria-roledescription="carousel" aria-label="OfferLoom shopping inspiration">
       <div className="campaignCopy">
         <span className="campaignKicker">THE OFFERLOOM EDIT · {activeSlide.eyebrow}</span>
-        <h1>{activeSlide.title}</h1>
+        <h1><a className="campaignTitleLink" href={activeSlide.amazonUrl} target="_blank" rel="sponsored noopener noreferrer">{activeSlide.title}</a></h1>
         <p>{activeSlide.text}</p>
         <div className="campaignActions"><a href="#front-deals-heading">Explore product picks <span aria-hidden="true">↗</span></a><a href={activeSlide.amazonUrl} target="_blank" rel="sponsored noopener noreferrer">Browse on Amazon →</a></div>
         <ul className="campaignTrust">
@@ -113,27 +120,24 @@ export default function Home() {
               {product.offer?.mrp && product.offer.mrp > product.offer.price && <span className="collageBadge">{Math.round(discountOf(product) * 100)}% OFF</span>}
             </Link>)}
           </div>
-        ) : <img src="/category-showcase-v1.png" width="2172" height="724" alt="Shopping inspiration featuring electronics, fashion and home essentials" fetchPriority="high"/>}
+        ) : <Link className="campaignFallbackLink" href={activeSlide.amazonUrl} target="_blank" rel="sponsored noopener noreferrer" aria-label={`Browse ${activeSlide.eyebrow} on Amazon`}><img src="/category-showcase-v1.png" width="2172" height="724" alt="Shopping inspiration featuring electronics, fashion and home essentials" fetchPriority="high"/></Link>}
         <span>{heroDeals.length ? (heroBestDiscount > 0 ? `Up to ${heroBestDiscount}% off` : `${activeSlide.filterCategory === "All" ? "Today's" : activeSlide.filterCategory} picks`) : "Electronics. Fashion. Home."}</span>
         <small>{heroDeals.length ? "Live product picks" : "Category inspiration"}</small>
       </div>
     </section>
     <section className="finder"><form className="search" onSubmit={search}><span aria-hidden="true">⌕</span><input value={draft} onChange={(event) => setDraft(event.target.value)} aria-label="Search products" placeholder="Search phones, fashion, appliances…"/><button>Find products</button></form><div className="popularSearches"><span>Popular:</span><button onClick={() => { setDraft("5G phone"); setQuery("5G phone"); }}>5G phones</button><button onClick={() => { setDraft("fashion"); setQuery("fashion"); }}>Fashion</button><button onClick={() => { setDraft("laptop"); setQuery("laptop"); }}>Laptops</button><button onClick={() => { setDraft("appliances"); setQuery("appliances"); }}>Appliances</button></div></section>
     <section className="frontDeals" aria-labelledby="front-deals-heading">
-
-      <div className="frontDealsHeading"><h2 id="front-deals-heading">Latest product picks</h2><span>{catalogState === "loading" ? "Loading products…" : `${frontProducts.length} curated products`}</span></div>
+      <div className="frontDealsHeading"><h2 id="front-deals-heading">Shop today’s product picks</h2><span>{catalogState === "loading" ? "Loading products…" : `${frontProducts.length} products`}</span></div>
       {catalogState === "error" && <p role="status">Product details could not be loaded. Please refresh to try again.</p>}
       {catalogState === "ready" && !photoProducts.length && <p>New product picks are being reviewed. Check back soon.</p>}
       {catalogState === "ready" && photoProducts.length > 0 && !frontProducts.length && <div className="emptyState"><strong>No matching products</strong><p>Try another category or clear the search.</p><button onClick={clearSearch}>Show all products</button></div>}
       <div className="dealCategoryTabs" role="group" aria-label="Filter product deals">{dealCategories.map((item) => <button key={item} onClick={() => setDealCategory(item)} aria-pressed={dealCategory === item}>{item === "All" ? "All picks" : item}</button>)}</div>
-      <div className="frontDealsGrid">{frontProducts.map((product) => <article className="frontDealCard" key={product.id}>
-        {product.imageUrl && <Link className="dealPhoto" href={product.detailPath!}><img src={product.imageUrl} alt={product.name} width="320" height="320" loading="lazy" />{product.offer?.mrp && product.offer.mrp > product.offer.price && <span className="dealDiscount">{Math.round((1 - product.offer.price / product.offer.mrp) * 100)}% OFF</span>}</Link>}
-        <span className="categoryTag">{product.listings[0].store} · {product.category}</span>
-        <h3><Link href={product.detailPath!}>{product.name}</Link></h3>
-        {product.offer && <div className="frontDealPrice"><strong>₹{(product.offer.price / 100).toLocaleString("en-IN")}</strong>{product.offer.mrp && product.offer.mrp > product.offer.price && <><del>₹{(product.offer.mrp / 100).toLocaleString("en-IN")}</del></>}<small>Checked {new Date(product.offer.checkedAt).toLocaleString("en-IN")}</small></div>}
-        <div className="frontDealActions"><Link href={product.detailPath!}>Product details</Link><a className="offerCta" href={product.listings[0].affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">{product.offer ? "Grab deal →" : "Check price →"}</a></div>
-        <small>Confirm current price and availability on {product.listings[0].store}.</small>
-      </article>)}</div>
+      {productShelves.map((shelf) => <section className="productShelf" aria-labelledby={`${shelf.id}-heading`} key={shelf.key}>
+        <div className="productShelfHeading"><div><span>{shelf.description}</span><h3 id={`${shelf.id}-heading`}>{shelf.title}</h3></div><a href={`#${shelf.id}-rail`}>Scroll products <span aria-hidden="true">→</span></a></div>
+        {shelf.products.length ? <div className="productRail" id={`${shelf.id}-rail`} role="region" aria-label={`${shelf.title} products`}>
+          {shelf.products.map((product) => <ProductCard product={product} discount={discountOf(product)} key={product.id} />)}
+        </div> : <p className="shelfEmpty">No validated products in this collection yet. Check back after the next update.</p>}
+      </section>)}
       <p className="disclosure"><strong>Affiliate and price notice:</strong> OfferLoom may earn a commission when you use eligible merchant links, at no extra cost to you. As an Amazon Associate I earn from qualifying purchases. Prices and availability can change and are confirmed on the merchant website. OfferLoom does not handle checkout, payment, shipping, cancellations, returns or refunds.</p>
     </section>
 
@@ -141,4 +145,14 @@ export default function Home() {
     <DealAlertsFloat />
     <SiteFooter />
   </main>;
+}
+
+function ProductCard({ product, discount }: { product: Product; discount: number }) {
+  return <article className="railProduct">
+    {product.imageUrl && <Link className="railProductImage" href={product.detailPath!}><img src={product.imageUrl} alt={product.name} loading="lazy"/>{discount > 0 && <span>{Math.round(discount * 100)}% OFF</span>}</Link>}
+    <span className="categoryTag">{product.category}</span>
+    <h4><Link href={product.detailPath!}>{product.name}</Link></h4>
+    {product.offer && <div className="railProductPrice"><strong>₹{(product.offer.price / 100).toLocaleString("en-IN")}</strong>{product.offer.mrp && product.offer.mrp > product.offer.price && <del>₹{(product.offer.mrp / 100).toLocaleString("en-IN")}</del>}</div>}
+    <a className="offerCta" href={product.listings[0].affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">{product.offer ? "View deal →" : "Check price →"}</a>
+  </article>;
 }

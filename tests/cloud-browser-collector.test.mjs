@@ -3,7 +3,7 @@ import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import { chromium } from "playwright";
-import { uniqueProductUrls, discover, selectDeals, publishSql } from "../scripts/cloud-browser-collector.mjs";
+import { uniqueProductUrls, discover, selectDeals, publishSql, NEW_RELEASES } from "../scripts/cloud-browser-collector.mjs";
 
 const deal = (asin, price = 50000) => ({ merchant: "amazon", merchantProductId: asin, sourceUrl: `https://www.amazon.in/dp/${asin}`, name: "Owner's kitchen storage", category: "Home", imageUrl: "https://m.media-amazon.com/images/I/test.jpg", price, mrp: 100000, currency: "INR", checkedAt: new Date().toISOString() });
 
@@ -56,8 +56,18 @@ test("Today's Deals discovery reads only product cards and preserves source dive
     await page.route("**/*", (route) => route.fulfill({ status: 200, contentType: "text/html", body: '<a href="/dp/B000000099">Outside</a><div id="slots-container"><div data-testid="product-card"><a href="/dp/B000000003">Deal</a></div></div>' }));
     assert.deepEqual(await discover(page, "https://www.amazon.in/gp/goldbox"), ["https://www.amazon.in/dp/B000000003"]);
     const a = { ...deal("B000000001", 10000), discoverySource: "bestsellers" };
-    const b = { ...deal("B000000002", 50000), discoverySource: "todays_deals" };
+    const b = { ...deal("B000000002", 50000), discoverySources: ["todays_deals"] };
     const c = { ...deal("B000000003", 20000), discoverySource: "bestsellers" };
-    assert.deepEqual(selectDeals([a, b, c], new Map(), 2).additions.map((d) => d.merchantProductId), [b.merchantProductId, a.merchantProductId]);
+    const d = { ...deal("B000000004", 30000), discoverySources: ["new_releases"] };
+    assert.deepEqual(selectDeals([a, b, c, d], new Map(), 3).additions.map((item) => item.merchantProductId), [b.merchantProductId, d.merchantProductId, a.merchantProductId]);
+  } finally { await browser.close(); }
+});
+
+test("Amazon New Releases discovery is restricted to its official page path", async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await page.route("**/*", (route) => route.fulfill({ status: 200, contentType: "text/html", body: '<div id="zg-right-col"><div id="B000000009"><a href="/Release-Item/dp/B000000009">Release</a></div></div>' }));
+    assert.deepEqual(await discover(page, NEW_RELEASES), ["https://www.amazon.in/dp/B000000009"]);
   } finally { await browser.close(); }
 });
