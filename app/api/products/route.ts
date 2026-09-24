@@ -28,6 +28,7 @@ export async function GET() {
     category: row.category,
     specs: safeSpecs(row.specsJson),
     merchantName: row.merchantName,
+    merchant: row.merchant,
     outboundPath: `/go/${row.merchant}/${row.listingId}`,
     detailPath: `/products/${row.slug}`,
   }));

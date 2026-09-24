@@ -19,18 +19,6 @@ export default function DealJoinLinks({ className }: DealJoinLinksProps) {
           <small>{COMMUNITY.facebook.via}</small>
         </span>
       </a>
-      <a
-        className="dealJoin dealJoin-telegram"
-        href={COMMUNITY.telegram.url}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <span className="dealJoinIcon" aria-hidden="true">✈</span>
-        <span className="dealJoinCopy">
-          <strong>{COMMUNITY.telegram.buttonText}</strong>
-          <small>{COMMUNITY.telegram.via}</small>
-        </span>
-      </a>
     </div>
   );
 }

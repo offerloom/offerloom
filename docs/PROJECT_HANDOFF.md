@@ -316,9 +316,9 @@ Because checkout happens on the merchant website, OfferLoom may not receive comp
 
 ## Immediate next tasks
 
-1. Review the validated local category-led homepage and explicitly approve production deployment.
-2. Push the latest commits to GitHub and deploy the public site.
-3. Verify the public homepage, legal pages, guides, `/admin`, product pages and tracked redirects.
+1. Monitor twice-daily hosted product collection in GitHub Actions; investigate failed or missed publication windows.
+2. Continue curating approved products and check public listing freshness.
+3. Apply for Amazon Creators API access after eligibility requirements are met; the current browser workflow does not depend on it.
 4. Monitor CJ until Dell Consumer – India or HP India becomes Active; use no CJ data before approval.
 5. After advertiser approval, confirm feed/link rights and obtain authorized credentials without committing them.
 6. Build the CJ feed connector sync job against fixtures, then enable D1 synchronization only for authorized data.
@@ -342,4 +342,10 @@ Because checkout happens on the merchant website, OfferLoom may not receive comp
 - A separate Cloudflare Worker, `offerloom-collector-scheduler`, dispatches the GitHub workflow at 07:00 and 17:00 IST. GitHub native schedules provide 08:00 and 18:00 backups. Cloudflare's free account cap prevented installing additional recovery cron triggers; GitHub backups cover those recovery events. GitHub queueing and product validation affect completion time.
 - Worker source/config: `worker/collector-scheduler/`; automatic deployment: `.github/workflows/deploy-collector-scheduler.yml`. GitHub credential is stored in Cloudflare as `GITHUB_ACTIONS_TOKEN` with owner approval; never retrieve it into documentation or logs.
 - Operation, manual probe/force options, daily deduplication and run verification: [Cloud browser collector](CLOUD_BROWSER_COLLECTOR.md). Existing Mac collection and disabled API preparation are separate workflows.
-- PR #5 (`748f714`) adds New Releases discovery and the three horizontally scrolling homepage shelves; it also shortens/deduplicates clickable hero banners and replaces homepage WhatsApp links with Facebook. Hosted probe and site deployment passed. Follow-up commit `094972d` reduced Cloudflare triggers to two after free-plan cron quota rejection; scheduler deployment passed. Forced full run `36006003741` added 10 products and refreshed 78, with all three shelves now populated. Live catalogue: 91 products.
+- PR #5 (`748f714`) adds New Releases discovery and the three horizontally scrolling homepage shelves; it also shortens/deduplicates clickable hero banners and replaces homepage WhatsApp links with Facebook. Hosted probe and site deployment passed. Follow-up commit `094972d` reduced Cloudflare triggers to two after free-plan cron quota rejection; scheduler deployment passed. Forced full run `36006003741` added 10 products and refreshed 78, with all three shelves now populated. Live catalogue: 91 products. PR #6 (`a8e43fe`) corrected homepage freshness copy and passed CI; the current version is deployed.
+
+## Homepage browse and social updates — 24 September 2026
+
+- Product shelf actions now say “View all” and open a collection-filtered product grid for New Releases, Bestsellers, or Today’s Deals. The listing includes all matching published products, not only the homepage rail subset.
+- Added an AJIO Fashion Deals shelf and `/deals?merchant=ajio` listing. It surfaces the two existing manually reviewed AJIO catalogue products and keeps their approved ACE deep links behind `/go/ajio/{listingId}`. The campaign email provided sale terms and creative artwork but no individual product pages; do not infer product listings or affiliate destinations from it.
+- Removed Instagram, Telegram, YouTube and X links from the site header, footer and deal-alert actions. Facebook is the only public social link, using the verified OfferLoom Page URL `https://www.facebook.com/1220668387806265`.
