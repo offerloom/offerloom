@@ -1,17 +1,17 @@
-import Link from "next/link";
 import BrandMark from "./BrandMark";
 import SocialLinks from "./SocialLinks";
 import { FOOTER_LINKS, SITE } from "../lib/site";
 
+/* eslint @next/next/no-html-link-for-pages: "off" -- Native navigation avoids the Vinext Link runtime error in the shared footer. */
 export default function SiteFooter() {
   return (
     <footer className="siteFooter">
       <div className="footerGrid">
         <div className="footerBrand">
-          <Link className="brand" href="/" aria-label={`${SITE.brand} home`}>
+          <a className="brand" href="/" aria-label={`${SITE.brand} home`}>
             <BrandMark />
             <span>Offer<span>Loom</span></span>
-          </Link>
+          </a>
           <p>{SITE.tagline}</p>
           <SocialLinks variant="footer" />
           <small>Operated by {SITE.legalEntity}. Product discovery and price comparison for shoppers in {SITE.country}.</small>
@@ -20,7 +20,7 @@ export default function SiteFooter() {
           <strong>Company</strong>
           <nav aria-label="Company links">
             {FOOTER_LINKS.company.map((link) => (
-              <Link href={link.href} key={link.href}>{link.label}</Link>
+              <a href={link.href} key={link.href}>{link.label}</a>
             ))}
           </nav>
         </div>
@@ -28,7 +28,7 @@ export default function SiteFooter() {
           <strong>Legal</strong>
           <nav aria-label="Legal links">
             {FOOTER_LINKS.legal.map((link) => (
-              <Link href={link.href} key={link.href}>{link.label}</Link>
+              <a href={link.href} key={link.href}>{link.label}</a>
             ))}
           </nav>
         </div>

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ReactNode } from "react";
 import BrandMark from "./BrandMark";
 import SiteFooter from "./SiteFooter";
@@ -9,21 +8,22 @@ type ContentShellProps = {
   children: ReactNode;
 };
 
+/* eslint @next/next/no-html-link-for-pages: "off" -- Native navigation avoids the Vinext Link runtime error on public content pages. */
 export default function ContentShell({ title, eyebrow, children }: ContentShellProps) {
   return (
     <main className="contentShell">
       <header className="topbar">
-        <Link className="brand" href="/" aria-label="OfferLoom home">
+        <a className="brand" href="/" aria-label="OfferLoom home">
           <BrandMark />
           <span>Offer<span>Loom</span></span>
-        </Link>
+        </a>
         <nav aria-label="Main navigation">
-          <Link href="/#catalog">Find products</Link>
-          <Link href="/guides">Buying guides</Link>
-          <Link href="/about">About</Link>
-          <Link href="/contact">Contact</Link>
+          <a href="/#catalog">Find products</a>
+          <a href="/guides">Buying guides</a>
+          <a href="/about">About</a>
+          <a href="/contact">Contact</a>
         </nav>
-        <Link className="alertButton" href="/#catalog">Find a deal</Link>
+        <a className="alertButton" href="/#catalog">Find a deal</a>
       </header>
       <article className="contentPage">
         {eyebrow && <span className="eyebrow">{eyebrow}</span>}

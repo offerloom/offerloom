@@ -1,5 +1,4 @@
 import { env } from "cloudflare:workers";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import SiteFooter from "../../components/SiteFooter";
 import styles from "./product.module.css";
@@ -7,6 +6,8 @@ import { publicOffer } from "../../lib/public-offer";
 import { SITE } from "../../lib/site";
 
 export const dynamic = "force-dynamic";
+
+/* eslint @next/next/no-html-link-for-pages: "off" -- Native navigation avoids the Vinext Link runtime error on public product pages. */
 
 type ProductRow = {
   id:string; name:string; slug:string; brand:string|null; modelNumber:string|null;
@@ -57,7 +58,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug:s
   const supportedListings = listings.results.filter((listing) => ["amazon", "ajio"].includes(listing.merchant));
 
   return <main className={styles.shell}>
-    <header className={styles.header}><Link className={styles.brand} href="/">Offer<span>Loom</span></Link><Link href="/#catalog">Back to catalogue</Link></header>
+    <header className={styles.header}><a className={styles.brand} href="/">Offer<span>Loom</span></a><a href="/#catalog">Back to catalogue</a></header>
     <p className={styles.disclosure}>As an Amazon Associate I earn from qualifying purchases.</p>
     <section className={styles.product}>
       <div className={styles.visual}>{product.imageUrl ? <img src={product.imageUrl} alt={product.name} width={320} height={320} style={{width:"100%",height:"100%",objectFit:"contain",borderRadius:30}} /> : <span aria-hidden="true">◇</span>}</div>

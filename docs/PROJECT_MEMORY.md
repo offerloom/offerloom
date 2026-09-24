@@ -190,3 +190,9 @@ Read this file and `README.md`/`AGENTS.md` before changing the project — `docs
 - Product shelf actions now say “View all” and open a collection-filtered product grid for New Releases, Bestsellers, or Today’s Deals. The listing includes all matching published products, not only the homepage rail subset.
 - Added an AJIO Fashion Deals shelf and `/deals?merchant=ajio` listing. It surfaces the two existing manually reviewed AJIO catalogue products and keeps their approved ACE deep links behind `/go/ajio/{listingId}`. The campaign email provided sale terms and creative artwork but no individual product pages; do not infer product listings or affiliate destinations from it.
 - Removed Instagram, Telegram, YouTube and X links from the site header, footer and deal-alert actions. Facebook is the only public social link, using the owner-supplied OfferLoom Page URL `https://www.facebook.com/profile.php?id=61594517871499`, which resolves to an OfferLoom page.
+
+## Public navigation fallback — 24 September 2026
+
+- Replaced Vinext `<Link>` navigation with native anchors in product-page headers, the shared content-page header, and the shared footer. The previous live issue was reproduced as a Vinext prefetch runtime error on public pages; native browser navigation avoids that failing client handler.
+- The product slug shown in the owner's screenshot currently returns 404 because that particular record is no longer in the live catalogue. The product-page navigation fix applies to currently published product records.
+- Local build and all 83 tests passed. Live product-page click verification is pending website deployment; verify the logo reaches `/` and “Back to catalogue” reaches `/#catalog` after the deployment succeeds.
