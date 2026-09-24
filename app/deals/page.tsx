@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import Link from "next/link";
 import SiteFooter from "../components/SiteFooter";
 import BrandMark from "../components/BrandMark";
+import { matchesCollection, matchesMerchant } from "../lib/deal-collections";
 import { publicOffer } from "../lib/public-offer";
 import { SITE } from "../lib/site";
 
@@ -20,7 +21,25 @@ type Row = {
   merchant: string; merchantName: string; listingId: string; approvedPayload: string | null;
 };
 
-export default async function DealsPage() {
+const COLLECTIONS = {
+  new_releases: { title: "Amazon New Releases", description: "All recently released products validated by OfferLoom." },
+  bestsellers: { title: "Amazon Bestsellers", description: "All products found on Amazon bestseller category lists and validated by OfferLoom." },
+  todays_deals: { title: "Today’s Deals", description: "All current deal products checked by OfferLoom." },
+} as const;
+
+type DealsPageProps = { searchParams?: Promise<{ collection?: string; merchant?: string }> };
+
+export default async function DealsPage({ searchParams }: DealsPageProps) {
+  const params = await searchParams;
+  const collectionKey = params?.collection && params.collection in COLLECTIONS
+    ? params.collection as keyof typeof COLLECTIONS
+    : undefined;
+  const merchantFilter = params?.merchant === "ajio" ? "ajio" : undefined;
+  const collection = collectionKey ? COLLECTIONS[collectionKey] : undefined;
+  const title = collection?.title ?? (merchantFilter ? "AJIO Fashion Deals" : "Today’s Deals");
+  const description = collection?.description ?? (merchantFilter
+    ? "AJIO products with OfferLoom’s approved publisher deep links. Confirm current price and availability on AJIO."
+    : "Live prices and photos for OfferLoom deals, checked twice daily.");
   const result = await env.DB.prepare(`
     SELECT p.id, p.slug, p.name, p.image_url AS imageUrl, c.name AS category,
       ml.id AS listingId, ml.merchant, m.name AS merchantName, cd.approved_payload AS approvedPayload
@@ -31,12 +50,14 @@ export default async function DealsPage() {
     LEFT JOIN collected_deals cd ON cd.product_id = p.id AND cd.id = ml.merchant || '-' || ml.merchant_product_id
     WHERE p.status = 'published' AND p.image_url IS NOT NULL
     ORDER BY p.published_at DESC
-    LIMIT 60
   `).all<Row>();
 
   const deals = (result.results ?? [])
     .map((row) => ({ row, offer: publicOffer(row.approvedPayload) }))
-    .filter((item): item is { row: Row; offer: NonNullable<ReturnType<typeof publicOffer>> } => Boolean(item.offer))
+    .filter((item): item is { row: Row; offer: NonNullable<ReturnType<typeof publicOffer>> } => {
+      if (!item.offer || !matchesMerchant(item.row.merchant, merchantFilter)) return false;
+      return !collectionKey || matchesCollection(item.row.approvedPayload, collectionKey);
+    })
     .sort((a, b) => {
       const discount = (offer: { price: number; mrp: number | null }) => (offer.mrp ? 1 - offer.price / offer.mrp : 0);
       return discount(b.offer) - discount(a.offer);
@@ -48,7 +69,8 @@ export default async function DealsPage() {
       <nav aria-label="Main navigation"><Link href="/">Home</Link><Link href="/guides">Buying guides</Link></nav>
     </header>
     <section className="frontDeals" aria-labelledby="deals-heading" style={{ marginTop: 24 }}>
-      <div className="frontDealsHeading"><h2 id="deals-heading">Today&apos;s deals</h2><span>{deals.length} live picks</span></div>
+      <div className="frontDealsHeading"><h2 id="deals-heading">{title}</h2><span>{deals.length} live picks</span></div>
+      <p className="dealsIntro">{description}</p>
       {!deals.length && <p>New deals are being reviewed. Check back soon.</p>}
       <div className="frontDealsGrid">{deals.map(({ row, offer }) => {
         const discountPct = offer.mrp && offer.mrp > offer.price ? Math.round((1 - offer.price / offer.mrp) * 100) : 0;

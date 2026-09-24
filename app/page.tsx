@@ -11,8 +11,8 @@ import { heroCategorySlides } from "./lib/hero-categories";
 
 type Listing = { store: string; affiliateUrl?: string };
 type Offer = { price: number; mrp: number | null; checkedAt: string };
-type Product = { offer?: Offer | null; imageUrl?: string | null; id: string | number; name: string; category: string; summary: string; specs: string[]; listings: Listing[]; detailPath?: string; collectionSources?: string[] };
-type ManagedProduct = { offer?: Offer | null; imageUrl?: string | null; merchantName: string; id: string; name: string; category: string; summary: string; specs: string[]; outboundPath: string; detailPath: string; collectionSources?: string[] };
+type Product = { offer?: Offer | null; imageUrl?: string | null; id: string | number; name: string; category: string; summary: string; specs: string[]; listings: Listing[]; detailPath?: string; collectionSources?: string[]; merchant?: string };
+type ManagedProduct = { offer?: Offer | null; imageUrl?: string | null; merchant: string; merchantName: string; id: string; name: string; category: string; summary: string; specs: string[]; outboundPath: string; detailPath: string; collectionSources?: string[] };
 
 export default function Home() {
   const [dealCategory, setDealCategory] = useState("All");
@@ -33,6 +33,7 @@ export default function Home() {
         setManagedProducts(data.products.map((product: ManagedProduct) => ({
           imageUrl: product.imageUrl,
           offer: product.offer,
+          merchant: product.merchant,
           collectionSources: product.collectionSources ?? [],
           id: product.id,
           name: product.name,
@@ -60,10 +61,16 @@ export default function Home() {
     .filter((product) => !term || `${product.name} ${product.category} ${product.summary}`.toLowerCase().includes(term))
     .sort((a, b) => discountOf(b) - discountOf(a));
   const productShelves = [
-    { key: "new_releases", title: "Amazon New Releases", description: "Recently released finds", id: "new-releases" },
-    { key: "bestsellers", title: "Amazon Bestsellers", description: "Popular picks from bestseller lists", id: "bestsellers" },
-    { key: "todays_deals", title: "Today’s Deals", description: "Current deals checked by OfferLoom", id: "todays-deals" },
-  ].map((shelf) => ({ ...shelf, products: frontProducts.filter((product) => product.collectionSources?.includes(shelf.key)).slice(0, 16) }));
+    { key: "new_releases", title: "Amazon New Releases", description: "Recently released finds", id: "new-releases", href: "/deals?collection=new_releases" },
+    { key: "bestsellers", title: "Amazon Bestsellers", description: "Popular picks from bestseller lists", id: "bestsellers", href: "/deals?collection=bestsellers" },
+    { key: "todays_deals", title: "Today’s Deals", description: "Current deals checked by OfferLoom", id: "todays-deals", href: "/deals?collection=todays_deals" },
+    { key: "ajio", title: "AJIO Fashion Deals", description: "Fashion picks with approved AJIO ACE links", id: "ajio-deals", href: "/deals?merchant=ajio" },
+  ].map((shelf) => ({
+    ...shelf,
+    products: frontProducts.filter((product) => shelf.key === "ajio"
+      ? product.merchant === "ajio"
+      : product.collectionSources?.includes(shelf.key)).slice(0, 16),
+  }));
 
   useEffect(() => {
     if (!playing) return;
@@ -133,7 +140,7 @@ export default function Home() {
       {catalogState === "ready" && photoProducts.length > 0 && !frontProducts.length && <div className="emptyState"><strong>No matching products</strong><p>Try another category or clear the search.</p><button onClick={clearSearch}>Show all products</button></div>}
       <div className="dealCategoryTabs" role="group" aria-label="Filter product deals">{dealCategories.map((item) => <button key={item} onClick={() => setDealCategory(item)} aria-pressed={dealCategory === item}>{item === "All" ? "All picks" : item}</button>)}</div>
       {productShelves.map((shelf) => <section className="productShelf" aria-labelledby={`${shelf.id}-heading`} key={shelf.key}>
-        <div className="productShelfHeading"><div><span>{shelf.description}</span><h3 id={`${shelf.id}-heading`}>{shelf.title}</h3></div><a href={`#${shelf.id}-rail`}>Scroll products <span aria-hidden="true">→</span></a></div>
+        <div className="productShelfHeading"><div><span>{shelf.description}</span><h3 id={`${shelf.id}-heading`}>{shelf.title}</h3></div><Link href={shelf.href}>View all <span aria-hidden="true">→</span></Link></div>
         {shelf.products.length ? <div className="productRail" id={`${shelf.id}-rail`} role="region" aria-label={`${shelf.title} products`}>
           {shelf.products.map((product) => <ProductCard product={product} discount={discountOf(product)} key={product.id} />)}
         </div> : <p className="shelfEmpty">No validated products in this collection yet. Check back after the next update.</p>}
@@ -150,7 +157,7 @@ export default function Home() {
 function ProductCard({ product, discount }: { product: Product; discount: number }) {
   return <article className="railProduct">
     {product.imageUrl && <Link className="railProductImage" href={product.detailPath!}><img src={product.imageUrl} alt={product.name} loading="lazy"/>{discount > 0 && <span>{Math.round(discount * 100)}% OFF</span>}</Link>}
-    <span className="categoryTag">{product.category}</span>
+    <span className="categoryTag">{product.merchant === "ajio" ? "AJIO · " : ""}{product.category}</span>
     <h4><Link href={product.detailPath!}>{product.name}</Link></h4>
     {product.offer && <div className="railProductPrice"><strong>₹{(product.offer.price / 100).toLocaleString("en-IN")}</strong>{product.offer.mrp && product.offer.mrp > product.offer.price && <del>₹{(product.offer.mrp / 100).toLocaleString("en-IN")}</del>}</div>}
     <a className="offerCta" href={product.listings[0].affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">{product.offer ? "View deal →" : "Check price →"}</a>
