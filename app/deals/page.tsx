@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import Link from "next/link";
 import SiteFooter from "../components/SiteFooter";
 import BrandMark from "../components/BrandMark";
-import { matchesCollection, matchesMerchant } from "../lib/deal-collections";
+import { matchesDealListing } from "../lib/deal-collections";
 import { publicOffer } from "../lib/public-offer";
 import { SITE } from "../lib/site";
 
@@ -54,12 +54,9 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
 
   const deals = (result.results ?? [])
     .map((row) => ({ row, offer: publicOffer(row.approvedPayload) }))
-    .filter((item): item is { row: Row; offer: NonNullable<ReturnType<typeof publicOffer>> } => {
-      if (!item.offer || !matchesMerchant(item.row.merchant, merchantFilter)) return false;
-      return !collectionKey || matchesCollection(item.row.approvedPayload, collectionKey);
-    })
+    .filter(({ row }) => matchesDealListing(row, { merchant: merchantFilter, collection: collectionKey }))
     .sort((a, b) => {
-      const discount = (offer: { price: number; mrp: number | null }) => (offer.mrp ? 1 - offer.price / offer.mrp : 0);
+      const discount = (offer: ReturnType<typeof publicOffer>) => offer?.mrp ? 1 - offer.price / offer.mrp : -1;
       return discount(b.offer) - discount(a.offer);
     });
 
@@ -69,11 +66,11 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
       <nav aria-label="Main navigation"><Link href="/">Home</Link><Link href="/guides">Buying guides</Link></nav>
     </header>
     <section className="frontDeals" aria-labelledby="deals-heading" style={{ marginTop: 24 }}>
-      <div className="frontDealsHeading"><h2 id="deals-heading">{title}</h2><span>{deals.length} live picks</span></div>
+      <div className="frontDealsHeading"><h2 id="deals-heading">{title}</h2><span>{deals.length} products</span></div>
       <p className="dealsIntro">{description}</p>
       {!deals.length && <p>New deals are being reviewed. Check back soon.</p>}
       <div className="frontDealsGrid">{deals.map(({ row, offer }) => {
-        const discountPct = offer.mrp && offer.mrp > offer.price ? Math.round((1 - offer.price / offer.mrp) * 100) : 0;
+        const discountPct = offer?.mrp && offer.mrp > offer.price ? Math.round((1 - offer.price / offer.mrp) * 100) : 0;
         const detailPath = `/products/${row.slug}`;
         return <article className="frontDealCard" key={row.id}>
           <Link className="dealPhoto" href={detailPath}>
@@ -83,14 +80,13 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
           <span className="categoryTag">{row.merchantName} · {row.category}</span>
           <h3><Link href={detailPath}>{row.name}</Link></h3>
           <div className="frontDealPrice">
-            <strong>₹{(offer.price / 100).toLocaleString("en-IN")}</strong>
-            {discountPct > 0 && <del>₹{(offer.mrp! / 100).toLocaleString("en-IN")}</del>}
+            {offer ? <><strong>₹{(offer.price / 100).toLocaleString("en-IN")}</strong>{discountPct > 0 && <del>₹{(offer.mrp! / 100).toLocaleString("en-IN")}</del>}</> : <strong>Check current price</strong>}
           </div>
           <div className="frontDealActions">
             <Link href={detailPath}>Product details</Link>
-            <a className="offerCta" href={`/go/${row.merchant}/${row.listingId}`} target="_blank" rel="sponsored noopener noreferrer">Grab deal →</a>
+            <a className="offerCta" href={`/go/${row.merchant}/${row.listingId}`} target="_blank" rel="sponsored noopener noreferrer">{offer ? "Grab deal →" : `Check price on ${row.merchantName} →`}</a>
           </div>
-          <small>Confirm current price and availability on {row.merchantName}.</small>
+          <small>{offer ? `Confirm current price and availability on ${row.merchantName}.` : `OfferLoom’s last price check expired; confirm today’s price and availability on ${row.merchantName}.`}</small>
         </article>;
       })}</div>
       <p className="disclosure"><strong>Affiliate and price notice:</strong> OfferLoom may earn a commission when you use eligible merchant links, at no extra cost to you. As an Amazon Associate I earn from qualifying purchases. Prices and availability can change and are confirmed on the merchant website. OfferLoom does not handle checkout, payment, shipping, cancellations, returns or refunds.</p>
