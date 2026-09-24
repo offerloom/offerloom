@@ -1,11 +1,11 @@
 import { env } from "cloudflare:workers";
-import Link from "next/link";
 import SiteFooter from "../components/SiteFooter";
 import BrandMark from "../components/BrandMark";
 import { matchesDealListing } from "../lib/deal-collections";
 import { publicOffer } from "../lib/public-offer";
 import { SITE } from "../lib/site";
 
+/* eslint @next/next/no-html-link-for-pages: "off" -- Native navigation avoids a Vinext Link runtime error on this page. */
 export const dynamic = "force-dynamic";
 
 // Instagram never makes links in a post caption clickable, so the bio link points here
@@ -62,8 +62,8 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
 
   return <main className="homePage">
     <header className="topbar">
-      <Link className="brand" href="/" aria-label="OfferLoom home"><BrandMark /><span>Offer<span>Loom</span></span></Link>
-      <nav aria-label="Main navigation"><Link href="/">Home</Link><Link href="/guides">Buying guides</Link></nav>
+      <a className="brand" href="/" aria-label="OfferLoom home"><BrandMark /><span>Offer<span>Loom</span></span></a>
+      <nav aria-label="Main navigation"><a href="/">Home</a><a href="/guides">Buying guides</a></nav>
     </header>
     <section className="frontDeals" aria-labelledby="deals-heading" style={{ marginTop: 24 }}>
       <div className="frontDealsHeading"><h2 id="deals-heading">{title}</h2><span>{deals.length} products</span></div>
@@ -73,17 +73,17 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
         const discountPct = offer?.mrp && offer.mrp > offer.price ? Math.round((1 - offer.price / offer.mrp) * 100) : 0;
         const detailPath = `/products/${row.slug}`;
         return <article className="frontDealCard" key={row.id}>
-          <Link className="dealPhoto" href={detailPath}>
+          <a className="dealPhoto" href={detailPath}>
             <img src={row.imageUrl!} alt={row.name} width="320" height="320" loading="lazy" />
             {discountPct > 0 && <span className="dealDiscount">{discountPct}% OFF</span>}
-          </Link>
+          </a>
           <span className="categoryTag">{row.merchantName} · {row.category}</span>
-          <h3><Link href={detailPath}>{row.name}</Link></h3>
+          <h3><a href={detailPath}>{row.name}</a></h3>
           <div className="frontDealPrice">
             {offer ? <><strong>₹{(offer.price / 100).toLocaleString("en-IN")}</strong>{discountPct > 0 && <del>₹{(offer.mrp! / 100).toLocaleString("en-IN")}</del>}</> : <strong>Check current price</strong>}
           </div>
           <div className="frontDealActions">
-            <Link href={detailPath}>Product details</Link>
+            <a href={detailPath}>Product details</a>
             <a className="offerCta" href={`/go/${row.merchant}/${row.listingId}`} target="_blank" rel="sponsored noopener noreferrer">{offer ? "Grab deal →" : `Check price on ${row.merchantName} →`}</a>
           </div>
           <small>{offer ? `Confirm current price and availability on ${row.merchantName}.` : `OfferLoom’s last price check expired; confirm today’s price and availability on ${row.merchantName}.`}</small>
