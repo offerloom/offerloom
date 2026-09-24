@@ -37,7 +37,7 @@ Public deployment: <https://offerloom.contact-offerloom.workers.dev> (Cloudflare
 
 ## Local development
 
-Browser collector operation and its six-hour Mac schedule are documented in [docs/BROWSER_COLLECTOR.md](docs/BROWSER_COLLECTOR.md). AJIO currently requires assisted browser review: standalone Chromium receives HTTP 403.
+The remote Amazon browser collection schedule and product verification are documented in [docs/CLOUD_BROWSER_COLLECTOR.md](docs/CLOUD_BROWSER_COLLECTOR.md). The former six-hour Mac LaunchAgent is disabled after cloud publication verification. AJIO currently requires assisted browser review: standalone Chromium receives HTTP 403.
 
 Requires Node.js `>=22.13.0`.
 
