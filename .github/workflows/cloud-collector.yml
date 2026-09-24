@@ -1,16 +1,21 @@
 name: Daily cloud product collection
+run-name: "Cloud catalogue · ${{ (github.event_name == 'push' || inputs.probe) && 'probe' || 'publish' }}"
 
 on:
   schedule:
-    - cron: "30 1 * * *" # 07:00 IST; GitHub may delay scheduled runs.
+    - cron: "30 2 * * *" # 08:00 IST backup; primary trigger is Cloudflare at 07:00 IST.
   workflow_dispatch:
     inputs:
       probe:
         description: "Test browser access without publishing"
         type: boolean
         default: true
+      force:
+        description: "Publish again even if a run completed today"
+        type: boolean
+        default: false
   push:
-    branches: [codex/cloud-browser-collector]
+    branches: [codex/cloud-browser-collector, codex/fix-daily-collector]
     paths:
       - scripts/cloud-browser-collector.mjs
       - .github/workflows/cloud-collector.yml
@@ -37,13 +42,13 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Offline collector tests
-        run: node --test tests/browser-collector.test.mjs tests/cloud-browser-collector.test.mjs
+        run: node --test tests/browser-collector.test.mjs tests/cloud-browser-collector.test.mjs tests/collector-scheduler.test.mjs
       - name: Cloud browser probe (no publication)
         if: github.event_name == 'push' || inputs.probe
         run: node scripts/cloud-browser-collector.mjs --probe
       - name: Discover, refresh and publish
         if: github.event_name != 'push' && !inputs.probe
-        run: node scripts/cloud-browser-collector.mjs
+        run: node scripts/cloud-browser-collector.mjs ${{ inputs.force && '--force' || '' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
