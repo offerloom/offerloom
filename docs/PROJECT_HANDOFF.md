@@ -348,4 +348,4 @@ Because checkout happens on the merchant website, OfferLoom may not receive comp
 
 - Product shelf actions now say “View all” and open a collection-filtered product grid for New Releases, Bestsellers, or Today’s Deals. The listing includes all matching published products, not only the homepage rail subset.
 - Added an AJIO Fashion Deals shelf and `/deals?merchant=ajio` listing. It surfaces the two existing manually reviewed AJIO catalogue products and keeps their approved ACE deep links behind `/go/ajio/{listingId}`. The campaign email provided sale terms and creative artwork but no individual product pages; do not infer product listings or affiliate destinations from it.
-- Removed Instagram, Telegram, YouTube and X links from the site header, footer and deal-alert actions. Facebook is the only public social link, using the verified OfferLoom Page URL `https://www.facebook.com/1220668387806265`.
+- Removed Instagram, Telegram, YouTube and X links from the site header, footer and deal-alert actions. Facebook is the only public social link, using the owner-supplied OfferLoom Page URL `https://www.facebook.com/profile.php?id=61594517871499`, verified in browser.

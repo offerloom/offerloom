@@ -20,7 +20,7 @@ Use a verified licensed product asset or original editorial artwork before prepa
 
 ## Verified setup
 
-- Facebook Page public URL (verified via Graph API `/me/accounts` and `/{page-id}?fields=link`): https://www.facebook.com/1220668387806265 — Page name "OfferLoom", Page ID `1220668387806265`. This is the confirmed, working API Page ID; the two older profile.php IDs previously noted here (`61593570969974`, `61594517871499`) were not this page — do not use them.
+- Meta Graph API publishing remains connected to Page ID `1220668387806265`. The owner-supplied public follow URL `https://www.facebook.com/profile.php?id=61594517871499` resolves to an OfferLoom page in browser verification on 24 September 2026 and is used by the public site's follow links. Confirm the Graph API Page mapping before changing automated posting; do not assume the public follow page and publishing identity match.
 - Instagram Business Account ID (verified): `17841432278236615`, connected to the above Page.
 - META_PAGE_ACCESS_TOKEN, META_PAGE_ID and META_INSTAGRAM_USER_ID are configured as Worker secrets, generated via a non-expiring Business Portfolio System User ("OfferLoom Automation", full access to the Page, Instagram account, and the "OfferLoom Automation" Meta app).
 - 13 September 2026: live end-to-end test succeeded on both platforms — Facebook post `122094426375483929`, Instagram post `18125019682634611`. Amazon CDN images are served through `/api/social-image` (a same-origin proxy) because Instagram's media-download crawler was being blocked directly on Amazon's CDN even though Facebook's crawler was not; Facebook posts also use the proxy for consistency.
