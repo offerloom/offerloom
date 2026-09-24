@@ -48,3 +48,16 @@ test("browser discovery extracts bestseller cards and stops on access challenges
     await assert.rejects(discover(page, "https://www.amazon.in/gp/bestsellers/electronics"), /Access challenge/);
   } finally { await browser.close(); }
 });
+
+test("Today's Deals discovery reads only product cards and preserves source diversity", async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await page.route("**/*", (route) => route.fulfill({ status: 200, contentType: "text/html", body: '<a href="/dp/B000000099">Outside</a><div id="slots-container"><div data-testid="product-card"><a href="/dp/B000000003">Deal</a></div></div>' }));
+    assert.deepEqual(await discover(page, "https://www.amazon.in/gp/goldbox"), ["https://www.amazon.in/dp/B000000003"]);
+    const a = { ...deal("B000000001", 10000), discoverySource: "bestsellers" };
+    const b = { ...deal("B000000002", 50000), discoverySource: "todays_deals" };
+    const c = { ...deal("B000000003", 20000), discoverySource: "bestsellers" };
+    assert.deepEqual(selectDeals([a, b, c], new Map(), 2).additions.map((d) => d.merchantProductId), [b.merchantProductId, a.merchantProductId]);
+  } finally { await browser.close(); }
+});

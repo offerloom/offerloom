@@ -5,7 +5,9 @@ import { promisify } from "node:util";
 import { pathToFileURL } from "node:url";
 import { collect, productSource, withRetry } from "./browser-collector.mjs";
 
+export const TODAY_DEALS = "https://www.amazon.in/gp/goldbox";
 const SOURCES = [
+  TODAY_DEALS,
   "https://www.amazon.in/gp/bestsellers/electronics",
   "https://www.amazon.in/gp/bestsellers/kitchen",
   "https://www.amazon.in/gp/bestsellers/apparel",
@@ -34,9 +36,11 @@ export async function discover(page, url) {
   const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
   if (!response?.ok()) throw new Error(`Discovery unavailable (${response?.status() ?? "no response"})`);
   const destination = new URL(page.url());
-  if (destination.hostname !== "www.amazon.in" || !destination.pathname.startsWith("/gp/bestsellers")) throw new Error("Unexpected discovery redirect");
+  if (destination.hostname !== "www.amazon.in" || !(url === TODAY_DEALS ? /^\/(?:gp\/goldbox|deals)(?:\/|$)/.test(destination.pathname) : destination.pathname.startsWith("/gp/bestsellers"))) throw new Error("Unexpected discovery redirect");
   if (challenge.test((await page.locator("body").innerText()).slice(0, 12000))) throw new Error("Access challenge; cloud run stopped");
-  const cards = page.locator('#zg-ordered-list a[href], #gridItemRoot a[href], .zg-grid-general-faceout a[href]');
+  const cards = page.locator(url === TODAY_DEALS
+    ? '#slots-container [data-testid="product-card"] a[href*="/dp/"], #slots-container [data-testid="deal-card"] a[href*="/dp/"]'
+    : '#zg-ordered-list a[href], #gridItemRoot a[href], .zg-grid-general-faceout a[href]');
   try { await cards.first().waitFor({ state: "attached", timeout: 15000 }); }
   catch {
     if (challenge.test((await page.locator("body").innerText()).slice(0, 12000))) throw new Error("Access challenge; cloud run stopped");
@@ -52,8 +56,11 @@ export function selectDeals(deals, existing, maxNew = 10) {
   const unique = [...new Map(deals.map((deal) => [deal.merchantProductId, deal])).values()];
   const allowed = (old) => old?.status === "published" && old?.listingStatus === "active";
   const refresh = unique.filter((deal) => allowed(existing.get(deal.merchantProductId)));
-  const additions = unique.filter((deal) => !existing.has(deal.merchantProductId) && deal.mrp && (1 - deal.price / deal.mrp) >= 0.1)
-    .sort((a, b) => (1 - b.price / b.mrp) - (1 - a.price / a.mrp) || a.merchantProductId.localeCompare(b.merchantProductId)).slice(0, maxNew);
+  const eligible = unique.filter((deal) => !existing.has(deal.merchantProductId) && deal.mrp && (1 - deal.price / deal.mrp) >= 0.1)
+    .sort((a, b) => (1 - b.price / b.mrp) - (1 - a.price / a.mrp) || a.merchantProductId.localeCompare(b.merchantProductId));
+  // Reserve half of new slots for verified Today’s Deals candidates when available.
+  const today = eligible.filter((deal) => deal.discoverySource === "todays_deals").slice(0, Math.ceil(maxNew / 2));
+  const additions = [...today, ...eligible.filter((deal) => !today.includes(deal))].slice(0, maxNew);
   return { refresh, additions };
 }
 
@@ -93,12 +100,28 @@ async function activeMerchant() {
 
 async function main() {
   const probe = process.argv.includes("--probe"), started = Date.now();
+  const marker = `cloud-browser:${new Date(started + 19800000).toISOString().slice(0, 10)}`;
   await mkdir("outputs/cloud-collector", { recursive: true });
   let existing = new Map();
-  if (!probe) { await activeMerchant(); existing = await readCatalogue(); }
+  if (!probe) {
+    await activeMerchant();
+    if (!process.argv.includes("--force")) {
+      const prior = JSON.parse(await d1(["--json", "--command", `SELECT id FROM sync_runs WHERE merchant_id='amazon' AND status='succeeded' AND error_message LIKE ${quote(marker + "%")} LIMIT 1`]));
+      if (prior[0]?.results?.length) {
+        const summary = { mode: "skipped", reason: "Already published today" };
+        await writeFile("outputs/cloud-collector/summary.json", JSON.stringify(summary));
+        console.log(JSON.stringify(summary));
+        return;
+      }
+    }
+    existing = await readCatalogue();
+  }
   const browser = await chromium.launch({ headless: true });
   const deals = [], failures = [];
+  let deferred = 0;
   let discovered = [];
+  const provenance = new Map();
+  const discoveryCounts = {};
   try {
     const page = await browser.newPage();
     await page.route("**/*", (route) => {
@@ -106,18 +129,31 @@ async function main() {
       if (request.isNavigationRequest() && !["amazon.in", "www.amazon.in"].includes(new URL(request.url()).hostname)) return route.abort();
       return ["media", "font"].includes(request.resourceType()) ? route.abort() : route.continue();
     });
-    for (const url of probe ? SOURCES.slice(0, 1) : SOURCES) {
-      discovered.push(...(await withRetry(() => discover(page, url), { maxAttempts: 2, retryable: (message) => /Discovery cards unavailable|Timeout|net::/.test(message) })).filter((candidate) => !existing.has(productSource(candidate).id)).slice(0, 5));
+    for (const url of probe ? [TODAY_DEALS, SOURCES[1]] : SOURCES) {
+      console.log(`Discovering ${url === TODAY_DEALS ? "Today’s Deals" : url}`);
+      const found = await withRetry(() => discover(page, url), { maxAttempts: 2, retryable: (message) => /Discovery cards unavailable|Timeout|net::/.test(message) });
+      const candidates = found.filter((candidate) => !existing.has(productSource(candidate).id)).slice(0, url === TODAY_DEALS ? 10 : 4);
+      discoveryCounts[url] = found.length;
+      for (const candidate of candidates) if (!provenance.has(candidate)) provenance.set(candidate, url === TODAY_DEALS ? "todays_deals" : "bestsellers");
+      discovered.push(...candidates);
+      console.log(`Found ${found.length} links; ${candidates.length} new candidates`);
       await pause(5000);
     }
     discovered = uniqueProductUrls(discovered);
     const refresh = [...existing.entries()].filter(([, row]) => row.status === "published" && row.listingStatus === "active").slice(0, 100).map(([asin]) => `https://www.amazon.in/dp/${asin}`);
-    const newUrls = discovered.filter((url) => !existing.has(productSource(url).id)).slice(0, 30);
+    const newUrls = discovered.filter((url) => !existing.has(productSource(url).id)).slice(0, 34);
     const urls = probe ? discovered.slice(0, 3) : uniqueProductUrls([...newUrls, ...refresh]);
     for (const url of urls) {
-      if (Date.now() - started > 20 * 60000) throw new Error("Cloud run exceeded its collection budget; no publication");
+      if (Date.now() - started > 20 * 60000) {
+        deferred = urls.length - urls.indexOf(url);
+        console.log(`Collection budget reached; publishing validated observations, deferring ${deferred} URLs`);
+        break;
+      }
       try {
-        deals.push(await withRetry(() => collect(page, url), { maxAttempts: 2 }));
+        console.log(`Checking ${urls.indexOf(url) + 1}/${urls.length}: ${productSource(url).id}`);
+        const deal = await withRetry(() => collect(page, url), { maxAttempts: 2 });
+        if (provenance.has(url)) deal.discoverySource = provenance.get(url);
+        deals.push(deal);
         console.log(`Collected ${productSource(url).id}`);
         if (probe) break;
       } catch (error) {
@@ -134,13 +170,14 @@ async function main() {
     existing = await readCatalogue();
     const selection = selectDeals(deals, existing);
     added = selection.additions.length; refreshed = selection.refresh.length;
+    console.log(JSON.stringify({ selectedNew: selection.additions.map((deal) => ({ asin: deal.merchantProductId, source: deal.discoverySource })) }));
     const sql = publishSql([...selection.refresh, ...selection.additions], existing);
     const now = new Date().toISOString();
-    const record = `INSERT INTO sync_runs (merchant_id,status,products_seen,products_updated,error_message,started_at,finished_at) VALUES ('amazon',${quote(failures.length ? "failed" : "succeeded")},${deals.length + failures.length},${added + refreshed},${failures.length ? quote(`Cloud browser: ${failures.length} products unavailable`) : "NULL"},${quote(new Date(started).toISOString())},${quote(now)});`;
+    const record = `INSERT INTO sync_runs (merchant_id,status,products_seen,products_updated,error_message,started_at,finished_at) VALUES ('amazon','succeeded',${deals.length + failures.length},${added + refreshed},${quote(`${marker}; added=${added}; refreshed=${refreshed}; skipped=${failures.length}; deferred=${deferred}`)},${quote(new Date(started).toISOString())},${quote(now)});`;
     await writeFile("outputs/cloud-collector/publish.sql", sql + "\n" + record, { mode: 0o600 });
     await d1(["--file", "outputs/cloud-collector/publish.sql"]);
   }
-  const summary = { mode: probe ? "probe (no database writes)" : "publish", discovered: discovered.length, validated: deals.length, added, refreshed, failed: failures.length };
+  const summary = { mode: probe ? "probe (no database writes)" : "publish", discovered: discovered.length, discoveryCounts, validated: deals.length, added, refreshed, failed: failures.length, deferred };
   await writeFile("outputs/cloud-collector/summary.json", JSON.stringify(summary, null, 2));
   console.log(JSON.stringify(summary));
 }

@@ -1,0 +1,11 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "offerloom-collector-scheduler",
+  "main": "index.mjs",
+  "compatibility_date": "2026-09-24",
+  "workers_dev": false,
+  "preview_urls": false,
+  "vars": { "ENABLED": "true" },
+  "triggers": { "crons": ["30 1 * * *", "0,30 2 * * *"] },
+  "observability": { "enabled": true }
+}
