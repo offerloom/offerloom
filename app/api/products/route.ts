@@ -21,6 +21,7 @@ export async function GET() {
     brand: row.brand,
     imageUrl: row.imageUrl,
     offer: publicOffer(row.approvedPayload),
+    collectionSources: safeCollectionSources(row.approvedPayload),
     modelNumber: row.modelNumber,
     name: row.name,
     summary: row.summary,
@@ -31,6 +32,14 @@ export async function GET() {
     detailPath: `/products/${row.slug}`,
   }));
   return Response.json({ products }, { headers: { "Cache-Control": "no-store" } });
+}
+
+function safeCollectionSources(value: unknown): string[] {
+  try {
+    const parsed = JSON.parse(String(value));
+    const sources = Array.isArray(parsed.discoverySources) ? parsed.discoverySources : parsed.discoverySource ? [parsed.discoverySource] : [];
+    return sources.filter((source: unknown): source is string => ["todays_deals", "new_releases", "bestsellers"].includes(String(source)));
+  } catch { return []; }
 }
 
 function safeSpecs(value: unknown): string[] {

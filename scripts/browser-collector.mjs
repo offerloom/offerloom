@@ -325,6 +325,7 @@ async function main() {
         for (const row of JSON.parse(stdout)[0]?.results ?? []) existingIds.add(row.id);
       }
 
+      const preserveSources = "CASE WHEN json_type(excluded.approved_payload,'$.discoverySources')='array' THEN excluded.approved_payload WHEN json_type(collected_deals.approved_payload,'$.discoverySources')='array' THEN json_set(excluded.approved_payload,'$.discoverySources',json_extract(collected_deals.approved_payload,'$.discoverySources')) WHEN json_type(collected_deals.approved_payload,'$.discoverySource')='text' THEN json_set(excluded.approved_payload,'$.discoverySources',json_array(json_extract(collected_deals.approved_payload,'$.discoverySource'))) ELSE excluded.approved_payload END";
       const statements = results.map((deal) => {
         const dealId = `${deal.merchant}-${deal.merchantProductId}`;
         const now = new Date().toISOString();
@@ -339,7 +340,7 @@ async function main() {
         const summary = autoSummary(deal);
         if (!existingIds.has(productId)) newlyAdded.push({ name: deal.name, price: deal.price, mrp: deal.mrp, category: deal.category, productId });
         return [
-          `INSERT INTO collected_deals (id,payload,approved_payload,product_id,status,updated_at) VALUES (${quote(dealId)},${quote(JSON.stringify(deal))},${quote(JSON.stringify(deal))},${quote(productId)},'approved',${quote(now)}) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,approved_payload=excluded.approved_payload,product_id=excluded.product_id,status='approved',updated_at=excluded.updated_at;`,
+          `INSERT INTO collected_deals (id,payload,approved_payload,product_id,status,updated_at) VALUES (${quote(dealId)},${quote(JSON.stringify(deal))},${quote(JSON.stringify(deal))},${quote(productId)},'approved',${quote(now)}) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,approved_payload=${preserveSources},product_id=excluded.product_id,status='approved',updated_at=excluded.updated_at;`,
           `INSERT INTO categories (id,name,slug,position,created_at) VALUES (${quote(`cat-${categorySlug}`)},${quote(deal.category)},${quote(categorySlug)},0,${quote(now)}) ON CONFLICT(slug) DO NOTHING;`,
           `INSERT INTO products (id,category_id,name,slug,summary,image_url,specs_json,status,source,created_at,updated_at,published_at) VALUES (${quote(productId)},(SELECT id FROM categories WHERE slug=${quote(categorySlug)}),${quote(deal.name)},${quote(`${slugify(deal.name)}-${productId.slice(0, 8)}`)},${quote(summary)},${quote(deal.imageUrl)},'[]','published','browser_auto',${quote(now)},${quote(now)},${quote(now)}) ON CONFLICT(id) DO UPDATE SET name=excluded.name,summary=excluded.summary,image_url=excluded.image_url,status='published',source='browser_auto',updated_at=excluded.updated_at,published_at=excluded.published_at;`,
           `INSERT INTO merchant_listings (id,product_id,merchant,merchant_product_id,source_url,affiliate_url,status,last_checked_at,created_at,updated_at) VALUES (${quote(crypto.randomUUID())},${quote(productId)},'amazon',${quote(deal.merchantProductId)},${quote(deal.sourceUrl)},${quote(affiliateUrl)},'active',${quote(deal.checkedAt)},${quote(now)},${quote(now)}) ON CONFLICT(merchant,merchant_product_id) DO UPDATE SET product_id=excluded.product_id,affiliate_url=excluded.affiliate_url,last_checked_at=excluded.last_checked_at,updated_at=excluded.updated_at;`,

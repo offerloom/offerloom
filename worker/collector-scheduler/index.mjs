@@ -21,23 +21,26 @@ async function github(path, token, fetcher, body) {
   return JSON.parse(text + decoder.decode());
 }
 
-export async function dispatchDaily(env, { now = Date.now(), fetcher = fetch } = {}) {
+export async function dispatchDaily(env, { now = Date.now(), fetcher = fetch, window = "morning" } = {}) {
   if (env.ENABLED !== "true") return { status: "disabled" };
   if (!env.GITHUB_ACTIONS_TOKEN) throw new Error("GitHub Actions scheduler credential is missing");
   const day = new Date(now + 19800000).toISOString().slice(0, 10);
   const start = Date.parse(`${day}T00:00:00+05:30`);
   const data = await github("/runs?branch=main&per_page=20", env.GITHUB_ACTIONS_TOKEN, fetcher);
   if (!Array.isArray(data?.workflow_runs)) throw new Error("GitHub run history is invalid");
-  const today = data.workflow_runs.filter((run) => run.display_title === "Cloud catalogue · publish" && Date.parse(run.created_at) >= start);
-  if (today.some((run) => ACTIVE.has(run.status))) return { status: "skipped", reason: "Publication is queued or running", day };
-  if (today.some((run) => run.conclusion === "success")) return { status: "skipped", reason: "Publication completed today", day };
-  if (today.length >= 3) throw new Error("Daily publication retry limit reached; inspect GitHub Actions");
-  await github("/dispatches", env.GITHUB_ACTIONS_TOKEN, fetcher, { ref: "main", inputs: { probe: false, force: false } });
-  return { status: "dispatched", day };
+  if (!["morning", "evening"].includes(window)) throw new Error("Unknown publication window");
+  const slotTitle = `Cloud catalogue · ${window}`;
+  const today = data.workflow_runs.filter((run) => run.display_title === slotTitle && Date.parse(run.created_at) >= start);
+  if (today.some((run) => ACTIVE.has(run.status))) return { status: "skipped", reason: `${window} publication is queued or running`, day, window };
+  if (today.some((run) => run.conclusion === "success")) return { status: "skipped", reason: `${window} publication completed today`, day, window };
+  if (today.length >= 3) throw new Error(`${window} publication retry limit reached; inspect GitHub Actions`);
+  await github("/dispatches", env.GITHUB_ACTIONS_TOKEN, fetcher, { ref: "main", inputs: { probe: false, force: false, window } });
+  return { status: "dispatched", day, window };
 }
 
 export default {
-  scheduled(_event, env, ctx) {
-    ctx.waitUntil(dispatchDaily(env).then((result) => console.log(JSON.stringify({ job: "collector-scheduler", ...result }))));
+  scheduled(event, env, ctx) {
+    const window = new Date(event.scheduledTime).getUTCHours() < 6 ? "morning" : "evening";
+    ctx.waitUntil(dispatchDaily(env, { now: event.scheduledTime, window }).then((result) => console.log(JSON.stringify({ job: "collector-scheduler", ...result }))));
   },
 };

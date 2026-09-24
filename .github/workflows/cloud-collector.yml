@@ -1,9 +1,10 @@
 name: Daily cloud product collection
-run-name: "Cloud catalogue · ${{ (github.event_name == 'push' || inputs.probe) && 'probe' || 'publish' }}"
+run-name: "Cloud catalogue · ${{ (github.event_name == 'push' || inputs.probe) && 'probe' || inputs.window || (github.event.schedule == '30 12 * * *' && 'evening' || 'morning') }}"
 
 on:
   schedule:
-    - cron: "30 2 * * *" # 08:00 IST backup; primary trigger is Cloudflare at 07:00 IST.
+    - cron: "30 2 * * *" # 08:00 IST morning backup.
+    - cron: "30 12 * * *" # 18:00 IST evening backup.
   workflow_dispatch:
     inputs:
       probe:
@@ -14,8 +15,13 @@ on:
         description: "Publish again even if a run completed today"
         type: boolean
         default: false
+      window:
+        description: "Collection window to publish"
+        type: choice
+        options: [morning, evening]
+        default: morning
   push:
-    branches: [codex/cloud-browser-collector, codex/fix-daily-collector]
+    branches: [codex/cloud-browser-collector, codex/fix-daily-collector, codex/twice-daily-product-shelves]
     paths:
       - scripts/cloud-browser-collector.mjs
       - .github/workflows/cloud-collector.yml
@@ -52,6 +58,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          COLLECTION_WINDOW: ${{ inputs.window || (github.event.schedule == '30 12 * * *' && 'evening' || 'morning') }}
       - name: Run summary
         if: always()
         shell: bash

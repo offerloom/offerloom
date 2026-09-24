@@ -21,6 +21,11 @@ export const COMMUNITY = {
     via: "WhatsApp Channel · Free",
     cta: "Join free",
   },
+  facebook: {
+    url: "https://www.facebook.com/profile.php?id=61594517871499",
+    buttonText: "Follow our page",
+    via: "Facebook · OfferLoom",
+  },
   telegram: {
     url: "https://t.me/+918127088087",
     buttonText: "Join for daily deals",
@@ -43,7 +48,7 @@ export const SOCIAL_LINKS = [
   {
     id: "facebook",
     label: "OfferLoom on Facebook",
-    href: "https://www.facebook.com/1220668387806265",
+    href: "https://www.facebook.com/profile.php?id=61594517871499",
   },
   {
     id: "x",

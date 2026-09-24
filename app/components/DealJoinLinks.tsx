@@ -8,15 +8,15 @@ export default function DealJoinLinks({ className }: DealJoinLinksProps) {
   return (
     <div className={className ? `dealAlertsActions ${className}` : "dealAlertsActions"}>
       <a
-        className="dealJoin dealJoin-whatsapp"
-        href={COMMUNITY.whatsapp.url}
+        className="dealJoin dealJoin-facebook"
+        href={COMMUNITY.facebook.url}
         target="_blank"
         rel="noopener noreferrer"
       >
-        <span className="dealJoinIcon" aria-hidden="true">✆</span>
+        <span className="dealJoinIcon" aria-hidden="true">f</span>
         <span className="dealJoinCopy">
-          <strong>{COMMUNITY.whatsapp.buttonText}</strong>
-          <small>{COMMUNITY.whatsapp.via}</small>
+          <strong>{COMMUNITY.facebook.buttonText}</strong>
+          <small>{COMMUNITY.facebook.via}</small>
         </span>
       </a>
       <a

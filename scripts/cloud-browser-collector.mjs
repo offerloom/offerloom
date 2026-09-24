@@ -6,8 +6,10 @@ import { pathToFileURL } from "node:url";
 import { collect, productSource, withRetry } from "./browser-collector.mjs";
 
 export const TODAY_DEALS = "https://www.amazon.in/gp/goldbox";
+export const NEW_RELEASES = "https://www.amazon.in/gp/new-releases";
 const SOURCES = [
   TODAY_DEALS,
+  NEW_RELEASES,
   "https://www.amazon.in/gp/bestsellers/electronics",
   "https://www.amazon.in/gp/bestsellers/kitchen",
   "https://www.amazon.in/gp/bestsellers/apparel",
@@ -19,6 +21,7 @@ const challenge = /captcha|robot check|access denied|verify you are human|automa
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const quote = (value) => `'${String(value).replaceAll("'", "''")}'`;
 const slug = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
+const preserveSources = "CASE WHEN json_type(excluded.approved_payload,'$.discoverySources')='array' THEN excluded.approved_payload WHEN json_type(collected_deals.approved_payload,'$.discoverySources')='array' THEN json_set(excluded.approved_payload,'$.discoverySources',json_extract(collected_deals.approved_payload,'$.discoverySources')) WHEN json_type(collected_deals.approved_payload,'$.discoverySource')='text' THEN json_set(excluded.approved_payload,'$.discoverySources',json_array(json_extract(collected_deals.approved_payload,'$.discoverySource'))) ELSE excluded.approved_payload END";
 
 export function uniqueProductUrls(links) {
   const found = new Map();
@@ -36,10 +39,12 @@ export async function discover(page, url) {
   const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
   if (!response?.ok()) throw new Error(`Discovery unavailable (${response?.status() ?? "no response"})`);
   const destination = new URL(page.url());
-  if (destination.hostname !== "www.amazon.in" || !(url === TODAY_DEALS ? /^\/(?:gp\/goldbox|deals)(?:\/|$)/.test(destination.pathname) : destination.pathname.startsWith("/gp/bestsellers"))) throw new Error("Unexpected discovery redirect");
+  if (destination.hostname !== "www.amazon.in" || !(url === TODAY_DEALS ? /^\/(?:gp\/goldbox|deals)(?:\/|$)/.test(destination.pathname) : url === NEW_RELEASES ? destination.pathname.startsWith("/gp/new-releases") : destination.pathname.startsWith("/gp/bestsellers"))) throw new Error("Unexpected discovery redirect");
   if (challenge.test((await page.locator("body").innerText()).slice(0, 12000))) throw new Error("Access challenge; cloud run stopped");
   const cards = page.locator(url === TODAY_DEALS
     ? '#slots-container [data-testid="product-card"] a[href*="/dp/"], #slots-container [data-testid="deal-card"] a[href*="/dp/"]'
+    : url === NEW_RELEASES
+      ? '#zg-right-col [id^="B"] a[href*="/dp/"]'
     : '#zg-ordered-list a[href], #gridItemRoot a[href], .zg-grid-general-faceout a[href]');
   try { await cards.first().waitFor({ state: "attached", timeout: 15000 }); }
   catch {
@@ -55,12 +60,17 @@ export async function discover(page, url) {
 export function selectDeals(deals, existing, maxNew = 10) {
   const unique = [...new Map(deals.map((deal) => [deal.merchantProductId, deal])).values()];
   const allowed = (old) => old?.status === "published" && old?.listingStatus === "active";
+  const sourcesOf = (deal) => deal.discoverySources ?? (deal.discoverySource ? [deal.discoverySource] : []);
+  const discountOf = (deal) => deal.mrp ? 1 - deal.price / deal.mrp : 0;
   const refresh = unique.filter((deal) => allowed(existing.get(deal.merchantProductId)));
-  const eligible = unique.filter((deal) => !existing.has(deal.merchantProductId) && deal.mrp && (1 - deal.price / deal.mrp) >= 0.1)
-    .sort((a, b) => (1 - b.price / b.mrp) - (1 - a.price / a.mrp) || a.merchantProductId.localeCompare(b.merchantProductId));
-  // Reserve half of new slots for verified Today’s Deals candidates when available.
-  const today = eligible.filter((deal) => deal.discoverySource === "todays_deals").slice(0, Math.ceil(maxNew / 2));
-  const additions = [...today, ...eligible.filter((deal) => !today.includes(deal))].slice(0, maxNew);
+  const eligible = unique.filter((deal) => !existing.has(deal.merchantProductId) && (
+    sourcesOf(deal).includes("new_releases") || (deal.mrp && (1 - deal.price / deal.mrp) >= 0.1)
+  )).sort((a, b) => discountOf(b) - discountOf(a) || a.merchantProductId.localeCompare(b.merchantProductId));
+  // Preserve visibility for each requested collection while filling unused slots by discount.
+  const reserved = ["todays_deals", "new_releases", "bestsellers"].flatMap((source) =>
+    eligible.filter((deal) => sourcesOf(deal).includes(source)).slice(0, Math.ceil(maxNew / 3)),
+  );
+  const additions = [...new Map([...reserved, ...eligible].map((deal) => [deal.merchantProductId, deal])).values()].slice(0, maxNew);
   return { refresh, additions };
 }
 
@@ -77,7 +87,7 @@ export function publishSql(deals, existing, now = new Date().toISOString()) {
       `INSERT INTO categories (id,name,slug,position,created_at) VALUES (${quote(`cat-${category}`)},${quote(deal.category)},${quote(category)},0,${quote(now)}) ON CONFLICT(slug) DO NOTHING;`,
       `INSERT INTO products (id,category_id,name,slug,summary,image_url,specs_json,status,source,created_at,updated_at,published_at) VALUES (${quote(id)},(SELECT id FROM categories WHERE slug=${quote(category)}),${quote(deal.name)},${quote(`${slug(deal.name)}-${id}`)},'Confirm current price, stock and specifications on Amazon.in before buying.',${quote(deal.imageUrl)},'[]','published','browser_auto',${quote(now)},${quote(now)},${quote(now)}) ON CONFLICT(id) DO UPDATE SET name=excluded.name,image_url=excluded.image_url,updated_at=excluded.updated_at WHERE products.status='published';`,
       `INSERT INTO merchant_listings (id,product_id,merchant,merchant_product_id,source_url,affiliate_url,status,last_checked_at,created_at,updated_at) VALUES (${quote(`cloud-${deal.merchantProductId}`)},${quote(id)},'amazon',${quote(deal.merchantProductId)},${quote(deal.sourceUrl)},${quote(affiliate)},'active',${quote(deal.checkedAt)},${quote(now)},${quote(now)}) ON CONFLICT(merchant,merchant_product_id) DO UPDATE SET affiliate_url=excluded.affiliate_url,last_checked_at=excluded.last_checked_at,updated_at=excluded.updated_at WHERE merchant_listings.status='active';`,
-      `INSERT INTO collected_deals (id,payload,approved_payload,product_id,status,updated_at) VALUES (${quote(dealId)},${payload},${payload},${quote(id)},'approved',${quote(now)}) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,approved_payload=excluded.approved_payload,product_id=excluded.product_id,status='approved',updated_at=excluded.updated_at;`,
+      `INSERT INTO collected_deals (id,payload,approved_payload,product_id,status,updated_at) VALUES (${quote(dealId)},${payload},${payload},${quote(id)},'approved',${quote(now)}) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,approved_payload=${preserveSources},product_id=excluded.product_id,status='approved',updated_at=excluded.updated_at;`,
     );
   }
   return statements.join("\n");
@@ -100,7 +110,8 @@ async function activeMerchant() {
 
 async function main() {
   const probe = process.argv.includes("--probe"), started = Date.now();
-  const marker = `cloud-browser:${new Date(started + 19800000).toISOString().slice(0, 10)}`;
+  const collectionWindow = process.env.COLLECTION_WINDOW === "evening" ? "evening" : "morning";
+  const marker = `cloud-browser:${new Date(started + 19800000).toISOString().slice(0, 10)}:${collectionWindow}`;
   await mkdir("outputs/cloud-collector", { recursive: true });
   let existing = new Map();
   if (!probe) {
@@ -129,12 +140,18 @@ async function main() {
       if (request.isNavigationRequest() && !["amazon.in", "www.amazon.in"].includes(new URL(request.url()).hostname)) return route.abort();
       return ["media", "font"].includes(request.resourceType()) ? route.abort() : route.continue();
     });
-    for (const url of probe ? [TODAY_DEALS, SOURCES[1]] : SOURCES) {
-      console.log(`Discovering ${url === TODAY_DEALS ? "Today’s Deals" : url}`);
+    for (const url of probe ? [TODAY_DEALS, NEW_RELEASES, SOURCES[2]] : SOURCES) {
+      const source = url === TODAY_DEALS ? "todays_deals" : url === NEW_RELEASES ? "new_releases" : "bestsellers";
+      console.log(`Discovering ${url === TODAY_DEALS ? "Today’s Deals" : url === NEW_RELEASES ? "Amazon New Releases" : url}`);
       const found = await withRetry(() => discover(page, url), { maxAttempts: 2, retryable: (message) => /Discovery cards unavailable|Timeout|net::/.test(message) });
-      const candidates = found.filter((candidate) => !existing.has(productSource(candidate).id)).slice(0, url === TODAY_DEALS ? 10 : 4);
+      for (const candidate of found.slice(0, 20)) {
+        const sources = provenance.get(candidate) ?? [];
+        if (!sources.includes(source)) sources.push(source);
+        provenance.set(candidate, sources);
+      }
+      const limit = url === TODAY_DEALS || url === NEW_RELEASES ? 8 : 4;
+      const candidates = found.filter((candidate) => !existing.has(productSource(candidate).id)).slice(0, limit);
       discoveryCounts[url] = found.length;
-      for (const candidate of candidates) if (!provenance.has(candidate)) provenance.set(candidate, url === TODAY_DEALS ? "todays_deals" : "bestsellers");
       discovered.push(...candidates);
       console.log(`Found ${found.length} links; ${candidates.length} new candidates`);
       await pause(5000);
@@ -152,7 +169,7 @@ async function main() {
       try {
         console.log(`Checking ${urls.indexOf(url) + 1}/${urls.length}: ${productSource(url).id}`);
         const deal = await withRetry(() => collect(page, url), { maxAttempts: 2 });
-        if (provenance.has(url)) deal.discoverySource = provenance.get(url);
+        if (provenance.has(url)) deal.discoverySources = provenance.get(url);
         deals.push(deal);
         console.log(`Collected ${productSource(url).id}`);
         if (probe) break;
@@ -177,7 +194,7 @@ async function main() {
     await writeFile("outputs/cloud-collector/publish.sql", sql + "\n" + record, { mode: 0o600 });
     await d1(["--file", "outputs/cloud-collector/publish.sql"]);
   }
-  const summary = { mode: probe ? "probe (no database writes)" : "publish", discovered: discovered.length, discoveryCounts, validated: deals.length, added, refreshed, failed: failures.length, deferred };
+  const summary = { mode: probe ? "probe (no database writes)" : "publish", window: collectionWindow, discovered: discovered.length, discoveryCounts, validated: deals.length, added, refreshed, failed: failures.length, deferred };
   await writeFile("outputs/cloud-collector/summary.json", JSON.stringify(summary, null, 2));
   console.log(JSON.stringify(summary));
 }

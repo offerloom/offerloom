@@ -80,7 +80,7 @@ The secure catalogue milestone includes single-product entry and CSV import for 
 
 ## Daily cloud browser collection
 
-The daily workflow uses the existing browser collector on a GitHub-hosted runner dispatched by Cloudflare at 07:00 IST with recovery checks and a GitHub backup, independent of the owner’s laptop. It discovers Today’s Deals and bestseller candidates, validates prices, publishes up to ten new discounted products and refreshes existing active listings with `offerloom-21`. See [operation and live verification status](docs/CLOUD_BROWSER_COLLECTOR.md). Creators API access is not required by this browser workflow.
+The daily workflow uses the existing browser collector on a GitHub-hosted runner dispatched by Cloudflare at 07:00 and 17:00 IST with recovery checks and GitHub backups, independent of the owner’s laptop. It discovers New Releases, Today’s Deals and bestseller candidates, validates prices, publishes up to ten newly validated products and refreshes existing active listings with `offerloom-21`. See [operation and live verification status](docs/CLOUD_BROWSER_COLLECTOR.md). Creators API access is not required by this browser workflow.
 
 ## Project handoff
 

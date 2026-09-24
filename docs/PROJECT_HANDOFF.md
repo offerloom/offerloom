@@ -335,3 +335,10 @@ Because checkout happens on the merchant website, OfferLoom may not receive comp
 - Clearly distinguish example data, manual deals and API-synchronized deals.
 - Follow affiliate agreements, image licences, advertising disclosures and Indian consumer-protection requirements.
 - Avoid fake countdown timers, misleading discounts and unauthorized scraping.
+
+## Daily browser collection — 24 September 2026
+
+- `scripts/cloud-browser-collector.mjs` discovers Amazon.in New Releases, Today’s Deals and six bestseller categories, then validates product observations before D1 publication. New additions are capped at ten per daily run; affiliate destinations use `offerloom-21`. No Creators API access or laptop uptime is required.
+- A separate Cloudflare Worker, `offerloom-collector-scheduler`, dispatches the GitHub workflow at 07:00 and 17:00 IST, with 07:30/08:00 and 17:30/18:00 recovery checks. GitHub native scheduling remains an 08:00 backup. GitHub queueing and product validation affect completion time.
+- Worker source/config: `worker/collector-scheduler/`; automatic deployment: `.github/workflows/deploy-collector-scheduler.yml`. GitHub credential is stored in Cloudflare as `GITHUB_ACTIONS_TOKEN` with owner approval; never retrieve it into documentation or logs.
+- Operation, manual probe/force options, daily deduplication and run verification: [Cloud browser collector](CLOUD_BROWSER_COLLECTOR.md). Existing Mac collection and disabled API preparation are separate workflows.
