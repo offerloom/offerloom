@@ -17,7 +17,7 @@ export const COMMUNITY = {
     cta: "Join free",
   },
   facebook: {
-    url: "https://www.facebook.com/1220668387806265",
+    url: "https://www.facebook.com/profile.php?id=61594517871499",
     buttonText: "Follow our page",
     via: "Facebook · OfferLoom",
   },
@@ -27,7 +27,7 @@ export const SOCIAL_LINKS = [
   {
     id: "facebook",
     label: "OfferLoom on Facebook",
-    href: "https://www.facebook.com/1220668387806265",
+    href: "https://www.facebook.com/profile.php?id=61594517871499",
   },
 ] as const;
 

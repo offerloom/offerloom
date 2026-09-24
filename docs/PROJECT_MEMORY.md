@@ -38,7 +38,7 @@ Read this file and `README.md`/`AGENTS.md` before changing the project — `docs
 ## Social publishing live — 13 September 2026
 
 - Amazon/AJIO auto-post to Facebook and Instagram is live and verified. See `docs/AMAZON_SOCIAL_PILOT.md` for full details.
-- The correct, working Facebook Page is https://www.facebook.com/1220668387806265 (name "OfferLoom", Page ID `1220668387806265`) and the connected Instagram Business Account ID is `17841432278236615`. Two older Facebook profile.php IDs referenced in earlier notes (`61593570969974` in `app/lib/site.ts`, `61594517871499` in this file and `docs/AMAZON_SOCIAL_PILOT.md`) were **not** this Page — `app/lib/site.ts`'s `SOCIAL_LINKS.facebook.href` has been corrected to the verified URL above.
+- The Meta Graph API publishing integration is connected to Page ID `1220668387806265` and Instagram Business Account ID `17841432278236615`. The owner-supplied public follow URL `https://www.facebook.com/profile.php?id=61594517871499` resolves to an OfferLoom page in browser verification on 24 September 2026; use this URL for public follow links as explicitly requested. Do not assume the Graph API publishing integration points to the same page until its account mapping is checked.
 - META_PAGE_ACCESS_TOKEN, META_PAGE_ID, META_INSTAGRAM_USER_ID are set as Worker secrets (non-expiring System User token, "OfferLoom Automation" Meta app).
 - A Cloudflare Cron Trigger (`0 13 * * *`) auto-picks the single best current discount not posted to either platform in the last 30 days and publishes it to both. Product images are served through `/api/social-image` (a same-origin proxy) because Instagram's crawler was being blocked directly on Amazon's CDN.
 
@@ -189,4 +189,4 @@ Read this file and `README.md`/`AGENTS.md` before changing the project — `docs
 
 - Product shelf actions now say “View all” and open a collection-filtered product grid for New Releases, Bestsellers, or Today’s Deals. The listing includes all matching published products, not only the homepage rail subset.
 - Added an AJIO Fashion Deals shelf and `/deals?merchant=ajio` listing. It surfaces the two existing manually reviewed AJIO catalogue products and keeps their approved ACE deep links behind `/go/ajio/{listingId}`. The campaign email provided sale terms and creative artwork but no individual product pages; do not infer product listings or affiliate destinations from it.
-- Removed Instagram, Telegram, YouTube and X links from the site header, footer and deal-alert actions. Facebook is the only public social link, using the verified OfferLoom Page URL `https://www.facebook.com/1220668387806265`.
+- Removed Instagram, Telegram, YouTube and X links from the site header, footer and deal-alert actions. Facebook is the only public social link, using the owner-supplied OfferLoom Page URL `https://www.facebook.com/profile.php?id=61594517871499`, which resolves to an OfferLoom page.
