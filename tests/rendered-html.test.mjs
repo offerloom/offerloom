@@ -42,6 +42,7 @@ test("renders the OfferLoom shopping experience", async () => {
   assert.match(html, /deals\?collection=bestsellers/);
   assert.match(html, /deals\?collection=todays_deals/);
   assert.match(html, /deals\?merchant=ajio/);
+  assert.match(html, /<a href="\/deals\?collection=bestsellers">View all/);
   assert.doesNotMatch(html, /whatsapp\.com\/channel/);
   assert.match(html, /aria-roledescription="carousel"/);
   assert.match(html, /aria-roledescription="carousel"/);
