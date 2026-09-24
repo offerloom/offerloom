@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 // instead — a standing landing page of today's deals for anyone tapping through from a post.
 export function generateMetadata() {
   const title = `Today's Deals | ${SITE.brand}`;
-  const description = "Live prices and photos for every current OfferLoom deal, updated every 3 hours.";
+  const description = "Live prices and photos for OfferLoom deals, checked twice daily.";
   return { title, description, openGraph: { title, description }, twitter: { card: "summary", title, description } };
 }
 
@@ -48,7 +48,7 @@ export default async function DealsPage() {
       <nav aria-label="Main navigation"><Link href="/">Home</Link><Link href="/guides">Buying guides</Link></nav>
     </header>
     <section className="frontDeals" aria-labelledby="deals-heading" style={{ marginTop: 24 }}>
-      <div className="frontDealsHeading"><h2 id="deals-heading">Today's deals</h2><span>{deals.length} live picks</span></div>
+      <div className="frontDealsHeading"><h2 id="deals-heading">Today&apos;s deals</h2><span>{deals.length} live picks</span></div>
       {!deals.length && <p>New deals are being reviewed. Check back soon.</p>}
       <div className="frontDealsGrid">{deals.map(({ row, offer }) => {
         const discountPct = offer.mrp && offer.mrp > offer.price ? Math.round((1 - offer.price / offer.mrp) * 100) : 0;

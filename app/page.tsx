@@ -106,7 +106,7 @@ export default function Home() {
         <p>{activeSlide.text}</p>
         <div className="campaignActions"><a href="#front-deals-heading">Explore product picks <span aria-hidden="true">↗</span></a><a href={activeSlide.amazonUrl} target="_blank" rel="sponsored noopener noreferrer">Browse on Amazon →</a></div>
         <ul className="campaignTrust">
-          <li>✓ Prices refreshed every 3 hours, not stale screenshots</li>
+          <li>✓ Product checks run twice daily</li>
           <li>✓ Every link goes straight to the seller — no middleman checkout</li>
           <li>✓ Clear affiliate disclosure, always</li>
         </ul>
