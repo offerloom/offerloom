@@ -6,7 +6,7 @@ const now = Date.parse("2026-09-24T01:30:00Z");
 function transport(runs, calls) {
   return async (url, options) => {
     calls.push({ url, options });
-    assert.equal(options.redirect, "error");
+    assert.equal(options.redirect, "manual");
     return options.method === "POST" ? new Response(null, { status: 204 }) : Response.json({ workflow_runs: runs });
   };
 }

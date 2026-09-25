@@ -3,7 +3,9 @@ const ACTIVE = new Set(["queued", "in_progress", "waiting", "pending", "requeste
 
 async function github(path, token, fetcher, body) {
   const response = await fetcher(API + path, {
-    method: body ? "POST" : "GET", redirect: "error", signal: AbortSignal.timeout(15000),
+    // Workers Fetch supports only "follow" and "manual"; manual keeps API
+    // redirects visible so we never silently send credentials elsewhere.
+    method: body ? "POST" : "GET", redirect: "manual", signal: AbortSignal.timeout(15000),
     headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "OfferLoom-collector-scheduler", ...(body ? { "Content-Type": "application/json" } : {}) },
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
