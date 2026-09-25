@@ -16,7 +16,7 @@ export function socialSecretsFromEnv(env: EnvLike): SocialSecrets {
     metaInstagramUserId: env.META_INSTAGRAM_USER_ID,
     telegramBotToken: env.TELEGRAM_BOT_TOKEN,
     telegramChannelId: env.TELEGRAM_CHANNEL_ID,
-    publicSiteUrl: env.PUBLIC_SITE_URL ?? "https://offerloom.contact-offerloom.workers.dev",
+    publicSiteUrl: env.PUBLIC_SITE_URL ?? "https://offerloom.offerloom.workers.dev",
   };
 }
 

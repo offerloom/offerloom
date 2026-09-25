@@ -241,7 +241,7 @@ async function main() {
   const endpoint = process.env.OFFERLOOM_COLLECTOR_ENDPOINT;
   if (endpoint) {
     const url = new URL(endpoint);
-    if (url.protocol !== "https:" || url.hostname !== "offerloom.contact-offerloom.workers.dev" || url.pathname !== "/api/admin/collected-deals") throw new Error("Unapproved ingestion endpoint");
+    if (url.protocol !== "https:" || url.hostname !== "offerloom.offerloom.workers.dev" || url.pathname !== "/api/admin/collected-deals") throw new Error("Unapproved ingestion endpoint");
     if (!process.env.OFFERLOOM_ADMIN_TOKEN) throw new Error("OFFERLOOM_ADMIN_TOKEN is required for server ingestion");
   }
   await mkdir("outputs/collector", { recursive: true });
