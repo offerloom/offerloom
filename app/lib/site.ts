@@ -5,7 +5,7 @@ export const SITE = {
   contactEmail: "contact.offerloom@gmail.com",
   amazonStoreId: "offerloom-21",
   country: "India",
-  publicUrl: "https://offerloom.contact-offerloom.workers.dev",
+  publicUrl: "https://offerloom.offerloom.workers.dev",
 } as const;
 
 export const COMMUNITY = {

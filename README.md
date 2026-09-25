@@ -33,7 +33,7 @@ OfferLoom is an India-first electronics product-discovery and price-comparison p
 - CJ fixture parser for future authorized feed synchronization
 - Cloudflare-compatible Vinext build
 
-Public deployment: <https://offerloom.contact-offerloom.workers.dev> (Cloudflare Workers). Legacy ChatGPT Sites URL: <https://offerloom.gdwivedi6.chatgpt.site>
+Public deployment: <https://offerloom.offerloom.workers.dev> (Cloudflare Workers). Legacy ChatGPT Sites URL: <https://offerloom.gdwivedi6.chatgpt.site>
 
 ## Local development
 

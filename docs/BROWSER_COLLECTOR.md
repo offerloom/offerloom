@@ -14,7 +14,7 @@ Outputs are ignored private files under `outputs/collector/`: `latest.json` is t
 
 ## Admin and publishing
 
-Import `latest.json` under Admin → Browser-collected products. Alternatively set `OFFERLOOM_COLLECTOR_ENDPOINT=https://offerloom.contact-offerloom.workers.dev/api/admin/collected-deals` and `OFFERLOOM_ADMIN_TOKEN` in the runner's private environment. Tokens are never sent to the browser or printed.
+Import `latest.json` under Admin → Browser-collected products. Alternatively set `OFFERLOOM_COLLECTOR_ENDPOINT=https://offerloom.offerloom.workers.dev/api/admin/collected-deals` and `OFFERLOOM_ADMIN_TOKEN` in the runner's private environment. Tokens are never sent to the browser or printed.
 
 An owner-operated runner with existing Wrangler authentication can instead use `--d1-remote` to stage observations in the existing D1 review queue. This requires migration 0005 first. No API token needs to be copied out of Cloudflare.
 

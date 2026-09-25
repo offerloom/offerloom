@@ -22,7 +22,7 @@ Requires Node.js `>=22.13.0`. The framework is **vinext** (a Vite-based Next.js-
 
 - Day-to-day work happens on the **`offerloom`** branch, not `main`. GitHub Actions only deploys on push to **`main`**, so `offerloom` can silently drift many commits ahead of what's actually live. Before assuming a change is deployed, check `git log --oneline main..offerloom`, then merge `offerloom` into `main` and push `main` to ship. Watch the run with `gh run watch <run-id> --exit-status` — a merge can surface build breaks that were never caught on `offerloom` alone.
 - The "Deploy OfferLoom to Cloudflare Workers" workflow builds, applies D1 migrations, then `wrangler deploy`s. It needs `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` repo secrets.
-- Live site: `https://offerloom.contact-offerloom.workers.dev`.
+- Live site: `https://offerloom.offerloom.workers.dev`.
 
 ## Architecture
 

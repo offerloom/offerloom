@@ -45,7 +45,7 @@ export default function SocialPostsPanel({ busy, setBusy, setMessage }: SocialPo
   const [loadError, setLoadError] = useState("");
   const [headline, setHeadline] = useState("");
   const [body, setBody] = useState("");
-  const [linkUrl, setLinkUrl] = useState("https://offerloom.contact-offerloom.workers.dev");
+  const [linkUrl, setLinkUrl] = useState("https://offerloom.offerloom.workers.dev");
   const [imageUrl, setImageUrl] = useState("/brand/logo-square-1080.png");
   const [scheduledAt, setScheduledAt] = useState("");
   const [platforms, setPlatforms] = useState<SocialPlatform[]>(["instagram", "facebook", "telegram", "whatsapp_channel"]);
@@ -199,7 +199,7 @@ export default function SocialPostsPanel({ busy, setBusy, setMessage }: SocialPo
           {loadError ? <p className={styles.message} role="status">{loadError}</p> : null}
           <label>Headline<input value={headline} onChange={(event) => setHeadline(event.target.value)} required minLength={5} placeholder="Today's best smartphone deal" /></label>
           <label>Post body<textarea value={body} onChange={(event) => setBody(event.target.value)} rows={4} placeholder="Short deal copy for Instagram, Facebook and Telegram…" /></label>
-          <label>Destination link<input value={linkUrl} onChange={(event) => setLinkUrl(event.target.value)} type="url" placeholder="https://offerloom.contact-offerloom.workers.dev" /></label>
+          <label>Destination link<input value={linkUrl} onChange={(event) => setLinkUrl(event.target.value)} type="url" placeholder="https://offerloom.offerloom.workers.dev" /></label>
           <label>Thumbnail path or image URL<input value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="/brand/logo-square-1080.png" /></label>
           <fieldset className={styles.platformFieldset}>
             <legend>Platforms</legend>

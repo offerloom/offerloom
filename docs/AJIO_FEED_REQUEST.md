@@ -5,7 +5,7 @@ Subject: AJIO ACE product feed access for OfferLoom — publisher 1072
 
 Hello AJIO team,
 
-Please route this request to the AJIO ACE affiliate team. We operate OfferLoom (https://offerloom.contact-offerloom.workers.dev/) and have active campaign 1, AJIO ACE PROGRAM(Final), under publisher 1072.
+Please route this request to the AJIO ACE affiliate team. We operate OfferLoom (https://offerloom.offerloom.workers.dev/) and have active campaign 1, AJIO ACE PROGRAM(Final), under publisher 1072.
 
 We want to display individual AJIO products with approved photos, selling prices, MRP, discounts, availability and affiliate deep links on our website. Our previous Trackier deals request returned no deals. The campaign's BAU Creative folder contains promotional artwork rather than a product catalogue.
 

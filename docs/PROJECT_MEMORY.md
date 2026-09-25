@@ -57,7 +57,7 @@ Read this file and `README.md`/`AGENTS.md` before changing the project — `docs
 
 - OfferLoom is an India-first product-discovery and price-comparison website operated by Parthsheel Enterprises.
 - **Default development branch:** `offerloom` (tracks `origin/offerloom`). `main` remains the stable/release branch.
-- Public site (Workers): <https://offerloom.contact-offerloom.workers.dev>
+- Public site (Workers): <https://offerloom.offerloom.workers.dev>
 - Legacy ChatGPT Sites URL: <https://offerloom.gdwivedi6.chatgpt.site>
 - Local repository: `/Users/gauravdwivedi/Documents/gaurav/parthsheel_enterprises/offerloom`
 - Stack: Vinext, React, TypeScript, Cloudflare Worker, D1 and Drizzle.
@@ -204,3 +204,9 @@ Read this file and `README.md`/`AGENTS.md` before changing the project — `docs
 - Fixed the Worker redirect mode to `manual`, added a regression assertion, and recorded the incident. PR [#10](https://github.com/offerloom/offerloom/pull/10) merged as `0b35902`; deployment workflow [36133084089](https://github.com/offerloom/offerloom/actions/runs/36133084089) passed and installed Worker version `a34c3282-dd7b-49c9-a41a-f8eca60418a5`. The `GITHUB_ACTIONS_TOKEN` secret remains configured and the primary UTC triggers `30 1 * * *` and `30 11 * * *` (07:00/17:00 IST) remain active. Verify the next scheduled invocation; the repair is not proven by a future cron until it succeeds.
 - The in-app AJIO storefront is signed in as `offerloom`; the separate Trackier/ACE tab still shows its login page, and the publisher signup was previously reported pending. Browser review found candidate [RIO women’s graphic-print pyjama set](https://www.ajio.com/rio-women-graphic-print-t-shirt--pyjamas-set/p/443121793_lilac) (₹356, 3.8/5 from 264), [AVAASA ankle-length leggings](https://www.ajio.com/avaasa-mix-n-match-ankle-length-leggings-with-elasticated-waist/p/441020957_white) (MRP ₹299, 3.8/5 from 111.9K; ₹209 only with conditional NEW30), [Puma Smashic women’s sneakers](https://www.ajio.com/puma-smashic-women-s-comfort-casual-sneakers/p/465643001_white) (₹1,845, listed 59% off, 4.0/5 from 2.4K), and [Red Tape women’s lace-up sneakers](https://www.ajio.com/red-tape-women-round-toe-lace-up-fastening-sneakers/p/703239935_white) (₹1,139, listed 83% off, 4.1/5 from 202). These are normal AJIO product pages, not affiliate links. The live AJIO shelf still contains only the two previously approved items, and their price checks have expired.
 - Do not publish the new AJIO candidates until the approved ACE publisher dashboard can generate each product’s deep link and AJIO image-use rights are confirmed. Browser visibility of a product page does not grant photo reuse rights or create commission attribution; never fabricate the ACE tracking URL.
+
+## Workers URL change — 25 September 2026
+
+- At the owner's request, changed this Cloudflare account's Workers subdomain from `contact-offerloom.workers.dev` to `offerloom.workers.dev`. Cloudflare warned that all previous `*.contact-offerloom.workers.dev` routes stop immediately; the account currently has the OfferLoom Worker plus a collector scheduler without a workers.dev route.
+- Cloudflare now lists the public OfferLoom route as `https://offerloom.offerloom.workers.dev`. Initial TLS setup took about a minute; a live HTTPS request then returned 200. The old hostname no longer resolves, so update any external links that used it.
+- Updated canonical public URL defaults, social-post composer defaults, browser collector host validation and operator docs to the new URL. Keep `workers_dev = true`; Cloudflare derives each Worker hostname from its Worker name plus this account subdomain.
