@@ -11,7 +11,7 @@ import { heroCategorySlides } from "./lib/hero-categories";
 
 type Listing = { store: string; affiliateUrl?: string };
 type Offer = { price: number; mrp: number | null; checkedAt: string };
-type Product = { offer?: Offer | null; imageUrl?: string | null; id: string | number; name: string; category: string; summary: string; specs: string[]; listings: Listing[]; detailPath?: string; collectionSources?: string[]; merchant?: string };
+type Product = { offer?: Offer | null; imageUrl?: string | null; id: string | number; name: string; category: string; summary: string; specs: string[]; listings: Listing[]; detailPath?: string; collectionSources?: string[]; merchant?: string; merchantName?: string };
 type ManagedProduct = { offer?: Offer | null; imageUrl?: string | null; merchant: string; merchantName: string; id: string; name: string; category: string; summary: string; specs: string[]; outboundPath: string; detailPath: string; collectionSources?: string[] };
 
 export default function Home() {
@@ -34,6 +34,7 @@ export default function Home() {
           imageUrl: product.imageUrl,
           offer: product.offer,
           merchant: product.merchant,
+          merchantName: product.merchantName,
           collectionSources: product.collectionSources ?? [],
           id: product.id,
           name: product.name,
@@ -100,6 +101,7 @@ export default function Home() {
     <header className="topbar">
       <a className="brand" href="#top" aria-label="OfferLoom home"><BrandMark /><span>Offer<span>Loom</span></span></a>
       <nav aria-label="Main navigation"><a href="#front-deals-heading">Find products</a><Link href="/guides">Buying guides</Link><a href="#how">How it works</a></nav>
+      <form className="headerSearch" onSubmit={search} role="search"><span aria-hidden="true">⌕</span><input value={draft} onChange={(event) => setDraft(event.target.value)} aria-label="Search products" placeholder="Search deals"/><button aria-label="Search products">⌕</button></form>
       <div className="topbarActions">
         <SocialLinks variant="header" />
         <a className="alertButton" href="#front-deals-heading">Find a deal</a>
@@ -132,7 +134,6 @@ export default function Home() {
         <small>{heroDeals.length ? "Live product picks" : "Category inspiration"}</small>
       </div>
     </section>
-    <section className="finder"><form className="search" onSubmit={search}><span aria-hidden="true">⌕</span><input value={draft} onChange={(event) => setDraft(event.target.value)} aria-label="Search products" placeholder="Search phones, fashion, appliances…"/><button>Find products</button></form><div className="popularSearches"><span>Popular:</span><button onClick={() => { setDraft("5G phone"); setQuery("5G phone"); }}>5G phones</button><button onClick={() => { setDraft("fashion"); setQuery("fashion"); }}>Fashion</button><button onClick={() => { setDraft("laptop"); setQuery("laptop"); }}>Laptops</button><button onClick={() => { setDraft("appliances"); setQuery("appliances"); }}>Appliances</button></div></section>
     <section className="frontDeals" aria-labelledby="front-deals-heading">
       <div className="frontDealsHeading"><h2 id="front-deals-heading">Shop today’s product picks</h2><span>{catalogState === "loading" ? "Loading products…" : `${frontProducts.length} products`}</span></div>
       {catalogState === "error" && <p role="status">Product details could not be loaded. Please refresh to try again.</p>}
@@ -157,7 +158,7 @@ export default function Home() {
 function ProductCard({ product, discount }: { product: Product; discount: number }) {
   return <article className="railProduct">
     {product.imageUrl && <Link className="railProductImage" href={product.detailPath!}><img src={product.imageUrl} alt={product.name} loading="lazy"/>{discount > 0 && <span>{Math.round(discount * 100)}% OFF</span>}</Link>}
-    <span className="categoryTag">{product.merchant === "ajio" ? "AJIO · " : ""}{product.category}</span>
+    <span className="categoryTag">{product.merchantName ?? (product.merchant === "ajio" ? "AJIO" : product.merchant === "myntra" ? "Myntra" : "Amazon")} · {product.category}</span>
     <h4><Link href={product.detailPath!}>{product.name}</Link></h4>
     {product.offer && <div className="railProductPrice"><strong>₹{(product.offer.price / 100).toLocaleString("en-IN")}</strong>{product.offer.mrp && product.offer.mrp > product.offer.price && <del>₹{(product.offer.mrp / 100).toLocaleString("en-IN")}</del>}</div>}
     <a className="offerCta" href={product.listings[0].affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">{product.offer ? "View deal →" : "Check price →"}</a>

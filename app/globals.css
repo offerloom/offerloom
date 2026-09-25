@@ -249,5 +249,16 @@ main.homePage{padding-bottom:calc(58px + env(safe-area-inset-bottom))}
 .railProduct>.offerCta{margin-top:auto;padding:8px 10px;border-radius:8px;background:#3478ed;color:white;text-align:center;text-decoration:none;font-size:12px;font-weight:750}
 .shelfEmpty{margin:0 0 8px;color:#667085;font-size:13px}
 @media(max-width:760px){.campaignHero{grid-template-columns:1fr;margin:12px 16px 20px}.campaignCopy{padding:18px 19px}.campaignArtwork{height:174px;min-height:174px}.campaignCopy h1{font-size:27px}.campaignTrust{display:none}.campaignControls{gap:7px}.productShelf{margin-top:17px;padding-top:14px}.productShelfHeading h3{font-size:19px}.productShelfHeading>div>span{font-size:11px}.productShelfHeading>a{font-size:11px}.productRail{gap:10px}.railProduct{flex-basis:60vw;max-width:230px;padding:9px}.railProductImage{height:128px}}
+
+/* Keep homepage search in the header and compact on mobile. */
+.topbar{gap:clamp(8px,1.5vw,20px)}
+.topbar nav{gap:clamp(10px,1.5vw,22px);white-space:nowrap}
+.headerSearch{flex:1 1 220px;min-width:140px;max-width:270px;height:40px;display:flex;align-items:center;gap:7px;margin-left:auto;padding:4px 5px 4px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.headerSearch>span{color:#8991a1;font-size:21px;line-height:1}
+.headerSearch input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--ink);font-size:13px}
+.headerSearch button{width:31px;height:31px;flex:0 0 31px;border:0;border-radius:9px;background:#f0efff;color:var(--violet);cursor:pointer;font-size:20px;line-height:1}
+.headerSearch button:hover{background:#e5e2ff}
+@media(max-width:900px){.headerSearch{max-width:250px;margin-left:auto}.topbarActions{margin-left:0}}
+@media(max-width:620px){.topbar{gap:8px}.headerSearch{flex:1 1 auto;min-width:72px;max-width:none;height:34px;padding:2px 3px 2px 8px}.headerSearch>span{font-size:18px}.headerSearch input{font-size:11px}.headerSearch input::placeholder{color:#8991a1}.headerSearch button{width:27px;height:27px;flex-basis:27px;font-size:17px}.topbarActions{gap:0}.topbarActions .alertButton{padding:7px 8px;font-size:9px}}
 @media(max-width:620px){.campaignCopy{padding:14px 16px 12px}.campaignKicker{font-size:9px;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.campaignCopy h1{font-size:24px;line-height:1.12;margin:7px 0}.campaignCopy p{font-size:13px;line-height:1.4;margin:7px 0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}.campaignActions{gap:8px;margin:10px 0}.campaignActions a:first-child{padding:9px 12px;font-size:13px}.campaignActions a:nth-child(2){display:none}.campaignArtwork{display:none}.campaignControls{margin-top:6px}.campaignControls button{min-height:32px;padding:4px 9px;font-size:11px}.campaignControls button:last-child{display:none}}
 @media(max-width:380px){.productShelfHeading>a{max-width:82px;text-align:right}.railProduct{flex-basis:72vw}}
