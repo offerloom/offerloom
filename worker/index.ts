@@ -2,6 +2,7 @@
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
 import { runAutoSocialPost } from "../app/lib/social/auto-post";
+import { processDueSocialPosts } from "../app/lib/social/service";
 
 interface Env {
   ASSETS: Fetcher;
@@ -50,7 +51,16 @@ const worker = {
     return handler.fetch(request, env, ctx);
   },
 
-  async scheduled(_event: unknown, env: Env, ctx: ExecutionContext): Promise<void> {
+  async scheduled(event: { cron?: string }, env: Env, ctx: ExecutionContext): Promise<void> {
+    if (event.cron === "45 3 * * *") {
+      ctx.waitUntil(processDueSocialPosts(env).then((posts) => {
+        console.log("Scheduled social posts processed:", posts.length);
+      }).catch((error) => {
+        console.error("Scheduled social post processing failed:", error instanceof Error ? error.message : error);
+      }));
+      return;
+    }
+
     ctx.waitUntil(runAutoSocialPost(env).catch((error) => {
       console.error("Auto social post failed:", error instanceof Error ? error.message : error);
     }));
