@@ -74,6 +74,18 @@ export function selectDeals(deals, existing, maxNew = 10) {
   return { refresh, additions };
 }
 
+export function safeFailureReason(error) {
+  const message = String(error?.message ?? error ?? "");
+  if (/^Currently unavailable/i.test(message)) return "unavailable";
+  if (/^Page unavailable \((\d{3}|no response)\)/i.test(message)) return `page unavailable (${message.match(/\((\d{3}|no response)\)/i)?.[1] ?? "unknown"})`;
+  if (/^Unexpected product redirect/i.test(message)) return "redirected to a different product";
+  if (/^Product image is not on an approved/i.test(message)) return "image host not approved";
+  if (/^Missing product title, image or price/i.test(message)) return "title, image or price could not be verified";
+  if (/Timeout|timed out/i.test(message)) return "page timed out";
+  if (/ERR_NETWORK|Navigation failed/i.test(message)) return "network/navigation failure";
+  return "product could not be validated";
+}
+
 export function publishSql(deals, existing, now = new Date().toISOString()) {
   const statements = [];
   for (const deal of deals) {
@@ -175,7 +187,7 @@ async function main() {
         if (probe) break;
       } catch (error) {
         if (/Access challenge|Page unavailable \((403|429)\)/i.test(error.message)) throw new Error("Amazon blocked the cloud browser; no publication");
-        failures.push({ asin: productSource(url).id, reason: "Product unavailable or could not be validated" });
+        failures.push({ asin: productSource(url).id, reason: safeFailureReason(error) });
       }
       await pause(5000);
     }
@@ -190,11 +202,12 @@ async function main() {
     console.log(JSON.stringify({ selectedNew: selection.additions.map((deal) => ({ asin: deal.merchantProductId, source: deal.discoverySource })) }));
     const sql = publishSql([...selection.refresh, ...selection.additions], existing);
     const now = new Date().toISOString();
-    const record = `INSERT INTO sync_runs (merchant_id,status,products_seen,products_updated,error_message,started_at,finished_at) VALUES ('amazon','succeeded',${deals.length + failures.length},${added + refreshed},${quote(`${marker}; added=${added}; refreshed=${refreshed}; skipped=${failures.length}; deferred=${deferred}`)},${quote(new Date(started).toISOString())},${quote(now)});`;
+    const failedItems = failures.map(({ asin, reason }) => `${asin}:${reason}`).join(",");
+    const record = `INSERT INTO sync_runs (merchant_id,status,products_seen,products_updated,error_message,started_at,finished_at) VALUES ('amazon','succeeded',${deals.length + failures.length},${added + refreshed},${quote(`${marker}; added=${added}; refreshed=${refreshed}; skipped=${failures.length}; deferred=${deferred}; failures=${failedItems}`)},${quote(new Date(started).toISOString())},${quote(now)});`;
     await writeFile("outputs/cloud-collector/publish.sql", sql + "\n" + record, { mode: 0o600 });
     await d1(["--file", "outputs/cloud-collector/publish.sql"]);
   }
-  const summary = { mode: probe ? "probe (no database writes)" : "publish", window: collectionWindow, discovered: discovered.length, discoveryCounts, validated: deals.length, added, refreshed, failed: failures.length, deferred };
+  const summary = { mode: probe ? "probe (no database writes)" : "publish", window: collectionWindow, discovered: discovered.length, discoveryCounts, validated: deals.length, added, refreshed, failed: failures.length, failures, deferred };
   await writeFile("outputs/cloud-collector/summary.json", JSON.stringify(summary, null, 2));
   console.log(JSON.stringify(summary));
 }
