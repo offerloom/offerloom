@@ -1,7 +1,10 @@
 import { env } from "cloudflare:workers";
 import { publicOffer } from "../../lib/public-offer";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const merchantFilter = new URL(request.url).searchParams.get("merchant");
+  const merchantClause = merchantFilter === "ajio" ? "AND ml.merchant = 'ajio'" : "";
+  const limitClause = merchantFilter === "ajio" ? "" : "LIMIT 100";
   const result = await env.DB.prepare(`
     SELECT p.id, p.slug, p.brand, p.image_url AS imageUrl, p.model_number AS modelNumber, p.name, p.summary, p.specs_json AS specsJson,
       c.name AS category, ml.id AS listingId, ml.merchant, m.name AS merchantName, cd.approved_payload AS approvedPayload
@@ -10,9 +13,9 @@ export async function GET() {
     JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant IN ('amazon', 'ajio') AND ml.status = 'active'
     JOIN merchants m ON m.id = ml.merchant AND m.status = 'active'
     LEFT JOIN collected_deals cd ON cd.product_id=p.id AND cd.id=ml.merchant || '-' || ml.merchant_product_id
-    WHERE p.status = 'published'
+    WHERE p.status = 'published' ${merchantClause}
     ORDER BY COALESCE(ml.last_checked_at, p.published_at) DESC
-    LIMIT 100
+    ${limitClause}
   `).all();
 
   const products = result.results.map((row) => ({
