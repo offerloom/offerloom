@@ -52,7 +52,7 @@ const worker = {
   },
 
   async scheduled(event: { cron?: string }, env: Env, ctx: ExecutionContext): Promise<void> {
-    if (event.cron === "45 3 * * *") {
+    if (event.cron === "0 4 * * *") {
       ctx.waitUntil(processDueSocialPosts(env).then((posts) => {
         console.log("Scheduled social posts processed:", posts.length);
       }).catch((error) => {
