@@ -6,8 +6,10 @@ import SiteFooter from "./components/SiteFooter";
 import BrandMark from "./components/BrandMark";
 import DealAlertsBar from "./components/DealAlertsBar";
 import DealAlertsFloat from "./components/DealAlertsFloat";
+import AjioCampaignOffers from "./components/AjioCampaignOffers";
 import SocialLinks from "./components/SocialLinks";
 import { heroCategorySlides } from "./lib/hero-categories";
+import { formatCheckedAt } from "./lib/format-checked-at";
 
 type Listing = { store: string; affiliateUrl?: string };
 type Offer = { price: number; mrp: number | null; checkedAt: string };
@@ -146,6 +148,7 @@ export default function Home() {
           {shelf.products.map((product) => <ProductCard product={product} discount={discountOf(product)} key={product.id} />)}
         </div> : <p className="shelfEmpty">No validated products in this collection yet. Check back after the next update.</p>}
       </section>)}
+      <AjioCampaignOffers limit={6} />
       <p className="disclosure"><strong>Affiliate and price notice:</strong> OfferLoom may earn a commission when you use eligible merchant links, at no extra cost to you. As an Amazon Associate I earn from qualifying purchases. Prices and availability can change and are confirmed on the merchant website. OfferLoom does not handle checkout, payment, shipping, cancellations, returns or refunds.</p>
     </section>
 
@@ -161,6 +164,7 @@ function ProductCard({ product, discount }: { product: Product; discount: number
     <span className="categoryTag">{product.merchantName ?? (product.merchant === "ajio" ? "AJIO" : product.merchant === "myntra" ? "Myntra" : "Amazon")} · {product.category}</span>
     <h4><Link href={product.detailPath!}>{product.name}</Link></h4>
     {product.offer && <div className="railProductPrice"><strong>₹{(product.offer.price / 100).toLocaleString("en-IN")}</strong>{product.offer.mrp && product.offer.mrp > product.offer.price && <del>₹{(product.offer.mrp / 100).toLocaleString("en-IN")}</del>}</div>}
+    {product.offer?.checkedAt && <small className="priceCheckedAt">{formatCheckedAt(product.offer.checkedAt)}</small>}
     <a className="offerCta" href={product.listings[0].affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">{product.offer ? "View deal →" : "Check price →"}</a>
   </article>;
 }

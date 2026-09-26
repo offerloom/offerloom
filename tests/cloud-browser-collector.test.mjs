@@ -3,7 +3,7 @@ import test from "node:test";
 import { readFile } from "node:fs/promises";
 import { DatabaseSync } from "node:sqlite";
 import { chromium } from "playwright";
-import { uniqueProductUrls, discover, selectDeals, publishSql, NEW_RELEASES } from "../scripts/cloud-browser-collector.mjs";
+import { uniqueProductUrls, discover, selectDeals, publishSql, safeFailureReason, NEW_RELEASES } from "../scripts/cloud-browser-collector.mjs";
 
 const deal = (asin, price = 50000) => ({ merchant: "amazon", merchantProductId: asin, sourceUrl: `https://www.amazon.in/dp/${asin}`, name: "Owner's kitchen storage", category: "Home", imageUrl: "https://m.media-amazon.com/images/I/test.jpg", price, mrp: 100000, currency: "INR", checkedAt: new Date().toISOString() });
 
@@ -16,6 +16,13 @@ test("new deal cap, duplicate checks and unpublished products are respected", ()
   const result = selectDeals([deal("B000000001"), deal("B000000002"), deal("B000000003", 30000), deal("B000000004", 95000), deal("B000000005"), deal("B000000003", 30000)], existing, 1);
   assert.deepEqual(result.refresh.map((d) => d.merchantProductId), ["B000000001"]);
   assert.deepEqual(result.additions.map((d) => d.merchantProductId), ["B000000003"]);
+});
+
+test("collector failure summaries identify causes without leaking provider page text", () => {
+  assert.equal(safeFailureReason(new Error("Currently unavailable; no draft created")), "unavailable");
+  assert.equal(safeFailureReason(new Error("Page unavailable (404)")), "page unavailable (404)");
+  assert.equal(safeFailureReason(new Error("Missing product title, image or price; no draft created")), "title, image or price could not be verified");
+  assert.equal(safeFailureReason(new Error("private page content and token=secret")), "product could not be validated");
 });
 
 test("publication uses actual schema, escapes titles, preserves URLs and adds affiliate tag", async () => {

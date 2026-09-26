@@ -38,6 +38,9 @@ test("renders the OfferLoom shopping experience", async () => {
   assert.match(html, /facebook\.com\/profile\.php\?id=61594517871499/);
   assert.match(html, /View all/);
   assert.match(html, /AJIO Fashion Deals/);
+  assert.match(html, /AJIO Bestselling Offers/);
+  assert.match(html, /AJIO ACE partner offers/);
+  assert.match(html, /Shop AJIO offer/);
   assert.match(html, /deals\?collection=new_releases/);
   assert.match(html, /deals\?collection=bestsellers/);
   assert.match(html, /deals\?collection=todays_deals/);

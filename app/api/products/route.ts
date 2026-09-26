@@ -11,7 +11,7 @@ export async function GET() {
     JOIN merchants m ON m.id = ml.merchant AND m.status = 'active'
     LEFT JOIN collected_deals cd ON cd.product_id=p.id AND cd.id=ml.merchant || '-' || ml.merchant_product_id
     WHERE p.status = 'published'
-    ORDER BY p.published_at DESC
+    ORDER BY COALESCE(ml.last_checked_at, p.published_at) DESC
     LIMIT 100
   `).all();
 

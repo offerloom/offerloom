@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import SiteFooter from "../components/SiteFooter";
 import BrandMark from "../components/BrandMark";
+import AjioCampaignOffers from "../components/AjioCampaignOffers";
 import { matchesDealListing } from "../lib/deal-collections";
 import { publicOffer } from "../lib/public-offer";
 import { SITE } from "../lib/site";
@@ -36,7 +37,7 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
     : undefined;
   const merchantFilter = params?.merchant === "ajio" ? "ajio" : undefined;
   const collection = collectionKey ? COLLECTIONS[collectionKey] : undefined;
-  const title = collection?.title ?? (merchantFilter ? "AJIO Fashion Deals" : "Today’s Deals");
+  const title = collection?.title ?? (merchantFilter ? "AJIO Fashion Deals & Offers" : "Today’s Deals");
   const description = collection?.description ?? (merchantFilter
     ? "AJIO products with OfferLoom’s approved publisher deep links. Confirm current price and availability on AJIO."
     : "Live prices and photos for OfferLoom deals, checked twice daily.");
@@ -68,6 +69,7 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
     <section className="frontDeals" aria-labelledby="deals-heading" style={{ marginTop: 24 }}>
       <div className="frontDealsHeading"><h2 id="deals-heading">{title}</h2><span>{deals.length} products</span></div>
       <p className="dealsIntro">{description}</p>
+      {merchantFilter && <AjioCampaignOffers />}
       {!deals.length && <p>New deals are being reviewed. Check back soon.</p>}
       <div className="frontDealsGrid">{deals.map(({ row, offer }) => {
         const discountPct = offer?.mrp && offer.mrp > offer.price ? Math.round((1 - offer.price / offer.mrp) * 100) : 0;
