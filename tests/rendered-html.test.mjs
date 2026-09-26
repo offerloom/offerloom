@@ -40,6 +40,8 @@ test("renders the OfferLoom shopping experience", async () => {
   assert.match(html, /AJIO Fashion Deals/);
   assert.match(html, /AJIO Bestselling Offers/);
   assert.match(html, /AJIO ACE partner offers/);
+  assert.match(html, /ajioOfferArt/);
+  assert.match(html, /Denim edit|Style edit/);
   assert.match(html, /Shop AJIO offer/);
   assert.match(html, /deals\?collection=new_releases/);
   assert.match(html, /deals\?collection=bestsellers/);

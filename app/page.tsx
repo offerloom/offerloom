@@ -23,16 +23,18 @@ export default function Home() {
   const [slide, setSlide] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [managedProducts, setManagedProducts] = useState<Product[]>([]);
+  const [ajioProducts, setAjioProducts] = useState<Product[]>([]);
   const [catalogState, setCatalogState] = useState("loading");
 
   useEffect(() => {
     let active = true;
-    fetch("/api/products", { cache: "no-store" })
-      .then((response) => response.ok ? response.json() : Promise.reject())
-      .then((data) => {
-        if (!active) return;
+    Promise.allSettled(["/api/products", "/api/products?merchant=ajio"].map((url) =>
+      fetch(url, { cache: "no-store" }).then((response) => response.ok ? response.json() : Promise.reject())
+    )).then(([recentResult, ajioResult]) => {
+      if (!active) return;
+      if (recentResult.status === "fulfilled") {
         setCatalogState("ready");
-        setManagedProducts(data.products.map((product: ManagedProduct) => ({
+        setManagedProducts(recentResult.value.products.map((product: ManagedProduct) => ({
           imageUrl: product.imageUrl,
           offer: product.offer,
           merchant: product.merchant,
@@ -46,8 +48,26 @@ export default function Home() {
           listings: [{ store: product.merchantName, affiliateUrl: product.outboundPath }],
           detailPath: product.detailPath,
         })));
-      })
-      .catch(() => { if (active) setCatalogState("error"); });
+      } else {
+        setCatalogState("error");
+      }
+      if (ajioResult.status === "fulfilled") {
+        setAjioProducts(ajioResult.value.products.map((product: ManagedProduct) => ({
+          imageUrl: product.imageUrl,
+          offer: product.offer,
+          merchant: product.merchant,
+          merchantName: product.merchantName,
+          collectionSources: product.collectionSources ?? [],
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          summary: product.summary,
+          specs: product.specs,
+          listings: [{ store: product.merchantName, affiliateUrl: product.outboundPath }],
+          detailPath: product.detailPath,
+        })));
+      }
+    });
     return () => { active = false; };
   }, []);
 
@@ -70,9 +90,11 @@ export default function Home() {
     { key: "ajio", title: "AJIO Fashion Deals", description: "Fashion picks with approved AJIO ACE links", id: "ajio-deals", href: "/deals?merchant=ajio" },
   ].map((shelf) => ({
     ...shelf,
-    products: frontProducts.filter((product) => shelf.key === "ajio"
-      ? product.merchant === "ajio"
-      : product.collectionSources?.includes(shelf.key)).slice(0, 16),
+    products: (shelf.key === "ajio" ? ajioProducts : frontProducts)
+      .filter((product) => shelf.key === "ajio"
+        ? Boolean(product.imageUrl)
+        : product.collectionSources?.includes(shelf.key))
+      .slice(0, 16),
   }));
 
   useEffect(() => {
@@ -145,7 +167,7 @@ export default function Home() {
       {productShelves.map((shelf) => <section className="productShelf" aria-labelledby={`${shelf.id}-heading`} key={shelf.key}>
         <div className="productShelfHeading"><div><span>{shelf.description}</span><h3 id={`${shelf.id}-heading`}>{shelf.title}</h3></div><a href={shelf.href}>View all <span aria-hidden="true">→</span></a></div>
         {shelf.products.length ? <div className="productRail" id={`${shelf.id}-rail`} role="region" aria-label={`${shelf.title} products`}>
-          {shelf.products.map((product) => <ProductCard product={product} discount={discountOf(product)} key={product.id} />)}
+          {shelf.products.map((product) => <ProductCard product={product} discount={discountOf(product)} key={`${product.merchant ?? "amazon"}:${product.id}`} />)}
         </div> : <p className="shelfEmpty">No validated products in this collection yet. Check back after the next update.</p>}
       </section>)}
       <AjioCampaignOffers limit={6} />
