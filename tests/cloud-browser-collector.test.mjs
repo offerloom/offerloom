@@ -36,8 +36,9 @@ test("publication uses actual schema, escapes titles, preserves URLs and adds af
     assert.match(before.slug, /amazon-b000000001$/);
     assert.equal(db.prepare("SELECT affiliate_url AS url FROM merchant_listings").get().url, "https://www.amazon.in/dp/B000000001?tag=offerloom-21");
     const existing = new Map([[item.merchantProductId, { productId: before.id, status: "published", listingStatus: "active" }]]);
-    db.exec(publishSql([{ ...item, name: "Changed title" }], existing));
+    db.exec(publishSql([{ ...item, name: "Changed shirt title", category: "Fashion" }], existing));
     assert.equal(db.prepare("SELECT slug FROM products").get().slug, before.slug);
+    assert.equal(db.prepare("SELECT c.slug FROM products p JOIN categories c ON c.id=p.category_id").get().slug, "fashion");
     db.exec("UPDATE products SET status='archived'");
     existing.get(item.merchantProductId).status = "archived";
     assert.equal(publishSql([item], existing), "");
