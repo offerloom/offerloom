@@ -27,6 +27,21 @@ test("all-numeric (ISBN-10) Amazon ASINs are categorised as Books even without b
   assert.equal(categorize("amazon", "Portronics Car Mobile Phone Holder for Dashboard", "B0B6HM36Z8"), "Auto");
 });
 
+test("product categories recognize apparel, luggage, electronics and auto accessories", () => {
+  assert.equal(categorize("amazon", "LITZO Shirts for Women - Korean Style Long Sleeve", "B000000001"), "Fashion");
+  assert.equal(categorize("amazon", "Amazon Brand - Symbol Men's Cotton Rich Polo Tshirt", "B000000007"), "Fashion");
+  assert.equal(categorize("amazon", "HRX Parabola 3-Piece Luggage Set Light Blue Suitcase", "B000000002"), "Fashion");
+  assert.equal(categorize("amazon", "TAGDO Cotton Linen Pants for Man", "B000000003"), "Fashion");
+  assert.equal(categorize("amazon", "RIEKA Womens Embroidered Korean Style Top and Tunic", "B000000008"), "Fashion");
+  assert.equal(categorize("amazon", "Preneum Women's Solid Color Maxi Dress", "B000000011"), "Fashion");
+  assert.equal(categorize("amazon", "Pikkme Flip Cover Leather Finish for Smartphone", "B000000004"), "Electronics");
+  assert.equal(categorize("amazon", "Fire-Boltt Axiom Round Smart Watch with 100 Sports Modes", "B000000005"), "Electronics");
+  assert.equal(categorize("amazon", "Skybags Laptop Backpack", "B000000012"), "Fashion");
+  assert.equal(categorize("amazon", "Casio Vintage Digital Grey Dial Unisex Watch", "B000000009"), "Electronics");
+  assert.equal(categorize("amazon", "Don't Believe Everything You Think (English)", "B000000010"), "Books");
+  assert.equal(categorize("amazon", "Portronics Clamp M4 Car Phone Holder for Dashboard", "B000000006"), "Auto");
+});
+
 // --- Retry / classification -------------------------------------------------------------------
 
 test("transient failures are retried; permanent ones are not", () => {

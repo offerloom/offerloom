@@ -40,26 +40,34 @@ export function money(text) {
   return Number.isSafeInteger(value) && value > 0 && value < 100000000 ? value : null;
 }
 
-const HOME_KEYWORDS = /\b(container|containers|bottle|bottles|cookware|kitchen|storage jar|jars?|cooktop|induction|utensil|dinnerware|cutlery|casserole|tiffin|lunch box|flask|garbage bags?|trash bags?|weighing (machine|scale))\b/i;
-const FASHION_KEYWORDS = /\b(backpack|bag|handbag|wallet|shoe|shoes|footwear|sneaker|sandal|trouser|shirt|t-shirt|jacket|dress|saree|kurta|jeans)\b/i;
+const HOME_KEYWORDS = /\b(container|containers|bottle|bottles|cookware|kitchen|storage jar|jars?|cooktop|induction|utensil|dinnerware|cutlery|casserole|tiffin|lunch box|flask|garbage bags?|trash bags?|weighing (machine|scale)|laptop table|foldable laptop table|breakfast table|tableware|cleaning sponge|scrub sponge|bathroom hand shower|bidet sprayer)\b/i;
+const APPAREL_KEYWORDS = /\b(trousers?|pants?|leggings?|shirts?|t-?shirts?|tshirts?|blouses?|tops?|tunics?|jackets?|coats?|dress(?:es)?|sarees?|kurtas?|kurtis?|jeans|salwar|clothing|apparel|salwar suit|suit set)\b/i;
+const FASHION_KEYWORDS = /\b(backpack|bag|handbag|wallet|shoe|shoes|footwear|sneaker|sandal|luggage|suitcases?|trolley bags?)\b/i;
 const BEAUTY_KEYWORDS = /\b(sunscreen|face ?wash|skincare|moisturi[sz]er|serum|shampoo|conditioner|lipstick|makeup|cosmetic|spf)\b/i;
-const SPORTS_KEYWORDS = /\b(yoga mat|resistance band|dumbbell|gym|fitness|foam roller|exercise|workout)\b/i;
-const BOOKS_KEYWORDS = /\b(paperback|hardcover|hardback|a novel by|book set|books?:|books?)\b/i;
-const AUTO_KEYWORDS = /\b(car mount|dashboard|car holder|car mobile holder|windshield|dash ?cam|car accessor)\b/i;
-const TOYS_KEYWORDS = /\b(board game|card game|strategy game|puzzle|jigsaw|action figure|building blocks|soft toy|stuffed toy|remote control car|rc car|toys?)\b/i;
+const SPORTS_KEYWORDS = /\b(yoga mat|resistance bands?|dumbbells?|gym|fitness|foam roller|exercise|workout)\b/i;
+const BOOKS_KEYWORDS = /\b(paperback|hardcover|hardback|a novel by|book set|books?:|books?)\b|\(english\)/i;
+const AUTO_KEYWORDS = /\b(car mount|dashboard|car holder|car mobile holder|windshield|dash ?cam|car accessor|car air freshener|automotive|car bike cleaning)\b/i;
+const ELECTRONICS_KEYWORDS = /\b(smart ?phones?|mobile phones?|phone cases?|phone covers?|flip cases?|flip covers?|tablet cases?|smart ?watches?|smart ?watch|smartwatches|digital .*watch|watches|laptops?|earbuds?|headphones?|earphones?|chargers?|power banks?|bluetooth|wireless|usb|type[- ]?c|hdmi|keyboard|mouse|computer|microphones?|karaoke|speakers?|electronics?)\b/i;
+const TOYS_KEYWORDS = /\b(board game|card game|strategy game|puzzle|jigsaw|action figure|building blocks|soft toy|stuffed toy|remote control car|rc car|toys?|kids laptop learning toy|computer toys)\b/i;
 
 export function categorize(merchant, name, id = "") {
   if (merchant === "ajio") return "Fashion";
   // An all-numeric Amazon ASIN is an ISBN-10, i.e. a book — many book titles ("Atomic Habits: Tiny
   // Changes, Remarkable Results") contain none of the BOOKS_KEYWORDS and would land in Electronics.
   if (merchant === "amazon" && /^\d{9}[\dX]$/i.test(id)) return "Books";
-  if (HOME_KEYWORDS.test(name)) return "Home";
-  if (FASHION_KEYWORDS.test(name)) return "Fashion";
-  if (BEAUTY_KEYWORDS.test(name)) return "Beauty";
-  if (SPORTS_KEYWORDS.test(name)) return "Sports";
   if (BOOKS_KEYWORDS.test(name)) return "Books";
   if (AUTO_KEYWORDS.test(name)) return "Auto";
+  if (HOME_KEYWORDS.test(name)) return "Home";
   if (TOYS_KEYWORDS.test(name)) return "Toys";
+  if (/\bsmart ?watch(?:es)?\b|\bsmartwatch(?:es)?\b|\bdigital .*\bwatch(?:es)?\b|\bwatch(?:es)?\b/i.test(name)) return "Electronics";
+  if (/\b(microphones?|karaoke|speakers?)\b/i.test(name)) return "Electronics";
+  if (BEAUTY_KEYWORDS.test(name)) return "Beauty";
+  if (APPAREL_KEYWORDS.test(name)) return "Fashion";
+  if (/\b(backpacks?|luggage|suitcases?|trolley bags?)\b/i.test(name)) return "Fashion";
+  if (SPORTS_KEYWORDS.test(name)) return "Sports";
+  if (/\b(phone cases?|phone covers?|flip cases?|flip covers?|tablet cases?)\b/i.test(name)) return "Electronics";
+  if (ELECTRONICS_KEYWORDS.test(name)) return "Electronics";
+  if (FASHION_KEYWORDS.test(name)) return "Fashion";
   return "Electronics";
 }
 
@@ -342,7 +350,7 @@ async function main() {
         return [
           `INSERT INTO collected_deals (id,payload,approved_payload,product_id,status,updated_at) VALUES (${quote(dealId)},${quote(JSON.stringify(deal))},${quote(JSON.stringify(deal))},${quote(productId)},'approved',${quote(now)}) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,approved_payload=${preserveSources},product_id=excluded.product_id,status='approved',updated_at=excluded.updated_at;`,
           `INSERT INTO categories (id,name,slug,position,created_at) VALUES (${quote(`cat-${categorySlug}`)},${quote(deal.category)},${quote(categorySlug)},0,${quote(now)}) ON CONFLICT(slug) DO NOTHING;`,
-          `INSERT INTO products (id,category_id,name,slug,summary,image_url,specs_json,status,source,created_at,updated_at,published_at) VALUES (${quote(productId)},(SELECT id FROM categories WHERE slug=${quote(categorySlug)}),${quote(deal.name)},${quote(`${slugify(deal.name)}-${productId.slice(0, 8)}`)},${quote(summary)},${quote(deal.imageUrl)},'[]','published','browser_auto',${quote(now)},${quote(now)},${quote(now)}) ON CONFLICT(id) DO UPDATE SET name=excluded.name,summary=excluded.summary,image_url=excluded.image_url,status='published',source='browser_auto',updated_at=excluded.updated_at,published_at=excluded.published_at;`,
+          `INSERT INTO products (id,category_id,name,slug,summary,image_url,specs_json,status,source,created_at,updated_at,published_at) VALUES (${quote(productId)},(SELECT id FROM categories WHERE slug=${quote(categorySlug)}),${quote(deal.name)},${quote(`${slugify(deal.name)}-${productId.slice(0, 8)}`)},${quote(summary)},${quote(deal.imageUrl)},'[]','published','browser_auto',${quote(now)},${quote(now)},${quote(now)}) ON CONFLICT(id) DO UPDATE SET category_id=excluded.category_id,name=excluded.name,summary=excluded.summary,image_url=excluded.image_url,status='published',source='browser_auto',updated_at=excluded.updated_at,published_at=excluded.published_at;`,
           `INSERT INTO merchant_listings (id,product_id,merchant,merchant_product_id,source_url,affiliate_url,status,last_checked_at,created_at,updated_at) VALUES (${quote(crypto.randomUUID())},${quote(productId)},'amazon',${quote(deal.merchantProductId)},${quote(deal.sourceUrl)},${quote(affiliateUrl)},'active',${quote(deal.checkedAt)},${quote(now)},${quote(now)}) ON CONFLICT(merchant,merchant_product_id) DO UPDATE SET product_id=excluded.product_id,affiliate_url=excluded.affiliate_url,last_checked_at=excluded.last_checked_at,updated_at=excluded.updated_at;`,
         ].join("\n");
       });
