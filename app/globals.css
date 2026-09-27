@@ -185,8 +185,37 @@ main.homePage{padding-bottom:calc(58px + env(safe-area-inset-bottom))}
 .collageItem .collageBadge { position: absolute; top: 10px; left: 10px; bottom: auto; background: #e6ff83; color: #142016; font-size: 11px; font-weight: 800; padding: 5px 9px; border-radius: 7px; }
 .campaignHero a:focus-visible, .campaignHero button:focus-visible { outline: 3px solid #e6ff83; outline-offset: 4px; }
 .frontDeals { padding-top: 0; }
+.dealOfTheDay{display:grid;grid-template-columns:1fr minmax(220px,38%);gap:24px;align-items:stretch;margin:24px 0 30px;padding:22px;border:1px solid #dfe4ef;border-radius:22px;background:radial-gradient(circle at 92% 8%,#e5e7ff 0,transparent 38%),linear-gradient(120deg,#f8f9ff,#fff 72%);box-shadow:0 16px 44px #2632630d}
+.dealOfTheDayCopy{display:flex;align-items:flex-start;flex-direction:column;justify-content:center;min-width:0}
+.dealOfTheDayEyebrow,.catalogEyebrow{color:#5145e5;font-size:10px;font-weight:850;letter-spacing:.1em;text-transform:uppercase}
+.dealOfTheDayCopy h2{margin:9px 0 6px;color:#161b2d;font-size:clamp(24px,3.4vw,38px);letter-spacing:-.045em}
+.dealOfTheDayCopy p{max-width:680px;margin:0;color:#364054;font-size:16px;font-weight:700;line-height:1.45}
+.dealOfTheDayPrice{display:flex;align-items:baseline;gap:10px;margin-top:12px}
+.dealOfTheDayPrice strong{color:#111827;font-size:30px}
+.dealOfTheDayPrice del{color:#788194;font-size:15px}
+.dealOfTheDayCopy small{margin-top:5px;color:#68758c;font-size:11px}
+.dealOfTheDayCopy>a{margin-top:15px;padding:10px 16px;border-radius:10px;background:#3478ed;color:#fff;font-size:14px;font-weight:800;text-decoration:none}
+.dealOfTheDayCopy>a:hover{background:#235fcb}
+.dealOfTheDayImage{position:relative;display:grid;min-height:220px;place-items:center;overflow:hidden;border-radius:15px;background:#fff}
+.dealOfTheDayImage img{width:100%;height:100%;max-height:290px;object-fit:contain}
+.dealOfTheDayImage>span{position:absolute;top:12px;left:12px;padding:7px 10px;border-radius:8px;background:#e60023;color:#fff;font-size:13px;font-weight:850}
+.frontDealsHeading>div{min-width:0}
+.catalogEyebrow{color:#68758c;font-size:10px}
+.frontDealsHeading h2{margin:5px 0 0;font-size:clamp(23px,3vw,32px);letter-spacing:-.04em}
+.catalogSearchSummary{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:5px 0 14px;color:#68758c;font-size:12px}
+.catalogSearchSummary button{border:0;background:transparent;color:#5145e5;cursor:pointer;font:inherit;font-weight:750}
+.dealPhotoPlaceholder{display:grid;min-height:160px;place-items:center;border-radius:10px;background:linear-gradient(140deg,#f0efff,#f8f9fc);color:#667085;font-size:13px;font-weight:750}
+.frontDealsGrid{margin-top:12px}
+.frontDealCard{min-height:100%;}
+.frontDealCard h3 a{color:inherit;text-decoration:none}
+.frontDealCard h3 a:hover{color:#5145e5}
+.frontDealPrice{display:flex;align-items:baseline;gap:8px}
+.frontDealPrice strong{font-size:20px}
+.frontDealPrice del{color:#788194;font-size:12px}
+.frontDealCard>small{color:#68758c;font-size:10px}
 @media (max-width: 1320px) { .campaignHero { margin-left: 20px; margin-right: 20px; } }
 @media (max-width: 760px) { .campaignHero { grid-template-columns: 1fr; margin: 18px 16px 28px; border-radius: 18px; } .campaignCopy { padding: 22px; } .campaignArtwork { min-height: 200px; } .campaignArtwork img { object-fit: cover; } .campaignCopy h1 { font-size: 30px; } }
+@media(max-width:760px){.dealOfTheDay{grid-template-columns:1fr;padding:16px;gap:14px}.dealOfTheDayImage{grid-row:1;min-height:180px}.dealOfTheDayImage img{max-height:220px}.dealOfTheDayCopy h2{font-size:26px}.dealOfTheDayCopy p{font-size:14px}.dealOfTheDayPrice strong{font-size:26px}}
 
 /* Photo-led deal grid, inspired by the owner's reference. */
 .dealCategoryTabs { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; position: sticky; top: 0; z-index: 5; background: #fff; }
@@ -261,7 +290,7 @@ main.homePage{padding-bottom:calc(58px + env(safe-area-inset-bottom))}
 .shelfEmpty{margin:0 0 8px;color:#667085;font-size:13px}
 @media(max-width:760px){.campaignHero{grid-template-columns:1fr;margin:12px 16px 20px}.campaignCopy{padding:18px 19px}.campaignArtwork{height:174px;min-height:174px}.campaignCopy h1{font-size:27px}.campaignTrust{display:none}.campaignControls{gap:7px}.productShelf{margin-top:17px;padding-top:14px}.productShelfHeading h3{font-size:19px}.productShelfHeading>div>span{font-size:11px}.productShelfHeading>a{font-size:11px}.productRail{gap:10px}.railProduct{flex-basis:60vw;max-width:230px;padding:9px}.railProductImage{height:128px}}
 
-/* Keep homepage search in the header and compact on mobile. */
+/* Keep the homepage search in the header instead of taking a full row below the hero. */
 .topbar{gap:clamp(8px,1.5vw,20px)}
 .topbar nav{gap:clamp(10px,1.5vw,22px);white-space:nowrap}
 .headerSearch{flex:1 1 220px;min-width:140px;max-width:270px;height:40px;display:flex;align-items:center;gap:7px;margin-left:auto;padding:4px 5px 4px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}

@@ -26,7 +26,8 @@ test("renders the OfferLoom shopping experience", async () => {
   assert.match(html, /Play<!-- --> banners|Play banners/);
   assert.ok(html.indexOf('class="campaignHero"') < html.indexOf('class="frontDeals"'));
   assert.doesNotMatch(html, /Up to 55% off/);
-  assert.match(html, /Shop today.s product picks/);
+  assert.match(html, /All products, sorted by discount/);
+  assert.match(html, /Browse the full OfferLoom catalogue/);
   assert.match(html, /Filter product deals/);
   assert.match(html, /Follow our page/);
   assert.match(html, /Follow OfferLoom on Facebook for our latest deals/);
