@@ -167,7 +167,15 @@ export async function createSocialPost(env: EnvLike, input: CreateSocialPostInpu
 
   if (input.mode === "publish_now") {
     const captionFor = (platform: SocialPlatform) => input.platformCaptions?.[platform] ?? caption;
-    publishResults = await publishWithMetaCooldown(env, input.platforms, captionFor, composed.imageUrl, secrets, input.linkUrl);
+    try {
+      publishResults = await publishWithMetaCooldown(env, input.platforms, captionFor, composed.imageUrl, secrets, input.linkUrl);
+    } catch (error) {
+      publishResults = input.platforms.map((platform) => ({
+        platform,
+        status: "failed" as const,
+        message: error instanceof Error ? error.message : "Social publishing failed before the platform returned a result.",
+      }));
+    }
     lastError = summarizePublishResults(publishResults);
     if (isPublishSuccessful(publishResults)) {
       status = "published";

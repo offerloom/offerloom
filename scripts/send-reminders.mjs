@@ -80,7 +80,7 @@ export function buildReminderText(plan, repoDir = ".") {
     'case "$T" in',
     "  sk-ant-oat01-*)",
     "    if [ ${#T} -lt 120 ]; then",
-    `      CLAUDE_CODE_OAUTH_TOKEN="$T" claude -p "Reply with the single word OK" && printf %s "$T" | gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo offerloom/offerloom && date +%F > \"${renewedFile}\"`,
+    `      CLAUDE_CODE_OAUTH_TOKEN="$T" claude -p "Reply with the single word OK" && printf %s "$T" | gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo offerloom/offerloom && date +%F > "${renewedFile}"`,
     "    else",
     '      echo "Too long: the clipboard has extra text. Nothing was saved."',
     "    fi;;",

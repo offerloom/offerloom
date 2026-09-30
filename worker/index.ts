@@ -3,6 +3,7 @@ import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } fr
 import handler from "vinext/server/app-router-entry";
 import { runAutoSocialPost } from "../app/lib/social/auto-post";
 import { processDueSocialPosts } from "../app/lib/social/service";
+import { getSocialScheduleTask } from "../app/lib/social/schedule.mjs";
 
 interface Env {
   ASSETS: Fetcher;
@@ -52,7 +53,13 @@ const worker = {
   },
 
   async scheduled(event: { cron?: string }, env: Env, ctx: ExecutionContext): Promise<void> {
-    if (event.cron === "0 4 * * *") {
+    const task = getSocialScheduleTask(event.cron);
+    if (task === "ignore") {
+      console.warn("Ignoring unconfigured social cron trigger:", event.cron ?? "<missing>");
+      return;
+    }
+
+    if (task === "process-due") {
       ctx.waitUntil(processDueSocialPosts(env).then((posts) => {
         console.log("Scheduled social posts processed:", posts.length);
       }).catch((error) => {
@@ -63,6 +70,24 @@ const worker = {
 
     ctx.waitUntil(runAutoSocialPost(env).catch((error) => {
       console.error("Auto social post failed:", error instanceof Error ? error.message : error);
+    }).then((result) => {
+      if (!result) return;
+      if (!result.ok) {
+        console.error("Auto social post did not publish:", {
+          cron: event.cron,
+          reason: result.reason,
+          postId: result.post?.id,
+          status: result.post?.status,
+          lastError: result.post?.lastError,
+          platformResults: result.post?.publishResults,
+        });
+        return;
+      }
+      console.log("Auto social post published:", {
+        cron: event.cron,
+        postId: result.post?.id,
+        platformResults: result.post?.publishResults,
+      });
     }));
   },
 };
