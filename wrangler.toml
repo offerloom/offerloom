@@ -21,5 +21,6 @@ migrations_dir = "drizzle"
 enabled = true
 
 [triggers]
-# 7:30 AM, 3:00 PM and 9:30 AM IST (UTC+5:30) daily
+# Auto-post daily at 7:30 AM and 3:00 PM IST; drain queued posts at 9:30 AM IST.
+# Cloudflare cron expressions are UTC: 07:30 IST = 02:00 UTC, 15:00 IST = 09:30 UTC, 09:30 IST = 04:00 UTC.
 crons = ["0 2 * * *", "30 9 * * *", "0 4 * * *"]

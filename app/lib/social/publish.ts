@@ -1,5 +1,15 @@
 import type { PublishResult, SocialPlatform, SocialSecrets } from "./types";
 
+const PUBLISH_REQUEST_TIMEOUT_MS = 20_000;
+
+function postForm(url: string, body: URLSearchParams) {
+  return fetch(url, {
+    method: "POST",
+    body,
+    signal: AbortSignal.timeout(PUBLISH_REQUEST_TIMEOUT_MS),
+  });
+}
+
 async function publishFacebook(caption: string, imageUrl: string, secrets: SocialSecrets, linkUrl?: string): Promise<PublishResult> {
   if (!secrets.metaPageAccessToken || !secrets.metaPageId) {
     return { platform: "facebook", status: "failed", message: "Meta Page token or Page ID is not configured." };
@@ -16,7 +26,7 @@ async function publishFacebook(caption: string, imageUrl: string, secrets: Socia
   const body = linkUrl
     ? new URLSearchParams({ message: caption, link: linkUrl, access_token: secrets.metaPageAccessToken })
     : new URLSearchParams({ url: imageUrl, caption, access_token: secrets.metaPageAccessToken });
-  const response = await fetch(endpoint, { method: "POST", body });
+  const response = await postForm(endpoint, body);
   const data = await response.json() as { id?: string; error?: { message?: string } };
   if (!response.ok) {
     return { platform: "facebook", status: "failed", message: data.error?.message ?? "Facebook publish failed." };
@@ -35,7 +45,7 @@ async function publishInstagram(caption: string, imageUrl: string, secrets: Soci
     caption,
     access_token: secrets.metaPageAccessToken,
   });
-  const createResponse = await fetch(createEndpoint, { method: "POST", body: createBody });
+  const createResponse = await postForm(createEndpoint, createBody);
   const createData = await createResponse.json() as { id?: string; error?: { message?: string } };
   if (!createResponse.ok || !createData.id) {
     return { platform: "instagram", status: "failed", message: createData.error?.message ?? "Instagram media create failed." };
@@ -46,7 +56,7 @@ async function publishInstagram(caption: string, imageUrl: string, secrets: Soci
     creation_id: createData.id,
     access_token: secrets.metaPageAccessToken,
   });
-  const publishResponse = await fetch(publishEndpoint, { method: "POST", body: publishBody });
+  const publishResponse = await postForm(publishEndpoint, publishBody);
   const publishData = await publishResponse.json() as { id?: string; error?: { message?: string } };
   if (!publishResponse.ok) {
     return { platform: "instagram", status: "failed", message: publishData.error?.message ?? "Instagram publish failed." };
@@ -63,6 +73,7 @@ async function publishTelegram(caption: string, imageUrl: string, secrets: Socia
   const response = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(PUBLISH_REQUEST_TIMEOUT_MS),
     body: JSON.stringify({
       chat_id: secrets.telegramChannelId,
       photo: imageUrl,
@@ -120,12 +131,20 @@ export async function publishToPlatforms(
 
   for (const platform of platforms) {
     const caption = getCaption(platform);
-    if (platform === "facebook") results.push(await publishFacebook(caption, imageUrl, secrets, linkUrl));
-    if (platform === "instagram") results.push(await publishInstagram(caption, imageUrl, secrets));
-    if (platform === "telegram") results.push(await publishTelegram(caption, imageUrl, secrets));
-    if (platform === "whatsapp_channel") results.push(publishWhatsAppChannel(caption));
-    if (platform === "x") results.push(publishX(caption));
-    if (platform === "youtube_community") results.push(publishYouTubeCommunity(caption));
+    try {
+      if (platform === "facebook") results.push(await publishFacebook(caption, imageUrl, secrets, linkUrl));
+      if (platform === "instagram") results.push(await publishInstagram(caption, imageUrl, secrets));
+      if (platform === "telegram") results.push(await publishTelegram(caption, imageUrl, secrets));
+      if (platform === "whatsapp_channel") results.push(publishWhatsAppChannel(caption));
+      if (platform === "x") results.push(publishX(caption));
+      if (platform === "youtube_community") results.push(publishYouTubeCommunity(caption));
+    } catch (error) {
+      results.push({
+        platform,
+        status: "failed",
+        message: error instanceof Error ? error.message : "The platform request failed unexpectedly.",
+      });
+    }
   }
 
   return results;
@@ -138,5 +157,7 @@ export function summarizePublishResults(results: PublishResult[]) {
 }
 
 export function isPublishSuccessful(results: PublishResult[]) {
-  return results.some((item) => item.status === "published" || item.status === "manual");
+  // A prepared caption is not a published post. Only a confirmation from a platform
+  // API should mark the social post as published or suppress its product for 30 days.
+  return results.some((item) => item.status === "published");
 }
