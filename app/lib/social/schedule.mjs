@@ -1,4 +1,4 @@
-export const AUTO_SOCIAL_POST_CRONS = ["0 2 * * *", "30 9 * * *"];
+export const AUTO_SOCIAL_POST_CRONS = ["30 1 * * *", "30 11 * * *"];
 export const PROCESS_DUE_SOCIAL_POSTS_CRON = "0 4 * * *";
 
 export function getSocialScheduleTask(cron) {
