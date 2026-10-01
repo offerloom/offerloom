@@ -2,6 +2,28 @@ import type { PublishResult, SocialPlatform, SocialSecrets } from "./types";
 
 const PUBLISH_REQUEST_TIMEOUT_MS = 20_000;
 
+type MetaApiError = {
+  message?: string;
+  type?: string;
+  code?: number;
+  fbtrace_id?: string;
+  is_transient?: boolean;
+};
+
+function describeMetaError(error: MetaApiError | undefined, fallback: string) {
+  const message = error?.message ?? fallback;
+  const details = [
+    error?.type,
+    error?.code === undefined ? undefined : `code ${error.code}`,
+    error?.fbtrace_id ? `trace ${error.fbtrace_id}` : undefined,
+    error?.is_transient ? "transient" : undefined,
+  ].filter(Boolean);
+  const diagnosis = error?.code === 200
+    ? "Meta blocked this API call. Check the app/business restriction status and publishing permissions; replacing the token alone may not resolve an app-level block."
+    : undefined;
+  return [message, ...details, diagnosis].filter(Boolean).join(" — ");
+}
+
 function postForm(url: string, body: URLSearchParams) {
   return fetch(url, {
     method: "POST",
@@ -27,9 +49,9 @@ async function publishFacebook(caption: string, imageUrl: string, secrets: Socia
     ? new URLSearchParams({ message: caption, link: linkUrl, access_token: secrets.metaPageAccessToken })
     : new URLSearchParams({ url: imageUrl, caption, access_token: secrets.metaPageAccessToken });
   const response = await postForm(endpoint, body);
-  const data = await response.json() as { id?: string; error?: { message?: string } };
+  const data = await response.json() as { id?: string; error?: MetaApiError };
   if (!response.ok) {
-    return { platform: "facebook", status: "failed", message: data.error?.message ?? "Facebook publish failed." };
+    return { platform: "facebook", status: "failed", message: describeMetaError(data.error, "Facebook publish failed.") };
   }
   return { platform: "facebook", status: "published", externalId: data.id, message: "Published to Facebook Page." };
 }
@@ -46,9 +68,9 @@ async function publishInstagram(caption: string, imageUrl: string, secrets: Soci
     access_token: secrets.metaPageAccessToken,
   });
   const createResponse = await postForm(createEndpoint, createBody);
-  const createData = await createResponse.json() as { id?: string; error?: { message?: string } };
+  const createData = await createResponse.json() as { id?: string; error?: MetaApiError };
   if (!createResponse.ok || !createData.id) {
-    return { platform: "instagram", status: "failed", message: createData.error?.message ?? "Instagram media create failed." };
+    return { platform: "instagram", status: "failed", message: describeMetaError(createData.error, "Instagram media create failed.") };
   }
 
   const publishEndpoint = `https://graph.facebook.com/v21.0/${secrets.metaInstagramUserId}/media_publish`;
@@ -57,9 +79,9 @@ async function publishInstagram(caption: string, imageUrl: string, secrets: Soci
     access_token: secrets.metaPageAccessToken,
   });
   const publishResponse = await postForm(publishEndpoint, publishBody);
-  const publishData = await publishResponse.json() as { id?: string; error?: { message?: string } };
+  const publishData = await publishResponse.json() as { id?: string; error?: MetaApiError };
   if (!publishResponse.ok) {
-    return { platform: "instagram", status: "failed", message: publishData.error?.message ?? "Instagram publish failed." };
+    return { platform: "instagram", status: "failed", message: describeMetaError(publishData.error, "Instagram publish failed.") };
   }
   return { platform: "instagram", status: "published", externalId: publishData.id, message: "Published to Instagram." };
 }
