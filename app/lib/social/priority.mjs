@@ -3,15 +3,14 @@ export function prioritizeFacebook(platforms) {
   return ["facebook", ...platforms.filter((platform) => platform !== "facebook")];
 }
 
-export function shouldSkipInstagramAfterFacebookFailure(platform, results) {
-  if (platform !== "instagram") return false;
-  const facebook = results.find((result) => result.platform === "facebook");
-  return Boolean(facebook && facebook.status !== "published");
-}
-
 export function isSocialPublishSuccessful(results, requestedPlatforms = []) {
-  if (requestedPlatforms.includes("facebook")) {
-    return results.some((result) => result.platform === "facebook" && result.status === "published");
+  const requiredMetaPlatforms = ["facebook", "instagram"].filter((platform) => requestedPlatforms.includes(platform));
+  if (requiredMetaPlatforms.length === 2) {
+    return requiredMetaPlatforms.every((platform) => results.some((result) => result.platform === platform && result.status === "published"));
+  }
+  if (requiredMetaPlatforms.length === 1) {
+    const [platform] = requiredMetaPlatforms;
+    return results.some((result) => result.platform === platform && result.status === "published");
   }
   return results.some((result) => result.status === "published");
 }

@@ -1,5 +1,5 @@
 import type { PublishResult, SocialPlatform, SocialSecrets } from "./types";
-import { isSocialPublishSuccessful, prioritizeFacebook, shouldSkipInstagramAfterFacebookFailure } from "./priority.mjs";
+import { isSocialPublishSuccessful, prioritizeFacebook } from "./priority.mjs";
 
 const PUBLISH_REQUEST_TIMEOUT_MS = 20_000;
 
@@ -152,16 +152,10 @@ export async function publishToPlatforms(
   const results: PublishResult[] = [];
   const getCaption = typeof captionFor === "function" ? captionFor : () => captionFor;
 
+  // Facebook goes first, then Instagram is always attempted independently. Both
+  // channels are required for a dual-channel campaign, so a failure on either
+  // leaves the campaign retryable instead of silently completing one channel only.
   for (const platform of prioritizeFacebook(platforms)) {
-    if (shouldSkipInstagramAfterFacebookFailure(platform, results)) {
-      results.push({
-        platform,
-        status: "skipped",
-        message: "Instagram was held because Facebook is OfferLoom's primary channel and its post did not publish.",
-      });
-      continue;
-    }
-
     const caption = getCaption(platform);
     try {
       if (platform === "facebook") results.push(await publishFacebook(caption, imageUrl, secrets, linkUrl));
@@ -189,7 +183,7 @@ export function summarizePublishResults(results: PublishResult[]) {
 }
 
 export function isPublishSuccessful(results: PublishResult[], requestedPlatforms: SocialPlatform[] = []) {
-  // Facebook is OfferLoom's primary channel. Instagram alone must never mark the
-  // campaign as complete or suppress a retry when Facebook did not publish.
+  // For campaigns targeting both Meta channels, completion requires confirmation
+  // from both. Facebook remains primary for ordering and remains required on its own.
   return isSocialPublishSuccessful(results, requestedPlatforms);
 }

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { getSocialScheduleTask } from "../app/lib/social/schedule.mjs";
-import { isSocialPublishSuccessful, prioritizeFacebook, shouldSkipInstagramAfterFacebookFailure } from "../app/lib/social/priority.mjs";
+import { isSocialPublishSuccessful, prioritizeFacebook } from "../app/lib/social/priority.mjs";
 
 test("daily social auto-post and queued-post crons have separate explicit routes", () => {
   assert.equal(getSocialScheduleTask("30 1 * * *"), "auto-post");
@@ -24,14 +24,26 @@ test("configured cron expressions are documented and unknown triggers cannot aut
   assert.match(worker, /if \(task === "process-due"\)/);
 });
 
-test("Facebook is the primary channel and Instagram cannot complete a Facebook campaign", () => {
+test("Facebook is primary, both Meta channels are attempted, and both are required", async () => {
   assert.deepEqual(prioritizeFacebook(["instagram", "x", "facebook"]), ["facebook", "instagram", "x"]);
-  assert.equal(shouldSkipInstagramAfterFacebookFailure("instagram", [{ platform: "facebook", status: "failed" }]), true);
-  assert.equal(shouldSkipInstagramAfterFacebookFailure("instagram", [{ platform: "facebook", status: "published" }]), false);
-  assert.equal(shouldSkipInstagramAfterFacebookFailure("x", [{ platform: "facebook", status: "failed" }]), false);
-  assert.equal(isSocialPublishSuccessful([{ platform: "instagram", status: "published" }, { platform: "facebook", status: "failed" }], ["facebook", "instagram"]), false);
-  assert.equal(isSocialPublishSuccessful([{ platform: "facebook", status: "published" }, { platform: "instagram", status: "failed" }], ["facebook", "instagram"]), true);
+  assert.equal(isSocialPublishSuccessful([
+    { platform: "facebook", status: "published" },
+    { platform: "instagram", status: "published" },
+  ], ["facebook", "instagram"]), true);
+  assert.equal(isSocialPublishSuccessful([
+    { platform: "instagram", status: "published" },
+    { platform: "facebook", status: "failed" },
+  ], ["facebook", "instagram"]), false);
+  assert.equal(isSocialPublishSuccessful([
+    { platform: "facebook", status: "published" },
+    { platform: "instagram", status: "failed" },
+  ], ["facebook", "instagram"]), false);
+  assert.equal(isSocialPublishSuccessful([{ platform: "facebook", status: "published" }], ["facebook"]), true);
   assert.equal(isSocialPublishSuccessful([{ platform: "instagram", status: "published" }], ["instagram"]), true);
+
+  const publish = await readFile(new URL("../app/lib/social/publish.ts", import.meta.url), "utf8");
+  assert.match(publish, /for \(const platform of prioritizeFacebook\(platforms\)\)/);
+  assert.doesNotMatch(publish, /shouldSkipInstagramAfterFacebookFailure/);
 });
 
 test("automated publishing records bounded requests and platform failures", async () => {
