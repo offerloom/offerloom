@@ -177,7 +177,7 @@ export async function createSocialPost(env: EnvLike, input: CreateSocialPostInpu
       }));
     }
     lastError = summarizePublishResults(publishResults);
-    if (isPublishSuccessful(publishResults)) {
+    if (isPublishSuccessful(publishResults, input.platforms)) {
       status = "published";
       publishedAt = now;
     } else {
@@ -220,7 +220,7 @@ export async function publishSocialPostNow(env: EnvLike, id: string) {
   const publishResults = await publishWithMetaCooldown(env, post.platforms, post.caption, post.imageUrl, secrets, post.linkUrl ?? undefined);
   const lastError = summarizePublishResults(publishResults);
   const now = new Date().toISOString();
-  const status: SocialPostStatus = isPublishSuccessful(publishResults) ? "published" : "failed";
+  const status: SocialPostStatus = isPublishSuccessful(publishResults, post.platforms) ? "published" : "failed";
 
   await env.DB.prepare(`
     UPDATE social_posts

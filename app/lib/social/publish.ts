@@ -1,4 +1,5 @@
 import type { PublishResult, SocialPlatform, SocialSecrets } from "./types";
+import { isSocialPublishSuccessful, prioritizeFacebook, shouldSkipInstagramAfterFacebookFailure } from "./priority.mjs";
 
 const PUBLISH_REQUEST_TIMEOUT_MS = 20_000;
 
@@ -151,7 +152,16 @@ export async function publishToPlatforms(
   const results: PublishResult[] = [];
   const getCaption = typeof captionFor === "function" ? captionFor : () => captionFor;
 
-  for (const platform of platforms) {
+  for (const platform of prioritizeFacebook(platforms)) {
+    if (shouldSkipInstagramAfterFacebookFailure(platform, results)) {
+      results.push({
+        platform,
+        status: "skipped",
+        message: "Instagram was held because Facebook is OfferLoom's primary channel and its post did not publish.",
+      });
+      continue;
+    }
+
     const caption = getCaption(platform);
     try {
       if (platform === "facebook") results.push(await publishFacebook(caption, imageUrl, secrets, linkUrl));
@@ -178,8 +188,8 @@ export function summarizePublishResults(results: PublishResult[]) {
   return notable.map((item) => `${item.platform}: ${item.message}`).join(" | ");
 }
 
-export function isPublishSuccessful(results: PublishResult[]) {
-  // A prepared caption is not a published post. Only a confirmation from a platform
-  // API should mark the social post as published or suppress its product for 30 days.
-  return results.some((item) => item.status === "published");
+export function isPublishSuccessful(results: PublishResult[], requestedPlatforms: SocialPlatform[] = []) {
+  // Facebook is OfferLoom's primary channel. Instagram alone must never mark the
+  // campaign as complete or suppress a retry when Facebook did not publish.
+  return isSocialPublishSuccessful(results, requestedPlatforms);
 }
