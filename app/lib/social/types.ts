@@ -27,6 +27,8 @@ export type SocialPostRecord = {
   publishResults: PublishResult[] | null;
   lastError: string | null;
   productId: string | null;
+  retryAttempts: number;
+  retryAfter: string | null;
   createdAt: string;
   updatedAt: string;
 };

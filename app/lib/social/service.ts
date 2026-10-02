@@ -1,6 +1,7 @@
 import { composeSocialPost } from "./compose";
 import { socialSecretsFromEnv } from "./env";
 import { isPublishSuccessful, publishToPlatforms, summarizePublishResults } from "./publish";
+import { mergePublishResults, nextSocialRetryAt, platformsNeedingPublish } from "./retry.mjs";
 import type { PublishResult, SocialPlatform, SocialPostRecord, SocialPostStatus } from "./types";
 import { SOCIAL_PLATFORMS } from "./types";
 
@@ -30,6 +31,8 @@ type SocialPostRow = {
   publish_results_json: string | null;
   last_error: string | null;
   product_id: string | null;
+  retry_attempts: number;
+  retry_after: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -106,6 +109,8 @@ function mapRow(row: SocialPostRow): SocialPostRecord {
     publishResults,
     lastError: row.last_error,
     productId: row.product_id,
+    retryAttempts: row.retry_attempts,
+    retryAfter: row.retry_after,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -114,7 +119,8 @@ function mapRow(row: SocialPostRow): SocialPostRecord {
 export async function listSocialPosts(db: DbLike) {
   const result = await db.prepare(`
     SELECT id, headline, body, link_url, image_url, platforms_json, caption, status,
-      scheduled_at, published_at, publish_results_json, last_error, product_id, created_at, updated_at
+      scheduled_at, published_at, publish_results_json, last_error, product_id,
+      retry_attempts, retry_after, created_at, updated_at
     FROM social_posts
     ORDER BY COALESCE(scheduled_at, created_at) DESC
     LIMIT 50
@@ -126,7 +132,8 @@ export async function listSocialPosts(db: DbLike) {
 export async function getSocialPost(db: DbLike, id: string) {
   const row = await db.prepare(`
     SELECT id, headline, body, link_url, image_url, platforms_json, caption, status,
-      scheduled_at, published_at, publish_results_json, last_error, product_id, created_at, updated_at
+      scheduled_at, published_at, publish_results_json, last_error, product_id,
+      retry_attempts, retry_after, created_at, updated_at
     FROM social_posts WHERE id = ?
   `).bind(id).first<SocialPostRow>();
 
@@ -164,6 +171,7 @@ export async function createSocialPost(env: EnvLike, input: CreateSocialPostInpu
   let publishedAt: string | null = null;
   let publishResults: PublishResult[] | null = null;
   let lastError: string | null = null;
+  let retryAfter: string | null = null;
 
   if (input.mode === "publish_now") {
     const captionFor = (platform: SocialPlatform) => input.platformCaptions?.[platform] ?? caption;
@@ -182,6 +190,7 @@ export async function createSocialPost(env: EnvLike, input: CreateSocialPostInpu
       publishedAt = now;
     } else {
       status = "failed";
+      if (input.productId) retryAfter = nextSocialRetryAt(0, Date.now());
     }
   }
 
@@ -189,7 +198,8 @@ export async function createSocialPost(env: EnvLike, input: CreateSocialPostInpu
     INSERT INTO social_posts (
       id, headline, body, link_url, image_url, platforms_json, caption, status,
       scheduled_at, published_at, publish_results_json, last_error, product_id, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      , retry_attempts, retry_after
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id,
     input.headline.trim(),
@@ -206,6 +216,8 @@ export async function createSocialPost(env: EnvLike, input: CreateSocialPostInpu
     input.productId ?? null,
     now,
     now,
+    0,
+    retryAfter,
   ).run();
 
   return getSocialPost(env.DB, id);
@@ -217,20 +229,28 @@ export async function publishSocialPostNow(env: EnvLike, id: string) {
   if (post.status === "published") throw new Error("This post is already published.");
 
   const secrets = socialSecretsFromEnv(env);
-  const publishResults = await publishWithMetaCooldown(env, post.platforms, post.caption, post.imageUrl, secrets, post.linkUrl ?? undefined);
+  const platformsToPublish = platformsNeedingPublish(post.platforms, post.publishResults ?? []);
+  if (platformsToPublish.length === 0) throw new Error("No unpublished platforms remain to retry.");
+  const newResults = await publishWithMetaCooldown(env, platformsToPublish, post.caption, post.imageUrl, secrets, post.linkUrl ?? undefined);
+  const publishResults = mergePublishResults(post.platforms, post.publishResults ?? [], newResults);
   const lastError = summarizePublishResults(publishResults);
   const now = new Date().toISOString();
   const status: SocialPostStatus = isPublishSuccessful(publishResults, post.platforms) ? "published" : "failed";
+  const retryAttempts = post.status === "failed" ? post.retryAttempts + 1 : post.retryAttempts;
+  const retryAfter = status === "failed" && post.productId ? nextSocialRetryAt(retryAttempts, Date.now()) : null;
 
   await env.DB.prepare(`
     UPDATE social_posts
-    SET status = ?, published_at = ?, publish_results_json = ?, last_error = ?, updated_at = ?
+    SET status = ?, published_at = ?, publish_results_json = ?, last_error = ?,
+      retry_attempts = ?, retry_after = ?, updated_at = ?
     WHERE id = ?
   `).bind(
     status,
     status === "published" ? now : null,
     JSON.stringify(publishResults),
     lastError || null,
+    retryAttempts,
+    retryAfter,
     now,
     id,
   ).run();
@@ -242,10 +262,12 @@ export async function processDueSocialPosts(env: EnvLike) {
   const now = new Date().toISOString();
   const due = await env.DB.prepare(`
     SELECT id FROM social_posts
-    WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= ?
-    ORDER BY scheduled_at ASC
+    WHERE (status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= ?)
+      OR (status = 'failed' AND product_id IS NOT NULL AND retry_after IS NOT NULL
+        AND retry_after <= ? AND retry_attempts < 3)
+    ORDER BY COALESCE(retry_after, scheduled_at) ASC
     LIMIT 10
-  `).bind(now).all<{ id: string }>();
+  `).bind(now, now).all<{ id: string }>();
 
   const processed: Array<{ id: string; status: SocialPostStatus }> = [];
   for (const row of due.results ?? []) {
@@ -254,9 +276,21 @@ export async function processDueSocialPosts(env: EnvLike) {
       if (post) processed.push({ id: post.id, status: post.status });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Scheduled publish failed.";
+      const failedPost = await getSocialPost(env.DB, row.id);
+      const retryAttempts = failedPost
+        ? failedPost.retryAttempts + (failedPost.status === "failed" ? 1 : 0)
+        : 3;
       await env.DB.prepare(`
-        UPDATE social_posts SET status = 'failed', last_error = ?, updated_at = ? WHERE id = ?
-      `).bind(message, now, row.id).run();
+        UPDATE social_posts
+        SET status = 'failed', last_error = ?, retry_attempts = ?, retry_after = ?, updated_at = ?
+        WHERE id = ?
+      `).bind(
+        message,
+        Math.min(retryAttempts, 3),
+        failedPost?.productId ? nextSocialRetryAt(retryAttempts, Date.now()) : null,
+        now,
+        row.id,
+      ).run();
       processed.push({ id: row.id, status: "failed" });
     }
   }

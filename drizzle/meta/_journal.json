@@ -50,6 +50,13 @@
       "when": 1789152600000,
       "tag": "0006_social_posts_product",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1790923842648,
+      "tag": "0007_shallow_silver_samurai",
+      "breakpoints": true
     }
   ]
 }
