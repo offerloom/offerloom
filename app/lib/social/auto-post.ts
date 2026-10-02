@@ -35,7 +35,7 @@ async function findEligibleProduct(env: EnvLike) {
     WHERE p.status = 'published' AND p.image_url IS NOT NULL
       AND p.id NOT IN (
         SELECT product_id FROM social_posts
-        WHERE product_id IS NOT NULL AND status = 'published' AND created_at >= ?
+        WHERE product_id IS NOT NULL AND status IN ('published', 'failed') AND created_at >= ?
       )
   `).bind(cutoff).all<CandidateRow>();
 

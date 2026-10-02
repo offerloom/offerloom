@@ -99,6 +99,11 @@ export const socialPosts = sqliteTable("social_posts", {
   publishedAt: text("published_at"),
   publishResultsJson: text("publish_results_json"),
   lastError: text("last_error"),
+  retryAttempts: integer("retry_attempts").notNull().default(0),
+  retryAfter: text("retry_after"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
-}, (table) => [index("idx_social_posts_status_scheduled").on(table.status, table.scheduledAt)]);
+}, (table) => [
+  index("idx_social_posts_status_scheduled").on(table.status, table.scheduledAt),
+  index("idx_social_posts_retry").on(table.status, table.retryAfter),
+]);

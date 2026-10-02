@@ -42,6 +42,14 @@ Read this file and `README.md`/`AGENTS.md` before changing the project — `docs
 - META_PAGE_ACCESS_TOKEN, META_PAGE_ID, META_INSTAGRAM_USER_ID are set as Worker secrets (non-expiring System User token, "OfferLoom Automation" Meta app).
 - A Cloudflare Cron Trigger (`0 13 * * *`) auto-picks the single best current discount not posted to either platform in the last 30 days and publishes it to both. Product images are served through `/api/social-image` (a same-origin proxy) because Instagram's crawler was being blocked directly on Amazon's CDN.
 
+## Social posting reliability — 2 October 2026
+
+- OfferLoom's Worker owns its Meta page/Instagram credentials and D1 social-post queue. Its scheduled publishing configuration is separate from Parthsheel Enterprises; never copy credentials, post records, or automation state between the two projects.
+- Cron schedule: Facebook-first posts to Facebook and Instagram at 07:00 and 17:00 IST; due scheduled posts and failed-channel retries are drained hourly. Cron expressions are UTC (`30 1 * * *`, `30 11 * * *`, `0 * * * *`).
+- The previous Worker caught and logged publish errors without rethrowing them, so Cloudflare showed failed social runs as successful. Scheduled work now awaits the publishing path and throws on an unsuccessful result so Cloudflare's Past Cron Events and Worker logs show actual delivery failures.
+- Failed product posts are retried at most three times, with 10-minute, 1-hour, and 6-hour backoff. Per-platform results are retained; a channel that already confirmed publication is never sent the same post again when its partner channel retries. Failed products are held out of the next daily product selection to prevent duplicates.
+- `retry_attempts` and `retry_after` are in D1 migration `0007`; check Cloudflare's cron history and `/admin` post error details after deployment. Meta account/app permission blocks, revoked/expired tokens, or an ineligible Page cannot be fixed by scheduling code; the concrete Meta API error remains visible and those credentials/permissions must be repaired in Meta/Cloudflare.
+
 ## Social publishing checkpoint — 12 September 2026 (superseded by the entry above)
 
 - Owner now wants an Amazon social publishing pilot managed by OfferLoom backend. See `docs/AMAZON_SOCIAL_PILOT.md` for the first unpublished product draft and exact remaining setup.
