@@ -77,14 +77,6 @@ export async function runAutoSocialPost(env: EnvLike) {
     disclosure,
   ].filter(Boolean).join("\n\n");
 
-  // X (Twitter) has a 280-character hard limit — build a short variant instead of
-  // truncating the long caption mid-sentence. The link and hashtags are kept intact;
-  // only the headline is shortened if needed.
-  const xSuffix = `\n${linkUrl}\n#OfferLoomIndia #DealsToday`;
-  const xHeadline = `🔥 ${row.name} — ${priceLine} on ${merchantLabel}`;
-  const xBudget = 280 - xSuffix.length;
-  const xCaption = (xHeadline.length <= xBudget ? xHeadline : `${xHeadline.slice(0, Math.max(0, xBudget - 1))}…`) + xSuffix;
-
   // Instagram's media-download crawler is blocked by some merchant CDNs (Amazon's included)
   // even when Facebook's own crawler succeeds on the identical URL — route through our own
   // domain so both platforms fetch from us instead of hitting that block directly.
@@ -95,11 +87,10 @@ export async function runAutoSocialPost(env: EnvLike) {
     body: row.summary,
     linkUrl,
     imageUrl: proxiedImageUrl,
-    platforms: ["facebook", "instagram", "whatsapp_channel", "x", "youtube_community"],
+    platforms: ["facebook", "instagram"],
     mode: "publish_now",
     productId: row.id,
     captionOverride: caption,
-    platformCaptions: { x: xCaption },
   });
 
   return { ok: post?.status === "published", post };

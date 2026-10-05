@@ -27,7 +27,9 @@ test("configured cron expressions are documented and unknown triggers cannot aut
 });
 
 test("Facebook is primary, both Meta channels are attempted, and both are required", async () => {
-  assert.deepEqual(prioritizeFacebook(["instagram", "x", "facebook"]), ["facebook", "instagram", "x"]);
+  const types = await readFile(new URL("../app/lib/social/types.ts", import.meta.url), "utf8");
+  assert.match(types, /SOCIAL_PLATFORMS = \["facebook", "instagram"\]/);
+  assert.deepEqual(prioritizeFacebook(["instagram", "facebook"]), ["facebook", "instagram"]);
   assert.equal(isSocialPublishSuccessful([
     { platform: "facebook", status: "published" },
     { platform: "instagram", status: "published" },
@@ -44,8 +46,11 @@ test("Facebook is primary, both Meta channels are attempted, and both are requir
   assert.equal(isSocialPublishSuccessful([{ platform: "instagram", status: "published" }], ["instagram"]), true);
 
   const publish = await readFile(new URL("../app/lib/social/publish.ts", import.meta.url), "utf8");
+  const autoPost = await readFile(new URL("../app/lib/social/auto-post.ts", import.meta.url), "utf8");
   assert.match(publish, /for \(const platform of prioritizeFacebook\(platforms\)\)/);
+  assert.match(autoPost, /platforms: \["facebook", "instagram"\]/);
   assert.doesNotMatch(publish, /shouldSkipInstagramAfterFacebookFailure/);
+  assert.doesNotMatch(publish, /whatsapp_channel|youtube_community|publishX/);
 });
 
 test("automated publishing records bounded requests and platform failures", async () => {

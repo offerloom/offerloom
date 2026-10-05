@@ -87,61 +87,6 @@ async function publishInstagram(caption: string, imageUrl: string, secrets: Soci
   return { platform: "instagram", status: "published", externalId: publishData.id, message: "Published to Instagram." };
 }
 
-async function publishTelegram(caption: string, imageUrl: string, secrets: SocialSecrets): Promise<PublishResult> {
-  if (!secrets.telegramBotToken || !secrets.telegramChannelId) {
-    return { platform: "telegram", status: "failed", message: "Telegram bot token or channel ID is not configured." };
-  }
-
-  const endpoint = `https://api.telegram.org/bot${secrets.telegramBotToken}/sendPhoto`;
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(PUBLISH_REQUEST_TIMEOUT_MS),
-    body: JSON.stringify({
-      chat_id: secrets.telegramChannelId,
-      photo: imageUrl,
-      caption,
-    }),
-  });
-  const data = await response.json() as { ok?: boolean; result?: { message_id?: number }; description?: string };
-  if (!response.ok || !data.ok) {
-    return { platform: "telegram", status: "failed", message: data.description ?? "Telegram publish failed." };
-  }
-  return {
-    platform: "telegram",
-    status: "published",
-    externalId: data.result?.message_id ? String(data.result.message_id) : undefined,
-    message: "Published to Telegram channel.",
-  };
-}
-
-function publishWhatsAppChannel(caption: string): PublishResult {
-  return {
-    platform: "whatsapp_channel",
-    status: "manual",
-    message: "WhatsApp Channel has no public auto-post API. Copy this caption into WhatsApp Channel admin.",
-    caption,
-  };
-}
-
-function publishX(caption: string): PublishResult {
-  return {
-    platform: "x",
-    status: "manual",
-    message: "X's posting API requires a paid developer tier. Copy this caption and post it manually.",
-    caption,
-  };
-}
-
-function publishYouTubeCommunity(caption: string): PublishResult {
-  return {
-    platform: "youtube_community",
-    status: "manual",
-    message: "YouTube has no public API for Community posts. Copy this caption into a new Community post.",
-    caption,
-  };
-}
-
 export async function publishToPlatforms(
   platforms: SocialPlatform[],
   captionFor: string | ((platform: SocialPlatform) => string),
@@ -160,10 +105,6 @@ export async function publishToPlatforms(
     try {
       if (platform === "facebook") results.push(await publishFacebook(caption, imageUrl, secrets, linkUrl));
       if (platform === "instagram") results.push(await publishInstagram(caption, imageUrl, secrets));
-      if (platform === "telegram") results.push(await publishTelegram(caption, imageUrl, secrets));
-      if (platform === "whatsapp_channel") results.push(publishWhatsAppChannel(caption));
-      if (platform === "x") results.push(publishX(caption));
-      if (platform === "youtube_community") results.push(publishYouTubeCommunity(caption));
     } catch (error) {
       results.push({
         platform,
