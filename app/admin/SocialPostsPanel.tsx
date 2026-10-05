@@ -31,12 +31,8 @@ type SocialPostsPanelProps = {
 };
 
 const platformLabels: Record<SocialPlatform, string> = {
-  instagram: "Instagram (Meta)",
   facebook: "Facebook (Meta)",
-  telegram: "Telegram",
-  whatsapp_channel: "WhatsApp Channel",
-  x: "X (Twitter)",
-  youtube_community: "YouTube Community",
+  instagram: "Instagram (Meta)",
 };
 
 export default function SocialPostsPanel({ busy, setBusy, setMessage }: SocialPostsPanelProps) {
@@ -48,7 +44,7 @@ export default function SocialPostsPanel({ busy, setBusy, setMessage }: SocialPo
   const [linkUrl, setLinkUrl] = useState("https://offerloom.offerloom.workers.dev");
   const [imageUrl, setImageUrl] = useState("/brand/logo-square-1080.png");
   const [scheduledAt, setScheduledAt] = useState("");
-  const [platforms, setPlatforms] = useState<SocialPlatform[]>(["instagram", "facebook", "telegram", "whatsapp_channel"]);
+  const [platforms, setPlatforms] = useState<SocialPlatform[]>(["facebook", "instagram"]);
 
   const preview = useMemo(() => composeSocialPost({ headline: headline || "Today's hottest deal", body, linkUrl, imageUrl }), [headline, body, linkUrl, imageUrl]);
 
@@ -182,11 +178,11 @@ export default function SocialPostsPanel({ busy, setBusy, setMessage }: SocialPo
       <div className={styles.socialIntro}>
         <p>SOCIAL MEDIA</p>
         <h2>Schedule and apply posts</h2>
-        <span>Create daily deal posts with viral hashtags, thumbnail and WhatsApp channel link. Use Schedule post for later, or Apply post for instant publishing.</span>
+        <span>Create daily deal posts for Facebook and Instagram. Use Schedule post for later, or Apply post for instant publishing.</span>
       </div>
       <div className={styles.socialWorkspace}>
         <form className={styles.form} onSubmit={onSchedule}>
-          <div className={styles.formTitle}><h2>Create post</h2><span>Meta + Telegram + WhatsApp</span></div>
+          <div className={styles.formTitle}><h2>Create post</h2><span>Facebook + Instagram</span></div>
           {connectors ? (
             <div className={styles.connectorGrid}>
               {SOCIAL_PLATFORMS.map((platform) => (
@@ -198,7 +194,7 @@ export default function SocialPostsPanel({ busy, setBusy, setMessage }: SocialPo
           ) : null}
           {loadError ? <p className={styles.message} role="status">{loadError}</p> : null}
           <label>Headline<input value={headline} onChange={(event) => setHeadline(event.target.value)} required minLength={5} placeholder="Today's best smartphone deal" /></label>
-          <label>Post body<textarea value={body} onChange={(event) => setBody(event.target.value)} rows={4} placeholder="Short deal copy for Instagram, Facebook and Telegram…" /></label>
+          <label>Post body<textarea value={body} onChange={(event) => setBody(event.target.value)} rows={4} placeholder="Short deal copy for Facebook and Instagram…" /></label>
           <label>Destination link<input value={linkUrl} onChange={(event) => setLinkUrl(event.target.value)} type="url" placeholder="https://offerloom.offerloom.workers.dev" /></label>
           <label>Thumbnail path or image URL<input value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="/brand/logo-square-1080.png" /></label>
           <fieldset className={styles.platformFieldset}>
