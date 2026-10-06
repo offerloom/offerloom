@@ -13,6 +13,7 @@ Updated: 6 October 2026
 
 - The all-products area is grouped by category in the order Electronics, Fashion, Sports, Home, Toys, Books, Beauty and Auto; other categories appear alphabetically afterward. Products remain discount-sorted within each category and search applies across groups.
 - The sticky category chips jump to the matching group. An IntersectionObserver keeps the selected chip in sync as shoppers scroll through the category sections. See the merge/deploy workflow after release verification.
+- Mobile browser verification showed later selected chips could remain off-screen in the horizontal sticky row. The row now scrolls just enough to keep the active chip visible.
 
 ## Collector reliability pass — 20 September 2026
 
