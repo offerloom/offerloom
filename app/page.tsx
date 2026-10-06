@@ -10,6 +10,7 @@ import AjioCampaignOffers from "./components/AjioCampaignOffers";
 import SocialLinks from "./components/SocialLinks";
 import { heroCategorySlides } from "./lib/hero-categories";
 import { formatCheckedAt } from "./lib/format-checked-at";
+import { orderProductCategories, productCategorySectionId } from "./lib/product-category-navigation.mjs";
 
 type Listing = { store: string; affiliateUrl?: string };
 type Offer = { price: number; mrp: number | null; checkedAt: string };
@@ -77,10 +78,11 @@ export default function Home() {
   // Only rotate hero banners for categories we currently have real, in-stock deals for.
   const slides = (availableCategories.size ? heroCategorySlides.filter((item) => availableCategories.has(item.filterCategory)) : heroCategorySlides)
     .filter((item, index, all) => all.findIndex((candidate) => candidate.filterCategory === item.filterCategory) === index);
-  const dealCategories = ["All", ...new Set(managedProducts.map((product) => product.category))];
+  const productCategories = orderProductCategories(managedProducts.map((product) => product.category));
+  const categoryKey = productCategories.join("|");
+  const dealCategories = ["All", ...productCategories];
   const term = query.trim().toLowerCase();
   const frontProducts = managedProducts
-    .filter((product) => dealCategory === "All" || product.category === dealCategory)
     .filter((product) => !term || `${product.name} ${product.category} ${product.summary}`.toLowerCase().includes(term))
     .sort((a, b) => discountOf(b) - discountOf(a));
   const dealOfTheDay = [...managedProducts]
@@ -106,6 +108,22 @@ export default function Home() {
     return () => window.clearInterval(timer);
   }, [playing, slides.length]);
 
+  useEffect(() => {
+    const categorySections = Array.from(document.querySelectorAll<HTMLElement>("[data-product-category]"));
+    if (!categorySections.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      const visibleSections = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      const category = visibleSections[0]?.target.getAttribute("data-product-category");
+      if (category) setDealCategory(category);
+    }, { rootMargin: "-18% 0px -68% 0px", threshold: 0 });
+
+    categorySections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, [frontProducts.length, query, categoryKey]);
+
   const activeSlideIndex = slide % slides.length;
   const activeSlide = slides[activeSlideIndex];
   const heroDealPool = photoProducts.filter((product) => activeSlide.filterCategory === "All" || product.category === activeSlide.filterCategory);
@@ -119,9 +137,16 @@ export default function Home() {
   }
 
   function clearSearch() {
-    setDealCategory("All");
     setQuery("");
     setDraft("");
+  }
+
+  function goToCategory(category: string) {
+    setDealCategory(category);
+    const target = category === "All"
+      ? document.querySelector("#front-deals-heading")
+      : document.getElementById(productCategorySectionId(category));
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return <main className="homePage" id="top">
@@ -175,10 +200,18 @@ export default function Home() {
         {dealOfTheDay.imageUrl && <Link href={dealOfTheDay.detailPath!} className="dealOfTheDayImage"><img src={dealOfTheDay.imageUrl} alt={dealOfTheDay.name} loading="eager"/><span>{Math.round(discountOf(dealOfTheDay) * 100)}% OFF</span></Link>}
       </section>}
       <div className="frontDealsHeading"><div><span className="catalogEyebrow">Browse the full OfferLoom catalogue</span><h2 id="front-deals-heading">All products, sorted by discount</h2></div><span>{catalogState === "loading" ? "Loading products…" : `${frontProducts.length} of ${managedProducts.length} products`}</span></div>
-      <div className="dealCategoryTabs" role="group" aria-label="Filter product deals">{dealCategories.map((item) => <button key={item} onClick={() => setDealCategory(item)} aria-pressed={dealCategory === item}>{item === "All" ? "All picks" : item}</button>)}</div>
-      {catalogState === "ready" && managedProducts.length > 0 && !frontProducts.length && <div className="emptyState"><strong>No matching products</strong><p>Try another category or clear the search.</p><button onClick={clearSearch}>Show all products</button></div>}
-      {frontProducts.length > 0 && <div className="catalogSearchSummary"><span>{dealCategory === "All" ? "All categories" : dealCategory}{query ? ` · Search: “${query}”` : ""}</span>{(query || dealCategory !== "All") && <button onClick={clearSearch}>Clear filters</button>}</div>}
-      <div className="frontDealsGrid" aria-live="polite">{frontProducts.map((product) => <CatalogProductCard product={product} discount={discountOf(product)} key={`${product.merchant ?? "amazon"}:${product.id}`} />)}</div>
+      <div className="dealCategoryTabs" role="group" aria-label="Jump to product category">{dealCategories.map((item) => <button key={item} onClick={() => goToCategory(item)} aria-pressed={dealCategory === item}>{item === "All" ? "All picks" : item}</button>)}</div>
+      {catalogState === "ready" && managedProducts.length > 0 && !frontProducts.length && <div className="emptyState"><strong>No matching products</strong><p>Try another search or clear it.</p><button onClick={clearSearch}>Show all products</button></div>}
+      {frontProducts.length > 0 && <div className="catalogSearchSummary"><span>{dealCategory === "All" ? "All categories" : `${dealCategory} · grouped by category`}{query ? ` · Search: “${query}”` : ""}</span>{query && <button onClick={clearSearch}>Clear search</button>}</div>}
+      <div className="catalogCategoryGroups" aria-live="polite">{productCategories.map((category) => {
+        const categoryProducts = frontProducts.filter((product) => product.category === category);
+        if (!categoryProducts.length) return null;
+        const sectionId = productCategorySectionId(category);
+        return <section className="catalogCategory" id={sectionId} data-product-category={category} aria-labelledby={`${sectionId}-heading`} key={category}>
+          <div className="catalogCategoryHeading"><h3 id={`${sectionId}-heading`}>{category}</h3><span>{categoryProducts.length} {categoryProducts.length === 1 ? "product" : "products"}</span></div>
+          <div className="frontDealsGrid">{categoryProducts.map((product) => <CatalogProductCard product={product} discount={discountOf(product)} key={`${product.merchant ?? "amazon"}:${product.id}`} />)}</div>
+        </section>;
+      })}</div>
       {productShelves.filter((shelf) => shelf.key !== "todays_deals" && shelf.key !== "bestsellers").map((shelf) => <section className="productShelf" aria-labelledby={`${shelf.id}-heading`} key={shelf.key}>
         <div className="productShelfHeading"><div><span>{shelf.description}</span><h3 id={`${shelf.id}-heading`}>{shelf.title}</h3></div><a href={shelf.href}>View all <span aria-hidden="true">→</span></a></div>
         {shelf.products.length ? <div className="productRail" id={`${shelf.id}-rail`} role="region" aria-label={`${shelf.title} products`}>

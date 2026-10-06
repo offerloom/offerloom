@@ -28,7 +28,8 @@ test("renders the OfferLoom shopping experience", async () => {
   assert.doesNotMatch(html, /Up to 55% off/);
   assert.match(html, /All products, sorted by discount/);
   assert.match(html, /Browse the full OfferLoom catalogue/);
-  assert.match(html, /Filter product deals/);
+  assert.match(html, /Jump to product category/);
+  assert.match(html, /Jump to product category/);
   assert.match(html, /Follow our page/);
   assert.match(html, /Follow on Instagram/);
   assert.match(html, /Follow OfferLoom on Instagram and Facebook for our latest deals/);
@@ -99,6 +100,9 @@ test("keeps shopping claims and unavailable merchants compliant", async () => {
   assert.doesNotMatch(page, /AMAZON SHOPPING ENABLED|Browse electronics on Amazon\.in/);
   assert.ok(page.indexOf('shelf.key === "todays_deals" || shelf.key === "bestsellers"') < page.indexOf('aria-labelledby="deal-of-the-day-heading"'));
   assert.ok(page.indexOf('aria-labelledby="deal-of-the-day-heading"') < page.indexOf('id="front-deals-heading">All products, sorted by discount'));
+  assert.match(page, /new IntersectionObserver/);
+  assert.match(page, /data-product-category=\{category\}/);
+  assert.match(page, /productCategorySectionId/);
   assert.doesNotMatch(page, /scrape|live Amazon price/i);
   assert.match(memory, /Never scrape .*without written authorization\./);
 });

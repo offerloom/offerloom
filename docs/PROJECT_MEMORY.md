@@ -9,6 +9,11 @@ Updated: 6 October 2026
 - Reviewed the AJIO Affiliate Support workbook “BestOffer 1st Oct’26 – 4th Oct’26” on 6 October. Its named promotion window had ended; no expired offer callouts were published. Continue using only approved AJIO ACE tracking destinations and fresh promotion terms. The email/workbook handoff is manual; the site does not automatically read affiliate email or Drive files.
 - Verification and deployment status for this release: see the Git commit and deployment workflow associated with this memory entry.
 
+## Category grouped catalogue and scroll-aware chips — 6 October 2026
+
+- The all-products area is grouped by category in the order Electronics, Fashion, Sports, Home, Toys, Books, Beauty and Auto; other categories appear alphabetically afterward. Products remain discount-sorted within each category and search applies across groups.
+- The sticky category chips jump to the matching group. An IntersectionObserver keeps the selected chip in sync as shoppers scroll through the category sections. See the merge/deploy workflow after release verification.
+
 ## Collector reliability pass — 20 September 2026
 
 - The 19 September runs (22–27 of ~34 collected) failed for four separate reasons: `goto` timeouts, `ERR_NETWORK_CHANGED` (Mac network change/sleep), a price-layout gap, and a real ASIN redirect. Details and the fixes are in `docs/BROWSER_COLLECTOR.md` → "Reliability behaviour". Summary: commit-based navigation, retry with network wait, `#apex_price` selectors, wait-for-price, failure diagnostics in `outputs/collector/failures/`, failed list in `summary.json` and the sync email, ISBN-10 ASINs categorised as Books, D1 write retried.
