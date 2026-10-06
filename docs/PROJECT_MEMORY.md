@@ -1,6 +1,13 @@
 # OfferLoom Project Memory
 
-Updated: 20 September 2026
+Updated: 6 October 2026
+
+## Homepage shelf order and social follow links — 6 October 2026
+
+- Reordered the home page below the hero to show Today’s Deals, Amazon Bestsellers, Deal of the Day, then the searchable all-products grid sorted by discount. New Releases and AJIO collections remain available further down the page. The two top shelves are populated from the product catalogue’s matching collection tags; each keeps its View all destination.
+- Added Instagram (`https://www.instagram.com/offer.loom/`) before Facebook in the header/footer social links and the persistent follow buttons. Added a floating “Top” control so shoppers can return to the hero from any scroll position.
+- Reviewed the AJIO Affiliate Support workbook “BestOffer 1st Oct’26 – 4th Oct’26” on 6 October. Its named promotion window had ended; no expired offer callouts were published. Continue using only approved AJIO ACE tracking destinations and fresh promotion terms. The email/workbook handoff is manual; the site does not automatically read affiliate email or Drive files.
+- Verification and deployment status for this release: see the Git commit and deployment workflow associated with this memory entry.
 
 ## Collector reliability pass — 20 September 2026
 
