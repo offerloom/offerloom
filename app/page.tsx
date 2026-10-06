@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import SiteFooter from "./components/SiteFooter";
 import BrandMark from "./components/BrandMark";
 import DealAlertsBar from "./components/DealAlertsBar";
@@ -26,6 +26,7 @@ export default function Home() {
   const [managedProducts, setManagedProducts] = useState<Product[]>([]);
   const [ajioProducts, setAjioProducts] = useState<Product[]>([]);
   const [catalogState, setCatalogState] = useState("loading");
+  const categoryTabsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -124,6 +125,21 @@ export default function Home() {
     return () => observer.disconnect();
   }, [frontProducts.length, query, categoryKey]);
 
+  useEffect(() => {
+    const tabs = categoryTabsRef.current;
+    const selectedButton = tabs?.querySelector<HTMLButtonElement>('[aria-pressed="true"]');
+    if (!tabs || !selectedButton) return;
+
+    const tabsRect = tabs.getBoundingClientRect();
+    const buttonRect = selectedButton.getBoundingClientRect();
+    const margin = 12;
+    if (buttonRect.left < tabsRect.left + margin) {
+      tabs.scrollBy({ left: buttonRect.left - tabsRect.left - margin, behavior: "smooth" });
+    } else if (buttonRect.right > tabsRect.right - margin) {
+      tabs.scrollBy({ left: buttonRect.right - tabsRect.right + margin, behavior: "smooth" });
+    }
+  }, [dealCategory]);
+
   const activeSlideIndex = slide % slides.length;
   const activeSlide = slides[activeSlideIndex];
   const heroDealPool = photoProducts.filter((product) => activeSlide.filterCategory === "All" || product.category === activeSlide.filterCategory);
@@ -200,7 +216,7 @@ export default function Home() {
         {dealOfTheDay.imageUrl && <Link href={dealOfTheDay.detailPath!} className="dealOfTheDayImage"><img src={dealOfTheDay.imageUrl} alt={dealOfTheDay.name} loading="eager"/><span>{Math.round(discountOf(dealOfTheDay) * 100)}% OFF</span></Link>}
       </section>}
       <div className="frontDealsHeading"><div><span className="catalogEyebrow">Browse the full OfferLoom catalogue</span><h2 id="front-deals-heading">All products, sorted by discount</h2></div><span>{catalogState === "loading" ? "Loading products…" : `${frontProducts.length} of ${managedProducts.length} products`}</span></div>
-      <div className="dealCategoryTabs" role="group" aria-label="Jump to product category">{dealCategories.map((item) => <button key={item} onClick={() => goToCategory(item)} aria-pressed={dealCategory === item}>{item === "All" ? "All picks" : item}</button>)}</div>
+      <div className="dealCategoryTabs" ref={categoryTabsRef} role="group" aria-label="Jump to product category">{dealCategories.map((item) => <button key={item} onClick={() => goToCategory(item)} aria-pressed={dealCategory === item}>{item === "All" ? "All picks" : item}</button>)}</div>
       {catalogState === "ready" && managedProducts.length > 0 && !frontProducts.length && <div className="emptyState"><strong>No matching products</strong><p>Try another search or clear it.</p><button onClick={clearSearch}>Show all products</button></div>}
       {frontProducts.length > 0 && <div className="catalogSearchSummary"><span>{dealCategory === "All" ? "All categories" : `${dealCategory} · grouped by category`}{query ? ` · Search: “${query}”` : ""}</span>{query && <button onClick={clearSearch}>Clear search</button>}</div>}
       <div className="catalogCategoryGroups" aria-live="polite">{productCategories.map((category) => {

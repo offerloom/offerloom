@@ -103,6 +103,8 @@ test("keeps shopping claims and unavailable merchants compliant", async () => {
   assert.match(page, /new IntersectionObserver/);
   assert.match(page, /data-product-category=\{category\}/);
   assert.match(page, /productCategorySectionId/);
+  assert.match(page, /categoryTabsRef/);
+  assert.match(page, /tabs\.scrollBy\(\{ left: buttonRect\.right - tabsRect\.right \+ margin, behavior: "smooth" \}\)/);
   assert.doesNotMatch(page, /scrape|live Amazon price/i);
   assert.match(memory, /Never scrape .*without written authorization\./);
 });
