@@ -39,8 +39,12 @@ test("renders the OfferLoom shopping experience", async () => {
   assert.match(html, /Amazon New Releases/);
   assert.match(html, /Amazon Bestsellers/);
   assert.match(html, /Today.s Deals/);
-  assert.ok(html.indexOf("Today’s Deals") < html.indexOf("Amazon Bestsellers"));
+  assert.ok(html.indexOf("Deal of the Day") < html.indexOf("Today’s Deals"));
+  assert.ok(html.indexOf("Today’s Deals") < html.indexOf("Amazon New Releases"));
+  assert.ok(html.indexOf("Amazon New Releases") < html.indexOf("Amazon Bestsellers"));
   assert.ok(html.indexOf("Amazon Bestsellers") < html.indexOf("All products, sorted by discount"));
+  const homeSource = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  assert.ok(homeSource.indexOf("{dealOfTheDay && <section className=\"dealOfTheDay\"") < homeSource.indexOf("{productShelves.filter((shelf) => shelf.key === \"todays_deals\""));
   assert.match(html, /class="backToTop" href="#top"/);
   assert.match(html, /facebook\.com\/profile\.php\?id=61594517871499/);
   assert.ok(html.indexOf("instagram.com/offer.loom") < html.indexOf("facebook.com/profile.php"));
