@@ -87,9 +87,9 @@ export default function Home() {
     .filter((product) => product.offer?.mrp && product.offer.mrp > product.offer.price)
     .sort((a, b) => discountOf(b) - discountOf(a))[0];
   const productShelves = [
-    { key: "new_releases", title: "Amazon New Releases", description: "Recently released finds", id: "new-releases", href: "/deals?collection=new_releases" },
-    { key: "bestsellers", title: "Amazon Bestsellers", description: "Popular picks from bestseller lists", id: "bestsellers", href: "/deals?collection=bestsellers" },
     { key: "todays_deals", title: "Today’s Deals", description: "Current deals checked by OfferLoom", id: "todays-deals", href: "/deals?collection=todays_deals" },
+    { key: "bestsellers", title: "Amazon Bestsellers", description: "Popular picks from bestseller lists", id: "bestsellers", href: "/deals?collection=bestsellers" },
+    { key: "new_releases", title: "Amazon New Releases", description: "Recently released finds", id: "new-releases", href: "/deals?collection=new_releases" },
     { key: "ajio", title: "AJIO Fashion Deals", description: "Fashion picks with approved AJIO ACE links", id: "ajio-deals", href: "/deals?merchant=ajio" },
   ].map((shelf) => ({
     ...shelf,
@@ -124,7 +124,7 @@ export default function Home() {
     setDraft("");
   }
 
-  return <main className="homePage">
+  return <main className="homePage" id="top">
     <header className="topbar">
       <a className="brand" href="#top" aria-label="OfferLoom home"><BrandMark /><span>Offer<span>Loom</span></span></a>
       <nav aria-label="Main navigation"><a href="#front-deals-heading">Find products</a><Link href="/guides">Buying guides</Link><a href="#how">How it works</a></nav>
@@ -135,7 +135,7 @@ export default function Home() {
       </div>
     </header>
     <DealAlertsBar />
-    <section className="campaignHero" id="top" aria-roledescription="carousel" aria-label="OfferLoom shopping inspiration">
+    <section className="campaignHero" aria-roledescription="carousel" aria-label="OfferLoom shopping inspiration">
       <div className="campaignCopy">
         <span className="campaignKicker">THE OFFERLOOM EDIT · {activeSlide.eyebrow}</span>
         <h1><a className="campaignTitleLink" href={activeSlide.amazonUrl} target="_blank" rel="sponsored noopener noreferrer">{activeSlide.title}</a></h1>
@@ -164,6 +164,12 @@ export default function Home() {
     <section className="frontDeals" aria-labelledby="front-deals-heading">
       {catalogState === "error" && <p role="status">Product details could not be loaded. Please refresh to try again.</p>}
       {catalogState === "ready" && !photoProducts.length && <p>New product picks are being reviewed. Check back soon.</p>}
+      {productShelves.filter((shelf) => shelf.key === "todays_deals" || shelf.key === "bestsellers").map((shelf) => <section className="productShelf" aria-labelledby={`${shelf.id}-heading`} key={shelf.key}>
+        <div className="productShelfHeading"><div><span>{shelf.description}</span><h2 id={`${shelf.id}-heading`}>{shelf.title}</h2></div><a href={shelf.href}>View all <span aria-hidden="true">→</span></a></div>
+        {shelf.products.length ? <div className="productRail" id={`${shelf.id}-rail`} role="region" aria-label={`${shelf.title} products`}>
+          {shelf.products.map((product) => <ProductCard product={product} discount={discountOf(product)} key={`${product.merchant ?? "amazon"}:${product.id}`} />)}
+        </div> : <p className="shelfEmpty">No validated products in this collection yet. Check back after the next update.</p>}
+      </section>)}
       {dealOfTheDay && <section className="dealOfTheDay" aria-labelledby="deal-of-the-day-heading">
         <div className="dealOfTheDayCopy"><span className="dealOfTheDayEyebrow">TODAY’S TOP VERIFIED DISCOUNT · {Math.round(discountOf(dealOfTheDay) * 100)}% OFF</span><h2 id="deal-of-the-day-heading">Deal of the Day</h2><p>{dealOfTheDay.name}</p><div className="dealOfTheDayPrice"><strong>₹{(dealOfTheDay.offer!.price / 100).toLocaleString("en-IN")}</strong><del>₹{(dealOfTheDay.offer!.mrp! / 100).toLocaleString("en-IN")}</del></div><small>Checked {formatCheckedAt(dealOfTheDay.offer!.checkedAt)} · Confirm today’s price with the seller.</small><a href={dealOfTheDay.listings[0]?.affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">Shop this deal →</a></div>
         {dealOfTheDay.imageUrl && <Link href={dealOfTheDay.detailPath!} className="dealOfTheDayImage"><img src={dealOfTheDay.imageUrl} alt={dealOfTheDay.name} loading="eager"/><span>{Math.round(discountOf(dealOfTheDay) * 100)}% OFF</span></Link>}
@@ -173,7 +179,7 @@ export default function Home() {
       {catalogState === "ready" && managedProducts.length > 0 && !frontProducts.length && <div className="emptyState"><strong>No matching products</strong><p>Try another category or clear the search.</p><button onClick={clearSearch}>Show all products</button></div>}
       {frontProducts.length > 0 && <div className="catalogSearchSummary"><span>{dealCategory === "All" ? "All categories" : dealCategory}{query ? ` · Search: “${query}”` : ""}</span>{(query || dealCategory !== "All") && <button onClick={clearSearch}>Clear filters</button>}</div>}
       <div className="frontDealsGrid" aria-live="polite">{frontProducts.map((product) => <CatalogProductCard product={product} discount={discountOf(product)} key={`${product.merchant ?? "amazon"}:${product.id}`} />)}</div>
-      {productShelves.map((shelf) => <section className="productShelf" aria-labelledby={`${shelf.id}-heading`} key={shelf.key}>
+      {productShelves.filter((shelf) => shelf.key !== "todays_deals" && shelf.key !== "bestsellers").map((shelf) => <section className="productShelf" aria-labelledby={`${shelf.id}-heading`} key={shelf.key}>
         <div className="productShelfHeading"><div><span>{shelf.description}</span><h3 id={`${shelf.id}-heading`}>{shelf.title}</h3></div><a href={shelf.href}>View all <span aria-hidden="true">→</span></a></div>
         {shelf.products.length ? <div className="productRail" id={`${shelf.id}-rail`} role="region" aria-label={`${shelf.title} products`}>
           {shelf.products.map((product) => <ProductCard product={product} discount={discountOf(product)} key={`${product.merchant ?? "amazon"}:${product.id}`} />)}
@@ -185,6 +191,7 @@ export default function Home() {
 
     <section className="how" id="how"><div><span>01</span><h3>Search or browse</h3><p>Find electronics by name, use case or category.</p></div><div><span>02</span><h3>Review the collection</h3><p>Use the summaries and specifications to narrow your choice.</p></div><div><span>03</span><h3>Shop with the merchant</h3><p>Open an approved link and confirm the live price before buying.</p></div></section>
     <DealAlertsFloat />
+    <a className="backToTop" href="#top" aria-label="Go to top"><span aria-hidden="true">↑</span><span>Top</span></a>
     <SiteFooter />
   </main>;
 }

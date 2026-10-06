@@ -9,7 +9,7 @@ export const SITE = {
 } as const;
 
 export const COMMUNITY = {
-  hook: "Follow OfferLoom on Facebook for our latest deals.",
+  hook: "Follow OfferLoom on Instagram and Facebook for our latest deals.",
   whatsapp: {
     url: "https://whatsapp.com/channel/0029VbD63wj6RGJ94VedZ42W",
     buttonText: "Join for daily deals",
@@ -21,9 +21,19 @@ export const COMMUNITY = {
     buttonText: "Follow our page",
     via: "Facebook · OfferLoom",
   },
+  instagram: {
+    url: "https://www.instagram.com/offer.loom/",
+    buttonText: "Follow on Instagram",
+    via: "Instagram · @offer.loom",
+  },
 } as const;
 
 export const SOCIAL_LINKS = [
+  {
+    id: "instagram",
+    label: "OfferLoom on Instagram",
+    href: "https://www.instagram.com/offer.loom/",
+  },
   {
     id: "facebook",
     label: "OfferLoom on Facebook",

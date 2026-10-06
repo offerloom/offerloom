@@ -240,6 +240,10 @@ main.homePage{padding-bottom:calc(58px + env(safe-area-inset-bottom))}
 
 /* Shorter editorial hero and touch-friendly two-line product shelves. */
 .dealJoin-facebook{background:linear-gradient(135deg,#174ea6,#1877f2)}
+.backToTop{position:fixed;right:20px;bottom:82px;z-index:40;display:flex;align-items:center;gap:6px;padding:10px 14px;border:1px solid #dfe4ef;border-radius:999px;background:#fff;color:#273154;font-size:12px;font-weight:800;text-decoration:none;box-shadow:0 8px 24px #17255424;transition:transform .2s,box-shadow .2s,background .2s}
+.backToTop:hover{transform:translateY(-2px);background:#f8f8ff;box-shadow:0 12px 28px #17255430}
+.backToTop span:first-child{font-size:17px;line-height:1}
+@media(max-width:620px){.backToTop{right:12px;bottom:calc(74px + env(safe-area-inset-bottom));padding:9px 12px}}
 .campaignHero{min-height:0;margin-top:14px;margin-bottom:22px;grid-template-columns:.94fr 1.06fr;border-radius:20px}
 .campaignCopy{padding:22px 28px}
 .priceCheckedAt{display:block;color:#68758c;font-size:12px;line-height:1.4}
@@ -270,7 +274,7 @@ main.homePage{padding-bottom:calc(58px + env(safe-area-inset-bottom))}
 .productShelf{margin-top:24px;padding:18px 0 4px;border-top:1px solid #e5e7eb;scroll-margin-top:68px}
 .productShelfHeading{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:12px}
 .productShelfHeading>div>span{color:#667085;font-size:12px}
-.productShelfHeading h3{margin:3px 0 0;color:#171b2c;font-size:22px;letter-spacing:-.03em}
+.productShelfHeading h2,.productShelfHeading h3{margin:3px 0 0;color:#171b2c;font-size:22px;letter-spacing:-.03em}
 .productShelfHeading>a{flex-shrink:0;color:#405eea;font-size:12px;font-weight:750;text-decoration:none}
 .productShelfHeading>a:hover{text-decoration:underline}
 .productRail{display:flex;gap:13px;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x mandatory;padding:2px 2px 12px;scrollbar-color:#bbc3d5 transparent;scrollbar-width:thin}
@@ -288,7 +292,7 @@ main.homePage{padding-bottom:calc(58px + env(safe-area-inset-bottom))}
 .railProductPrice del{color:#788194;font-size:11px}
 .railProduct>.offerCta{margin-top:auto;padding:8px 10px;border-radius:8px;background:#3478ed;color:white;text-align:center;text-decoration:none;font-size:12px;font-weight:750}
 .shelfEmpty{margin:0 0 8px;color:#667085;font-size:13px}
-@media(max-width:760px){.campaignHero{grid-template-columns:1fr;margin:12px 16px 20px}.campaignCopy{padding:18px 19px}.campaignArtwork{height:174px;min-height:174px}.campaignCopy h1{font-size:27px}.campaignTrust{display:none}.campaignControls{gap:7px}.productShelf{margin-top:17px;padding-top:14px}.productShelfHeading h3{font-size:19px}.productShelfHeading>div>span{font-size:11px}.productShelfHeading>a{font-size:11px}.productRail{gap:10px}.railProduct{flex-basis:60vw;max-width:230px;padding:9px}.railProductImage{height:128px}}
+@media(max-width:760px){.campaignHero{grid-template-columns:1fr;margin:12px 16px 20px}.campaignCopy{padding:18px 19px}.campaignArtwork{height:174px;min-height:174px}.campaignCopy h1{font-size:27px}.campaignTrust{display:none}.campaignControls{gap:7px}.productShelf{margin-top:17px;padding-top:14px}.productShelfHeading h2,.productShelfHeading h3{font-size:19px}.productShelfHeading>div>span{font-size:11px}.productShelfHeading>a{font-size:11px}.productRail{gap:10px}.railProduct{flex-basis:60vw;max-width:230px;padding:9px}.railProductImage{height:128px}}
 
 /* Keep the homepage search in the header instead of taking a full row below the hero. */
 .topbar{gap:clamp(8px,1.5vw,20px)}
