@@ -231,3 +231,10 @@ Read this file and `README.md`/`AGENTS.md` before changing the project — `docs
 - At the owner's request, changed this Cloudflare account's Workers subdomain from `contact-offerloom.workers.dev` to `offerloom.workers.dev`. Cloudflare warned that all previous `*.contact-offerloom.workers.dev` routes stop immediately; the account currently has the OfferLoom Worker plus a collector scheduler without a workers.dev route.
 - Cloudflare now lists the public OfferLoom route as `https://offerloom.offerloom.workers.dev`. Initial TLS setup took about a minute; a live HTTPS request then returned 200. The old hostname no longer resolves, so update any external links that used it.
 - Updated canonical public URL defaults, social-post composer defaults, browser collector host validation and operator docs to the new URL. Keep `workers_dev = true`; Cloudflare derives each Worker hostname from its Worker name plus this account subdomain.
+
+## AJIO All Stars Sale tracking — 7 October 2026
+
+- Owner signed in to the correct AJIO ACE publisher portal via the affiliate programme page in Edge. The active `AJIO ACE PROGRAM(Final)` campaign is campaign `1`, publisher `1072`; Content Sites are an allowed placement.
+- Used the ACE dashboard's Tracking Link form with “Add Tracking Param” and “Add Deeplink” to generate tracking links for all 14 sale callouts supplied by AJIO. Links use `p1=offerloom-site`, `p2=<AJIO short code>`, and the exact `https://www.ajio.com/s/<short-code>` destination.
+- Updated the existing AJIO callout cards to show the 7–11 October 2026 All Stars Sale and automatically hide after 11 October. They remain labeled campaign offers, not product listings; the email/workbook did not include product-level ACE links or licensed product imagery. Do not scrape AJIO product cards or use its photos without approved data/image terms.
+- ACE terms shown in the account prohibit self-purchases, misleading promotions, impersonation, fake discounts and unauthorized coupons. Commission rates remain subject to the active terms and order qualification.

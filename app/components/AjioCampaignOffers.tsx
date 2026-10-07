@@ -2,15 +2,20 @@ import { AJIO_CAMPAIGN_OFFERS } from "../lib/ajio-offers";
 import AjioOfferArtwork from "./AjioOfferArtwork";
 
 export default function AjioCampaignOffers({ limit }: { limit?: number }) {
-  const offers = limit ? AJIO_CAMPAIGN_OFFERS.slice(0, limit) : AJIO_CAMPAIGN_OFFERS;
   const compact = typeof limit === "number";
+  const dateParts = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()).split("/");
+  const today = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+  const currentOffers = AJIO_CAMPAIGN_OFFERS.filter((offer) => today <= offer.validThrough);
+  const offers = limit ? currentOffers.slice(0, limit) : currentOffers;
+
+  if (!offers.length) return null;
 
   return <section className={`ajioCampaignOffers${compact ? " ajioCampaignOffers-compact" : ""}`} aria-labelledby={compact ? "ajio-offers-home-heading" : "ajio-offers-heading"}>
     <div className="productShelfHeading">
-      <div><span>AJIO ACE partner offers</span><h3 id={compact ? "ajio-offers-home-heading" : "ajio-offers-heading"}>AJIO Bestselling Offers</h3></div>
-      {compact && <a href="/deals?merchant=ajio#ajio-offers-heading">View all 22 <span aria-hidden="true">→</span></a>}
+      <div><span>AJIO ACE · All Stars Sale · 7–11 Oct</span><h3 id={compact ? "ajio-offers-home-heading" : "ajio-offers-heading"}>AJIO All Stars Sale Offers</h3></div>
+      {compact && <a href="/deals?merchant=ajio#ajio-offers-heading">View all {currentOffers.length} <span aria-hidden="true">→</span></a>}
     </div>
-    <p className="ajioCampaignIntro">Offers shared by AJIO Affiliate Support. Terms, sizes, stock and prices may change on AJIO.</p>
+    <p className="ajioCampaignIntro">Opening-hour and sale callouts supplied by AJIO Affiliate Support. Offers run through 11 October; terms, stock and prices may change on AJIO.</p>
     <div className={compact ? "productRail ajioOfferRail" : "ajioOfferGrid"}>
       {offers.map((offer) => <article className={compact ? "railProduct ajioOfferCard" : "ajioOfferCard"} key={offer.shortCode}>
         <AjioOfferArtwork title={offer.title} />

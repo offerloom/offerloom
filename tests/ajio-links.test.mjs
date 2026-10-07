@@ -9,6 +9,9 @@ test("AJIO links require the approved publisher and an approved product or campa
   assert.equal(isApprovedAjioLink(base.replace("1072", "999") + encodeURIComponent("https://www.ajio.com/bag/p/442710962_offwhite")), false);
   assert.equal(isApprovedAjioLink(base + encodeURIComponent("https://www.ajio.com/")), false);
   assert.equal(isApprovedAjioCampaignLink(base + encodeURIComponent("https://www.ajio.com/s/underrs399-240950")), true);
+  const aceGenerated = "https://ajiotrk.vibconnect.in/click?campaign_id=1&pub_id=1072&p1=offerloom-site&p2=underrs399-240950&url=https://www.ajio.com/s/underrs399-240950";
+  assert.equal(isApprovedAjioCampaignLink(aceGenerated), true);
+  assert.equal(isApprovedAjioCampaignLink(aceGenerated.replace("offerloom-site", "other-site")), false);
   assert.equal(isApprovedAjioCampaignLink(base + encodeURIComponent("https://www.ajio.com/s/other-offer-240950")), false);
   assert.equal(isApprovedAjioCampaignLink(base + encodeURIComponent("https://www.ajio.com/s/underrs399-240950?redirect=evil")), false);
   assert.equal(isApprovedAjioLink(base + encodeURIComponent("https://www.ajio.com/s/underrs399-240950")), false);
