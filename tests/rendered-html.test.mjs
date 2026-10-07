@@ -50,8 +50,8 @@ test("renders the OfferLoom shopping experience", async () => {
   assert.ok(html.indexOf("instagram.com/offer.loom") < html.indexOf("facebook.com/profile.php"));
   assert.match(html, /View all/);
   assert.match(html, /AJIO Fashion Deals/);
-  assert.match(html, /AJIO Bestselling Offers/);
-  assert.match(html, /AJIO ACE partner offers/);
+  assert.match(html, /AJIO All Stars Sale Offers/);
+  assert.match(html, /AJIO ACE · All Stars Sale · 7–11 Oct/);
   assert.match(html, /ajioOfferArt/);
   assert.match(html, /Denim edit|Style edit/);
   assert.match(html, /Shop AJIO offer/);
