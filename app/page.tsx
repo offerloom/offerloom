@@ -228,7 +228,7 @@ export default function Home() {
           <div className="frontDealsGrid">{categoryProducts.map((product) => <CatalogProductCard product={product} discount={discountOf(product)} key={`${product.merchant ?? "amazon"}:${product.id}`} />)}</div>
         </section>;
       })}</div>
-      {productShelves.filter((shelf) => shelf.key !== "todays_deals" && shelf.key !== "bestsellers").map((shelf) => <section className="productShelf" aria-labelledby={`${shelf.id}-heading`} key={shelf.key}>
+      {productShelves.filter((shelf) => shelf.key === "ajio").map((shelf) => <section className="productShelf" aria-labelledby={`${shelf.id}-heading`} key={shelf.key}>
         <div className="productShelfHeading"><div><span>{shelf.description}</span><h3 id={`${shelf.id}-heading`}>{shelf.title}</h3></div><a href={shelf.href}>View all <span aria-hidden="true">→</span></a></div>
         {shelf.products.length ? <div className="productRail" id={`${shelf.id}-rail`} role="region" aria-label={`${shelf.title} products`}>
           {shelf.products.map((product) => <ProductCard product={product} discount={discountOf(product)} key={`${product.merchant ?? "amazon"}:${product.id}`} />)}

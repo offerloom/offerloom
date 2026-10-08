@@ -37,6 +37,7 @@ test("renders the OfferLoom shopping experience", async () => {
   assert.doesNotMatch(html, /telegram\.me|youtube\.com\/@offerloom|x\.com\/offerloom/);
   assert.match(html, /instagram\.com\/offer\.loom/);
   assert.match(html, /Amazon New Releases/);
+  assert.equal((html.match(/Amazon New Releases/g) ?? []).length, 1);
   assert.match(html, /Amazon Bestsellers/);
   assert.match(html, /Today.s Deals/);
   assert.ok(html.indexOf("Deal of the Day") < html.indexOf("Today’s Deals"));

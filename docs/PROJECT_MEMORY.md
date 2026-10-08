@@ -238,3 +238,9 @@ Read this file and `README.md`/`AGENTS.md` before changing the project — `docs
 - Used the ACE dashboard's Tracking Link form with “Add Tracking Param” and “Add Deeplink” to generate tracking links for all 14 sale callouts supplied by AJIO. Links use `p1=offerloom-site`, `p2=<AJIO short code>`, and the exact `https://www.ajio.com/s/<short-code>` destination.
 - Updated the existing AJIO callout cards to show the 7–11 October 2026 All Stars Sale and automatically hide after 11 October. They remain labeled campaign offers, not product listings; the email/workbook did not include product-level ACE links or licensed product imagery. Do not scrape AJIO product cards or use its photos without approved data/image terms.
 - ACE terms shown in the account prohibit self-purchases, misleading promotions, impersonation, fake discounts and unauthorized coupons. Commission rates remain subject to the active terms and order qualification.
+
+## Homepage duplicate New Releases section — 8 October 2026
+
+- Removed the lower-page duplicate Amazon New Releases shelf; its top homepage shelf and “View all” destination remain. Kept the lower AJIO shelf intact.
+- Added a rendered-homepage regression check requiring exactly one “Amazon New Releases” heading. Local production build and rendered-output tests passed.
+- Release path: this change is intended for `main` so `.github/workflows/deploy.yml` performs the Worker deployment. Record the merged commit and workflow result here after live verification.
