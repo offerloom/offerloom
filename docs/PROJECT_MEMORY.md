@@ -243,4 +243,4 @@ Read this file and `README.md`/`AGENTS.md` before changing the project — `docs
 
 - Removed the lower-page duplicate Amazon New Releases shelf; its top homepage shelf and “View all” destination remain. Kept the lower AJIO shelf intact.
 - Added a rendered-homepage regression check requiring exactly one “Amazon New Releases” heading. Local production build and rendered-output tests passed.
-- Release path: this change is intended for `main` so `.github/workflows/deploy.yml` performs the Worker deployment. Record the merged commit and workflow result here after live verification.
+- Merged to `main` as `036fa23` (PR #30). Cloudflare deployment workflow [37782453079](https://github.com/offerloom/offerloom/actions/runs/37782453079) succeeded on 8 October 2026. Live homepage returned HTTP 200 and exactly one `Amazon New Releases` heading.
