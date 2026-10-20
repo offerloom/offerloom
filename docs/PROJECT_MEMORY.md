@@ -1,6 +1,14 @@
 # OfferLoom Project Memory
 
-Updated: 6 October 2026
+Updated: 20 October 2026
+
+## AJIO cloud collector — 20 October 2026
+
+- Owner explicitly authorised (20 Oct 2026, in chat) automatic AJIO deal discovery from AJIO's own search API, showing AJIO product photos, and building each product's ACE deep link in code. This supersedes the earlier AJIO notes below that required manual selection, dashboard-generated links and confirmed image rights.
+- `scripts/ajio-collector.mjs` runs as the `ajio` job in `.github/workflows/cloud-collector.yml` (same schedule/`CLOUD_COLLECTOR_ENABLED` gate as Flipkart). It opens `ajio.com` in Playwright, then calls `/api/search` (10 fashion queries, AJIO's "50% and above" discount facet, relevance order) and `/api/p/{code}` from inside the page, with 3-second pauses. New products need ≥40% off, in stock, an `assets.ajio.com` image and (when ≥10 ratings) ≥3.5 stars; up to 12 new and 40 refreshed per run.
+- New listings get `https://ajiotrk.vibconnect.in/click?campaign_id=1&pub_id=1072&p1=offerloom-site&p2=<style id>&url=<product URL>`, which `isApprovedAjioLink()` accepts. Existing listings keep their stored affiliate URL. Owner should confirm in ACE reports that commission is credited for these links.
+- A 403/429 or access challenge stops the run and publishes nothing (`summary.blocked`). Earlier standalone-Chromium attempts at AJIO pages got 403, so the first GitHub probe run will show whether runners are blocked; do not work around a block.
+- Strict cross-store match (same brand + ≥75% title overlap, `matchesProduct`) attaches an AJIO listing to an existing Amazon/Flipkart product for price comparison.
 
 ## Homepage shelf order and social follow links — 6 October 2026
 
