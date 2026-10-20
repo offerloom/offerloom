@@ -157,6 +157,12 @@ async function main() {
     existing = new Map((await rows("SELECT ml.merchant_product_id AS id,p.id AS productId,p.status,ml.status AS listingStatus FROM merchant_listings ml JOIN products p ON p.id=ml.product_id WHERE ml.merchant='flipkart' ORDER BY COALESCE(ml.last_checked_at,'') ASC")).map((r) => [r.id, r]));
     amazonProducts = await rows("SELECT p.id,p.name,c.name AS category FROM products p JOIN categories c ON c.id=p.category_id JOIN merchant_listings ml ON ml.product_id=p.id AND ml.merchant='amazon' AND ml.status='active' WHERE p.status='published' AND NOT EXISTS (SELECT 1 FROM merchant_listings f WHERE f.product_id=p.id AND f.merchant='flipkart')");
   }
+  // Probe runs don't read the database; check matching against a few real catalogue titles instead.
+  if (probe) amazonProducts = [
+    { id: "probe-casio", name: "Casio Vintage A-158WA-1Q Digital Grey Dial Unisex Watch Silver Metal Strap (D011)", category: "Electronics" },
+    { id: "probe-rockerz", name: "boAt Rockerz 480, RGB LEDs, 6 Light Modes, 40mm Drivers, Beast Mode", category: "Electronics" },
+    { id: "probe-noise", name: "Noise Twist Go Round dial Smartwatch with BT Calling, 1.39\" Display", category: "Electronics" },
+  ];
   const browser = await chromium.launch({ headless: true });
   const deals = [], failures = [], discoveryCounts = {}, matched = [];
   try {
@@ -210,7 +216,7 @@ async function main() {
     const taken = new Set([...existing.keys(), ...deals.map((d) => d.merchantProductId)]);
     const day = Math.floor(started / 86400000);
     const queue = amazonProducts.filter((p) => p.category !== "Books")
-      .sort((a, b) => ((hash(a.id) + day) % 997) - ((hash(b.id) + day) % 997)).slice(0, probe ? 2 : MATCH_PER_RUN);
+      .sort((a, b) => ((hash(a.id) + day) % 997) - ((hash(b.id) + day) % 997)).slice(0, probe ? 3 : MATCH_PER_RUN);
     for (const amazon of queue) {
       if (Date.now() - started > BUDGET_MS) break;
       try {
