@@ -111,8 +111,9 @@ async function d1(args) {
     return stdout;
   } catch { throw new Error("Cloudflare D1 command failed; check runner credentials and D1 access"); }
 }
+// Products also sold by another store come first so their price comparisons stay current; then oldest-checked.
 async function readCatalogue() {
-  const result = JSON.parse(await d1(["--json", "--command", "SELECT ml.merchant_product_id AS asin,p.id AS productId,p.status,ml.status AS listingStatus,ml.last_checked_at AS checkedAt FROM merchant_listings ml JOIN products p ON p.id=ml.product_id WHERE ml.merchant='amazon' ORDER BY COALESCE(ml.last_checked_at,'') ASC"]));
+  const result = JSON.parse(await d1(["--json", "--command", "SELECT ml.merchant_product_id AS asin,p.id AS productId,p.status,ml.status AS listingStatus,ml.last_checked_at AS checkedAt FROM merchant_listings ml JOIN products p ON p.id=ml.product_id WHERE ml.merchant='amazon' ORDER BY CASE WHEN EXISTS (SELECT 1 FROM merchant_listings o WHERE o.product_id=ml.product_id AND o.merchant<>'amazon' AND o.status='active') THEN 0 ELSE 1 END, COALESCE(ml.last_checked_at,'') ASC"]));
   return new Map(result[0].results.map((row) => [row.asin, row]));
 }
 async function activeMerchant() {
