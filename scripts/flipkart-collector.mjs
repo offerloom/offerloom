@@ -10,12 +10,16 @@ import { categorize } from "./browser-collector.mjs";
 
 // Discount-filtered Flipkart category listings (≥40% off), the same kind linked from flipkart.com/offers-store.
 const DISCOUNT = "p%5B%5D=facets.discount_range_v1%255B%255D%3D40%2525%2Bor%2Bmore";
+// Popular discounted listings feed Today's Deals + Bestsellers; newest-first listings feed New Releases.
+const POPULAR = ["todays_deals", "bestsellers"], NEWEST = ["new_releases"];
 export const SOURCES = [
-  `https://www.flipkart.com/audio-video/headset/pr?sid=0pm,fcn&${DISCOUNT}&sort=popularity`,
-  `https://www.flipkart.com/wearable-smart-devices/smart-watches/pr?sid=ajy,buh&${DISCOUNT}&sort=popularity`,
-  `https://www.flipkart.com/clothing-and-accessories/topwear/pr?sid=clo,ash&${DISCOUNT}&sort=popularity`,
-  `https://www.flipkart.com/home-kitchen/pr?sid=j9e&${DISCOUNT}&sort=popularity`,
-  `https://www.flipkart.com/beauty-and-grooming/pr?sid=g9b&${DISCOUNT}&sort=popularity`,
+  { url: `https://www.flipkart.com/audio-video/headset/pr?sid=0pm,fcn&${DISCOUNT}&sort=popularity`, tags: POPULAR },
+  { url: `https://www.flipkart.com/wearable-smart-devices/smart-watches/pr?sid=ajy,buh&${DISCOUNT}&sort=popularity`, tags: POPULAR },
+  { url: `https://www.flipkart.com/clothing-and-accessories/topwear/pr?sid=clo,ash&${DISCOUNT}&sort=popularity`, tags: POPULAR },
+  { url: `https://www.flipkart.com/home-kitchen/pr?sid=j9e&${DISCOUNT}&sort=popularity`, tags: POPULAR },
+  { url: `https://www.flipkart.com/beauty-and-grooming/pr?sid=g9b&${DISCOUNT}&sort=popularity`, tags: POPULAR },
+  { url: "https://www.flipkart.com/audio-video/headset/pr?sid=0pm,fcn&sort=recency_desc", tags: NEWEST },
+  { url: "https://www.flipkart.com/wearable-smart-devices/smart-watches/pr?sid=ajy,buh&sort=recency_desc", tags: NEWEST },
 ];
 const MAX_NEW = 10, MAX_REFRESH = 40, PAUSE_MS = 5000, BUDGET_MS = 15 * 60000;
 const IMAGE_HOSTS = /^rukmini(m\d)?\d?\.flixcart\.com$/;
@@ -118,7 +122,7 @@ export function publishSql(deals, existing, amazonProducts, now = new Date().toI
     }
     out.push(
       `INSERT INTO merchant_listings (id,product_id,merchant,merchant_product_id,source_url,affiliate_url,status,last_checked_at,created_at,updated_at) VALUES (${quote(`flipkart-${deal.merchantProductId}`)},${quote(productId)},'flipkart',${quote(deal.merchantProductId)},${quote(deal.sourceUrl)},${quote(deal.sourceUrl)},'active',${quote(deal.checkedAt)},${quote(now)},${quote(now)}) ON CONFLICT(merchant,merchant_product_id) DO UPDATE SET source_url=excluded.source_url,affiliate_url=excluded.affiliate_url,last_checked_at=excluded.last_checked_at,updated_at=excluded.updated_at WHERE merchant_listings.status='active';`,
-      `INSERT INTO collected_deals (id,payload,approved_payload,product_id,status,updated_at) VALUES (${quote(`flipkart-${deal.merchantProductId}`)},${payload},${payload},${quote(productId)},'approved',${quote(now)}) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,approved_payload=excluded.approved_payload,product_id=excluded.product_id,status='approved',updated_at=excluded.updated_at;`,
+      `INSERT INTO collected_deals (id,payload,approved_payload,product_id,status,updated_at) VALUES (${quote(`flipkart-${deal.merchantProductId}`)},${payload},${payload},${quote(productId)},'approved',${quote(now)}) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,approved_payload=CASE WHEN json_array_length(json_extract(excluded.approved_payload,'$.discoverySources'))>0 THEN excluded.approved_payload ELSE json_set(excluded.approved_payload,'$.discoverySources',json(COALESCE(json_extract(collected_deals.approved_payload,'$.discoverySources'),'[]'))) END,product_id=excluded.product_id,status='approved',updated_at=excluded.updated_at;`,
     );
   }
   return out.join("\n");
@@ -157,18 +161,24 @@ async function main() {
       return ["media", "font"].includes(request.resourceType()) ? route.abort() : route.continue();
     });
     const found = new Map();
-    for (const url of SOURCES) {
+    const tagsById = new Map();
+    for (const { url, tags } of SOURCES) {
       try {
         const products = await discover(page, url);
-        discoveryCounts[url.split("/pr?")[0].replace("https://www.flipkart.com/", "")] = products.length;
-        for (const product of products.slice(0, 15)) found.set(product.id, product);
+        discoveryCounts[`${url.split("/pr?")[0].replace("https://www.flipkart.com/", "")}${tags === NEWEST ? " (new)" : ""}`] = products.length;
+        for (const product of products.slice(0, tags === NEWEST ? 8 : 15)) {
+          found.set(product.id, product);
+          tagsById.set(product.id, [...new Set([...(tagsById.get(product.id) ?? []), ...tags])]);
+        }
       } catch (error) {
         if (/Access challenge/.test(error.message)) throw error;
         note("warning", `Discovery source skipped: ${error.message}`);
       }
       await pause(PAUSE_MS);
     }
-    const newOnes = [...found.values()].filter((p) => !existing.has(p.id)).slice(0, probe ? 2 : MAX_NEW * 2);
+    const unseen = [...found.values()].filter((p) => !existing.has(p.id));
+    const newest = unseen.filter((p) => (tagsById.get(p.id) ?? []).includes("new_releases")).slice(0, 6);
+    const newOnes = [...new Map([...newest, ...unseen].map((p) => [p.id, p])).values()].slice(0, probe ? 2 : MAX_NEW * 2);
     const refresh = [...existing.entries()].filter(([, r]) => r.status === "published" && r.listingStatus === "active").slice(0, probe ? 0 : MAX_REFRESH)
       .map(([id]) => found.get(id) ?? { id, url: null }).filter((p) => p.url);
     // Refresh rows we know the canonical URL for via their stored source_url.
@@ -181,7 +191,9 @@ async function main() {
       try {
         const deal = await extract(page, product);
         const isNew = !existing.has(product.id);
-        if (!isNew || (deal.mrp && 1 - deal.price / deal.mrp >= 0.1)) deals.push({ ...deal, discoverySources: ["todays_deals"] });
+        const discoverySources = tagsById.get(product.id) ?? [];
+        // New listings need ≥10% off, except genuinely new releases (as with Amazon).
+        if (!isNew || discoverySources.includes("new_releases") || (deal.mrp && 1 - deal.price / deal.mrp >= 0.1)) deals.push({ ...deal, discoverySources });
       } catch (error) {
         if (/Access challenge/.test(error.message)) throw error;
         failures.push({ id: product.id, reason: error.message.slice(0, 80) });
@@ -189,7 +201,10 @@ async function main() {
       await pause(PAUSE_MS);
     }
   } finally { await browser.close(); }
-  const additions = deals.filter((d) => !existing.has(d.merchantProductId)).sort((a, b) => (b.mrp ? 1 - b.price / b.mrp : 0) - (a.mrp ? 1 - a.price / a.mrp : 0)).slice(0, MAX_NEW);
+  const discount = (d) => (d.mrp ? 1 - d.price / d.mrp : 0);
+  const fresh = deals.filter((d) => !existing.has(d.merchantProductId)).sort((a, b) => discount(b) - discount(a));
+  const reservedNew = fresh.filter((d) => d.discoverySources.includes("new_releases")).slice(0, 3);
+  const additions = [...new Map([...reservedNew, ...fresh].map((d) => [d.merchantProductId, d])).values()].slice(0, MAX_NEW);
   const refreshed = deals.filter((d) => existing.has(d.merchantProductId));
   const summary = { mode: probe ? "probe" : "publish", window, discoveryCounts, validated: deals.length, added: additions.length, refreshed: refreshed.length, failed: failures.length, sample: deals.slice(0, 3).map((d) => `${d.name.slice(0, 50)} ₹${d.price / 100} mrp ₹${(d.mrp ?? 0) / 100}`) };
   note("notice", JSON.stringify(summary));

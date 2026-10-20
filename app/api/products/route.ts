@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const merchantClause = merchantFilter === "ajio" ? "AND ml.merchant = 'ajio'" : "";
   const result = await env.DB.prepare(`
     SELECT p.id, p.slug, p.brand, p.image_url AS imageUrl, p.model_number AS modelNumber, p.name, p.summary, p.specs_json AS specsJson,
-      c.name AS category, ml.id AS listingId, ml.merchant, m.name AS merchantName, cd.approved_payload AS approvedPayload
+      c.name AS category, p.published_at AS publishedAt, ml.id AS listingId, ml.merchant, m.name AS merchantName, cd.approved_payload AS approvedPayload
     FROM products p
     JOIN categories c ON c.id = p.category_id
     JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant IN ('amazon', 'ajio', 'flipkart') AND ml.status = 'active'
@@ -32,15 +32,19 @@ export async function GET(request: Request) {
     merchant: row.merchant,
     outboundPath: `/go/${row.merchant}/${row.listingId}`,
     detailPath: `/products/${row.slug}`,
+    addedAt: row.publishedAt,
   }));
   // One card per product: keep the listing with the lowest current price, and record every store.
-  const byProduct = new Map<string, (typeof products)[number] & { stores: string[] }>();
+  type StoreOffer = { store: string; price: number | null };
+  const byProduct = new Map<string, (typeof products)[number] & { stores: string[]; storeOffers: StoreOffer[] }>();
   for (const product of products) {
+    const storeOffer = { store: product.merchantName as string, price: product.offer?.price ?? null };
     const current = byProduct.get(product.id as string);
-    if (!current) { byProduct.set(product.id as string, { ...product, stores: [product.merchantName as string] }); continue; }
-    current.stores.push(product.merchantName as string);
+    if (!current) { byProduct.set(product.id as string, { ...product, stores: [storeOffer.store], storeOffers: [storeOffer] }); continue; }
+    current.stores.push(storeOffer.store);
+    current.storeOffers.push(storeOffer);
     const better = product.offer && (!current.offer || product.offer.price < current.offer.price);
-    if (better) Object.assign(current, { ...product, stores: current.stores, collectionSources: [...new Set([...current.collectionSources, ...product.collectionSources])] });
+    if (better) Object.assign(current, { ...product, stores: current.stores, storeOffers: current.storeOffers, collectionSources: [...new Set([...current.collectionSources, ...product.collectionSources])] });
   }
   return Response.json({ products: [...byProduct.values()] }, { headers: { "Cache-Control": "no-store" } });
 }

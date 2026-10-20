@@ -336,3 +336,21 @@ main.homePage{padding-bottom:calc(58px + env(safe-area-inset-bottom))}
 .ajioCampaignOffers-compact .ajioOfferArt{min-height:103px;margin:-10px -10px 3px}
 @media(max-width:680px){.ajioOfferGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ajioOfferCard{padding:11px}.ajioOfferArt{min-height:94px;margin:-11px -11px 3px}.ajioOfferCard h4{font-size:14px}.ajioOfferRail .ajioOfferCard{flex-basis:208px}}
 @media(prefers-reduced-motion:reduce){.ajioOfferCard{transition:none}.ajioOfferCard:hover{transform:none}}
+
+/* Store-by-store prices on product cards (Amazon / Flipkart / AJIO) */
+.storePrices{list-style:none;margin:6px 0 4px;padding:6px 8px;border:1px solid var(--line);border-radius:10px;background:var(--mist);display:grid;gap:3px}
+.storePrices li{display:flex;align-items:center;gap:6px;font-size:12px;color:#4b5563}
+.storePrices li span{flex:1}
+.storePrices li b{color:var(--ink);font-size:12px}
+.storePrices li.isBest b{color:var(--green)}
+.storePrices li em{font-style:normal;font-size:10px;font-weight:700;color:#fff;background:var(--green);border-radius:999px;padding:1px 6px}
+
+/* Trends You May Like: category tiles built from live deals */
+.trendsSection{margin:28px 0}
+.trendGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.trendTile{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);cursor:pointer;text-align:left;box-shadow:0 8px 22px #20263d0d;transition:transform .2s,box-shadow .2s}
+.trendTile:hover{transform:translateY(-2px);box-shadow:0 12px 26px #20263d1a}
+.trendTile img{width:100%;aspect-ratio:1;object-fit:contain;background:var(--mist);border-radius:10px}
+.trendTile strong{font-size:14px}
+.trendTile small{font-size:12px;color:var(--green);font-weight:700}
+@media (max-width:600px){.trendGrid{grid-template-columns:repeat(2,1fr)}}
