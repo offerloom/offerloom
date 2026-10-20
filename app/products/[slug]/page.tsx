@@ -58,7 +58,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug:s
   const supportedListings = listings.results.filter((listing) => listing.merchant in MERCHANT_LABELS);
   const offers = supportedListings.map((listing) => ({ listing, offer: publicOffer(listing.approvedPayload) }));
   const cheapest = Math.min(...offers.map(({ offer }) => offer?.price ?? Infinity));
-  const missingStores = (["Amazon", "Flipkart", "AJIO"] as const).filter((label) => !supportedListings.some((listing) => MERCHANT_LABELS[listing.merchant] === label));
 
   return <main className={styles.shell}>
     <header className={styles.header}><a className={styles.brand} href="/">Offer<span>Loom</span></a><a href="/#catalog">Back to catalogue</a></header>
@@ -78,7 +77,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug:s
       <div className={styles.table}>
         {offers.sort((a, b) => (a.offer?.price ?? Infinity) - (b.offer?.price ?? Infinity)).map(({ listing, offer }) => { const label = MERCHANT_LABELS[listing.merchant]; const best = offers.length > 1 && offer?.price === cheapest; return <div className={styles.row} key={listing.id}><div><strong>{label}{best ? " · Best price" : ""}</strong><small>{offer ? `Price checked ${formatDate(offer.checkedAt)}` : "Confirm current price on merchant"}</small></div><b>{offer ? `₹${(offer.price/100).toLocaleString("en-IN")}` : "Check current price"}</b><a href={`/go/${listing.merchant}/${listing.id}`} target="_blank" rel="sponsored noopener noreferrer">View on {label} ↗</a></div>; })}
         {supportedListings.length === 0 && <p>No active offers available.</p>}
-        {missingStores.map((merchant) => <div className={styles.row} key={merchant}><div><strong>{merchant}</strong><small>No matching offer found</small></div><b>Not available</b><button disabled>Not listed</button></div>)}
       </div>
       <p className={styles.notice}>OfferLoom does not sell this product or handle payment, delivery, cancellation, return or refund. Merchant prices can change after you leave OfferLoom.</p>
     </section>
