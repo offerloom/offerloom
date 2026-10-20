@@ -24,15 +24,14 @@ export default function Home() {
   const [slide, setSlide] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [managedProducts, setManagedProducts] = useState<Product[]>([]);
-  const [ajioProducts, setAjioProducts] = useState<Product[]>([]);
   const [catalogState, setCatalogState] = useState("loading");
   const categoryTabsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
-    Promise.allSettled(["/api/products", "/api/products?merchant=ajio"].map((url) =>
+    Promise.allSettled(["/api/products"].map((url) =>
       fetch(url, { cache: "no-store" }).then((response) => response.ok ? response.json() : Promise.reject())
-    )).then(([recentResult, ajioResult]) => {
+    )).then(([recentResult]) => {
       if (!active) return;
       if (recentResult.status === "fulfilled") {
         setCatalogState("ready");
@@ -52,22 +51,6 @@ export default function Home() {
         })));
       } else {
         setCatalogState("error");
-      }
-      if (ajioResult.status === "fulfilled") {
-        setAjioProducts(ajioResult.value.products.map((product: ManagedProduct) => ({
-          imageUrl: product.imageUrl,
-          offer: product.offer,
-          merchant: product.merchant,
-          merchantName: product.merchantName,
-          collectionSources: product.collectionSources ?? [],
-          id: product.id,
-          name: product.name,
-          category: product.category,
-          summary: product.summary,
-          specs: product.specs,
-          listings: [{ store: product.merchantName, affiliateUrl: product.outboundPath }],
-          detailPath: product.detailPath,
-        })));
       }
     });
     return () => { active = false; };
@@ -91,17 +74,41 @@ export default function Home() {
     .sort((a, b) => discountOf(b) - discountOf(a))[0];
   const productShelves = [
     { key: "todays_deals", title: "Today’s Deals", description: "Current deals checked by OfferLoom", id: "todays-deals", href: "/deals?collection=todays_deals" },
-    { key: "new_releases", title: "Amazon New Releases", description: "Recently released finds", id: "new-releases", href: "/deals?collection=new_releases" },
-    { key: "bestsellers", title: "Amazon Bestsellers", description: "Popular picks from bestseller lists", id: "bestsellers", href: "/deals?collection=bestsellers" },
-    { key: "ajio", title: "AJIO Fashion Deals", description: "Fashion picks with approved AJIO ACE links", id: "ajio-deals", href: "/deals?merchant=ajio" },
+    { key: "new_releases", title: "New Releases", description: "Recently released finds", id: "new-releases", href: "/deals?collection=new_releases" },
+    { key: "bestsellers", title: "Bestsellers", description: "Popular picks from bestseller lists", id: "bestsellers", href: "/deals?collection=bestsellers" },
   ].map((shelf) => ({
     ...shelf,
-    products: (shelf.key === "ajio" ? ajioProducts : frontProducts)
-      .filter((product) => shelf.key === "ajio"
-        ? Boolean(product.imageUrl)
-        : product.collectionSources?.includes(shelf.key))
+    products: frontProducts
+      .filter((product) => product.collectionSources?.includes(shelf.key))
       .slice(0, 16),
   }));
+
+  // Advance each product shelf by one card every 5 seconds, looping back to the start.
+  // Pauses while the shopper hovers, touches or focuses a shelf, and respects reduced motion.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const rails = Array.from(document.querySelectorAll<HTMLElement>("[data-autoscroll]"));
+    if (!rails.length) return;
+    const paused = new WeakSet<HTMLElement>();
+    const cleanups = rails.map((rail) => {
+      const pause = () => paused.add(rail);
+      const resume = () => paused.delete(rail);
+      const events: [string, () => void][] = [["mouseenter", pause], ["mouseleave", resume], ["focusin", pause], ["focusout", resume], ["touchstart", pause], ["touchend", resume]];
+      events.forEach(([name, handler]) => rail.addEventListener(name, handler, { passive: true }));
+      return () => events.forEach(([name, handler]) => rail.removeEventListener(name, handler));
+    });
+    const timer = window.setInterval(() => {
+      for (const rail of rails) {
+        if (paused.has(rail) || rail.scrollWidth <= rail.clientWidth + 4) continue;
+        const card = rail.firstElementChild as HTMLElement | null;
+        const gap = parseFloat(getComputedStyle(rail).columnGap) || 0;
+        const step = (card?.offsetWidth ?? rail.clientWidth) + gap;
+        const atEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 4;
+        rail.scrollTo({ left: atEnd ? 0 : rail.scrollLeft + step, behavior: "smooth" });
+      }
+    }, 5000);
+    return () => { window.clearInterval(timer); cleanups.forEach((cleanup) => cleanup()); };
+  }, [catalogState, managedProducts.length, query]);
 
   useEffect(() => {
     if (!playing) return;
@@ -209,9 +216,9 @@ export default function Home() {
         <div className="dealOfTheDayCopy"><span className="dealOfTheDayEyebrow">TODAY’S TOP VERIFIED DISCOUNT · {Math.round(discountOf(dealOfTheDay) * 100)}% OFF</span><h2 id="deal-of-the-day-heading">Deal of the Day</h2><p>{dealOfTheDay.name}</p><div className="dealOfTheDayPrice"><strong>₹{(dealOfTheDay.offer!.price / 100).toLocaleString("en-IN")}</strong><del>₹{(dealOfTheDay.offer!.mrp! / 100).toLocaleString("en-IN")}</del></div><small>Checked {formatCheckedAt(dealOfTheDay.offer!.checkedAt)} · Confirm today’s price with the seller.</small><a href={dealOfTheDay.listings[0]?.affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">Shop this deal →</a></div>
         {dealOfTheDay.imageUrl && <Link href={dealOfTheDay.detailPath!} className="dealOfTheDayImage"><img src={dealOfTheDay.imageUrl} alt={dealOfTheDay.name} loading="eager"/><span>{Math.round(discountOf(dealOfTheDay) * 100)}% OFF</span></Link>}
       </section>}
-      {productShelves.filter((shelf) => shelf.key === "todays_deals" || shelf.key === "new_releases" || shelf.key === "bestsellers").map((shelf) => <section className="productShelf" aria-labelledby={`${shelf.id}-heading`} key={shelf.key}>
+      {productShelves.map((shelf) => <section className="productShelf" aria-labelledby={`${shelf.id}-heading`} key={shelf.key}>
         <div className="productShelfHeading"><div><span>{shelf.description}</span><h2 id={`${shelf.id}-heading`}>{shelf.title}</h2></div><a href={shelf.href}>View all <span aria-hidden="true">→</span></a></div>
-        {shelf.products.length ? <div className="productRail" id={`${shelf.id}-rail`} role="region" aria-label={`${shelf.title} products`}>
+        {shelf.products.length ? <div className="productRail" data-autoscroll id={`${shelf.id}-rail`} role="region" aria-label={`${shelf.title} products`}>
           {shelf.products.map((product) => <ProductCard product={product} discount={discountOf(product)} key={`${product.merchant ?? "amazon"}:${product.id}`} />)}
         </div> : <p className="shelfEmpty">No validated products in this collection yet. Check back after the next update.</p>}
       </section>)}
@@ -228,12 +235,6 @@ export default function Home() {
           <div className="frontDealsGrid">{categoryProducts.map((product) => <CatalogProductCard product={product} discount={discountOf(product)} key={`${product.merchant ?? "amazon"}:${product.id}`} />)}</div>
         </section>;
       })}</div>
-      {productShelves.filter((shelf) => shelf.key === "ajio").map((shelf) => <section className="productShelf" aria-labelledby={`${shelf.id}-heading`} key={shelf.key}>
-        <div className="productShelfHeading"><div><span>{shelf.description}</span><h3 id={`${shelf.id}-heading`}>{shelf.title}</h3></div><a href={shelf.href}>View all <span aria-hidden="true">→</span></a></div>
-        {shelf.products.length ? <div className="productRail" id={`${shelf.id}-rail`} role="region" aria-label={`${shelf.title} products`}>
-          {shelf.products.map((product) => <ProductCard product={product} discount={discountOf(product)} key={`${product.merchant ?? "amazon"}:${product.id}`} />)}
-        </div> : <p className="shelfEmpty">No validated products in this collection yet. Check back after the next update.</p>}
-      </section>)}
       <AjioCampaignOffers limit={6} />
       <p className="disclosure"><strong>Affiliate and price notice:</strong> OfferLoom may earn a commission when you use eligible merchant links, at no extra cost to you. As an Amazon Associate I earn from qualifying purchases. Prices and availability can change and are confirmed on the merchant website. OfferLoom does not handle checkout, payment, shipping, cancellations, returns or refunds.</p>
     </section>
