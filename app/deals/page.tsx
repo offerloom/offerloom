@@ -46,15 +46,21 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
       ml.id AS listingId, ml.merchant, m.name AS merchantName, cd.approved_payload AS approvedPayload
     FROM products p
     JOIN categories c ON c.id = p.category_id
-    JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant IN ('amazon', 'ajio') AND ml.status = 'active'
+    JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant IN ('amazon', 'ajio', 'flipkart') AND ml.status = 'active'
     JOIN merchants m ON m.id = ml.merchant AND m.status = 'active'
     LEFT JOIN collected_deals cd ON cd.product_id = p.id AND cd.id = ml.merchant || '-' || ml.merchant_product_id
     WHERE p.status = 'published' AND p.image_url IS NOT NULL
     ORDER BY p.published_at DESC
   `).all<Row>();
 
-  const deals = (result.results ?? [])
-    .map((row) => ({ row, offer: publicOffer(row.approvedPayload) }))
+  // A product sold by several stores appears once, at its lowest current price.
+  const cheapestPerProduct = new Map<string, { row: Row; offer: ReturnType<typeof publicOffer> }>();
+  for (const row of result.results ?? []) {
+    const offer = publicOffer(row.approvedPayload);
+    const current = cheapestPerProduct.get(row.id);
+    if (!current || (offer && (!current.offer || offer.price < current.offer.price))) cheapestPerProduct.set(row.id, { row, offer });
+  }
+  const deals = [...cheapestPerProduct.values()]
     .filter(({ row }) => matchesDealListing(row, { merchant: merchantFilter, collection: collectionKey }))
     .sort((a, b) => {
       const discount = (offer: ReturnType<typeof publicOffer>) => offer?.mrp ? 1 - offer.price / offer.mrp : -1;

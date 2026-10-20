@@ -55,7 +55,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug:s
     ORDER BY merchant
   `).bind(product.id).all<ListingRow>();
   const specs = safeSpecs(product.specsJson);
-  const supportedListings = listings.results.filter((listing) => ["amazon", "ajio"].includes(listing.merchant));
+  const supportedListings = listings.results.filter((listing) => listing.merchant in MERCHANT_LABELS);
+  const offers = supportedListings.map((listing) => ({ listing, offer: publicOffer(listing.approvedPayload) }));
+  const cheapest = Math.min(...offers.map(({ offer }) => offer?.price ?? Infinity));
+  const missingStores = (["Amazon", "Flipkart", "AJIO"] as const).filter((label) => !supportedListings.some((listing) => MERCHANT_LABELS[listing.merchant] === label));
 
   return <main className={styles.shell}>
     <header className={styles.header}><a className={styles.brand} href="/">Offer<span>Loom</span></a><a href="/#catalog">Back to catalogue</a></header>
@@ -73,15 +76,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug:s
     <section className={styles.offers}>
       <div className={styles.title}><div><span>MERCHANT COMPARISON</span><h2>Choose where to shop</h2></div><p>Price and availability are confirmed on the merchant website.</p></div>
       <div className={styles.table}>
-        {supportedListings.map((listing) => { const offer = publicOffer(listing.approvedPayload); return <div className={styles.row} key={listing.id}><div><strong>{listing.merchant === "ajio" ? "AJIO" : "Amazon"}</strong><small>{offer ? `Price checked ${formatDate(offer.checkedAt)}` : "Confirm current price on merchant"}</small></div><b>{offer ? `₹${(offer.price/100).toLocaleString("en-IN")}` : "Check current price"}</b><a href={`/go/${listing.merchant}/${listing.id}`} target="_blank" rel="sponsored noopener noreferrer">View on {listing.merchant === "ajio" ? "AJIO" : "Amazon"} ↗</a></div>; })}
+        {offers.sort((a, b) => (a.offer?.price ?? Infinity) - (b.offer?.price ?? Infinity)).map(({ listing, offer }) => { const label = MERCHANT_LABELS[listing.merchant]; const best = offers.length > 1 && offer?.price === cheapest; return <div className={styles.row} key={listing.id}><div><strong>{label}{best ? " · Best price" : ""}</strong><small>{offer ? `Price checked ${formatDate(offer.checkedAt)}` : "Confirm current price on merchant"}</small></div><b>{offer ? `₹${(offer.price/100).toLocaleString("en-IN")}` : "Check current price"}</b><a href={`/go/${listing.merchant}/${listing.id}`} target="_blank" rel="sponsored noopener noreferrer">View on {label} ↗</a></div>; })}
         {supportedListings.length === 0 && <p>No active offers available.</p>}
-        {(["Flipkart","Croma","Reliance Digital"] as const).map((merchant) => <div className={styles.row} key={merchant}><div><strong>{merchant}</strong><small>Partner feed not connected</small></div><b>Not available</b><button disabled>Coming soon</button></div>)}
+        {missingStores.map((merchant) => <div className={styles.row} key={merchant}><div><strong>{merchant}</strong><small>No matching offer found</small></div><b>Not available</b><button disabled>Not listed</button></div>)}
       </div>
       <p className={styles.notice}>OfferLoom does not sell this product or handle payment, delivery, cancellation, return or refund. Merchant prices can change after you leave OfferLoom.</p>
     </section>
     <SiteFooter />
   </main>;
 }
+
+const MERCHANT_LABELS: Record<string, string> = { amazon: "Amazon", flipkart: "Flipkart", ajio: "AJIO" };
 
 function safeSpecs(value:string):string[] { try { const parsed=JSON.parse(value); return Array.isArray(parsed)?parsed.filter((item):item is string=>typeof item==="string"):[]; } catch { return []; } }
 function formatDate(value:string):string { return new Intl.DateTimeFormat("en-IN",{dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Kolkata"}).format(new Date(value)); }

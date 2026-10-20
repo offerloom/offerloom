@@ -17,7 +17,7 @@ export async function GET() {
     SELECT p.id, p.slug, p.brand, p.image_url AS imageUrl, p.name, p.summary,
       ml.merchant, cd.approved_payload AS approvedPayload
     FROM products p
-    JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant IN ('amazon', 'ajio') AND ml.status = 'active'
+    JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant IN ('amazon', 'ajio', 'flipkart') AND ml.status = 'active'
     LEFT JOIN collected_deals cd ON cd.product_id = p.id AND cd.id = ml.merchant || '-' || ml.merchant_product_id
     WHERE p.status = 'published' AND p.image_url IS NOT NULL
   `).all<{ id: string; slug: string; brand: string | null; imageUrl: string; name: string; summary: string; merchant: string; approvedPayload: string | null }>();
