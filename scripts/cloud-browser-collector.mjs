@@ -155,7 +155,17 @@ async function main() {
     for (const url of probe ? [TODAY_DEALS, NEW_RELEASES, SOURCES[2]] : SOURCES) {
       const source = url === TODAY_DEALS ? "todays_deals" : url === NEW_RELEASES ? "new_releases" : "bestsellers";
       console.log(`Discovering ${url === TODAY_DEALS ? "Today’s Deals" : url === NEW_RELEASES ? "Amazon New Releases" : url}`);
-      const found = await withRetry(() => discover(page, url), { maxAttempts: 2, retryable: (message) => /Discovery cards unavailable|Timeout|net::/.test(message) });
+      let found;
+      try {
+        found = await withRetry(() => discover(page, url), { maxAttempts: 2, retryable: (message) => /Discovery cards unavailable|Timeout|net::/.test(message) });
+      } catch (error) {
+        // A seasonal redirect (e.g. Today's Deals -> /events/<sale>) or an empty page on one
+        // source should not cancel the whole run; access challenges still stop everything.
+        if (!/Unexpected discovery redirect|Discovery cards unavailable|Discovery unavailable|no product links/.test(error.message)) throw error;
+        console.log(`::warning title=Discovery source skipped::${error.message.replace(/[\r\n%]/g, " ").slice(0, 300)}`);
+        discoveryCounts[url] = 0;
+        continue;
+      }
       for (const candidate of found.slice(0, 20)) {
         const sources = provenance.get(candidate) ?? [];
         if (!sources.includes(source)) sources.push(source);
