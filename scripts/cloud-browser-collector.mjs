@@ -39,7 +39,7 @@ export async function discover(page, url) {
   const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
   if (!response?.ok()) throw new Error(`Discovery unavailable (${response?.status() ?? "no response"})`);
   const destination = new URL(page.url());
-  if (destination.hostname !== "www.amazon.in" || !(url === TODAY_DEALS ? /^\/(?:gp\/goldbox|deals)(?:\/|$)/.test(destination.pathname) : url === NEW_RELEASES ? destination.pathname.startsWith("/gp/new-releases") : destination.pathname.startsWith("/gp/bestsellers"))) throw new Error("Unexpected discovery redirect");
+  if (destination.hostname !== "www.amazon.in" || !(url === TODAY_DEALS ? /^\/(?:gp\/goldbox|deals)(?:\/|$)/.test(destination.pathname) : url === NEW_RELEASES ? destination.pathname.startsWith("/gp/new-releases") : destination.pathname.startsWith("/gp/bestsellers"))) throw new Error(`Unexpected discovery redirect: ${url} -> ${destination.hostname}${destination.pathname}`);
   if (challenge.test((await page.locator("body").innerText()).slice(0, 12000))) throw new Error("Access challenge; cloud run stopped");
   const cards = page.locator(url === TODAY_DEALS
     ? '#slots-container [data-testid="product-card"] a[href*="/dp/"], #slots-container [data-testid="deal-card"] a[href*="/dp/"]'
@@ -213,5 +213,6 @@ async function main() {
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main().catch((error) => {
   console.error(error.message.startsWith("Cloudflare") || /Discovery|discovery|cloud|publication|Amazon merchant/.test(error.message) ? error.message : "Cloud collection failed; no successful run recorded");
+  if (process.env.GITHUB_ACTIONS) console.log(`::error title=Cloud collector::${String(error.message).replace(/[\r\n%]/g, " ").slice(0, 400)}`);
   process.exitCode = 1;
 });
