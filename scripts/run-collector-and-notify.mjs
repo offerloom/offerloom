@@ -8,8 +8,8 @@ if (process.platform === "darwin") {
   try { spawn("/usr/bin/caffeinate", ["-i", "-m", "-s", "-w", String(process.pid)], { stdio: "ignore", detached: true }).unref(); } catch { /* best effort */ }
 }
 
-// Runs the collector, then always sends the sync summary email (mirrors the old
-// "if: always()" CI step order). A single node process, not a bash wrapper — launchd
+// Runs the collector without sending OfferLoom email notifications. A single node
+// process, not a bash wrapper — launchd
 // spawning /bin/bash under this project's path (~/Documents/...) hits macOS's TCC
 // privacy protection for Documents ("Operation not permitted" on getcwd), which plain
 // node apparently isn't subject to here. Keeping everything inside one node process
@@ -42,8 +42,6 @@ try {
   // Failure is still captured in outputs/collector/summary.json or last-error.log;
   // the email step below reports it either way.
 }
-// Open a GitHub issue for failures that persist across runs (no-op without GITHUB_ISSUES_TOKEN). Never blocks the email.
+// Open a GitHub issue for failures that persist across runs (no-op without GITHUB_ISSUES_TOKEN).
 try { execFileSync(process.execPath, ["scripts/report-failures.mjs"], { stdio: "inherit", timeout: 120000 }); } catch { /* reporting is best effort */ }
-// Email a reminder when the Claude token behind @claude is within 60 days of its one-year expiry (no-op otherwise; never blocks the sync email).
-try { execFileSync(process.execPath, ["scripts/send-reminders.mjs"], { stdio: "inherit", timeout: 60000 }); } catch { /* reminders are best effort */ }
-execFileSync(process.execPath, ["scripts/send-sync-email.mjs"], { stdio: "inherit" });
+log("OfferLoom email notifications are disabled.");
