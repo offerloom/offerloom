@@ -39,7 +39,7 @@ export async function discover(page, url) {
   const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
   if (!response?.ok()) throw new Error(`Discovery unavailable (${response?.status() ?? "no response"})`);
   const destination = new URL(page.url());
-  if (destination.hostname !== "www.amazon.in" || !(url === TODAY_DEALS ? /^\/(?:gp\/goldbox|deals)(?:\/|$)/.test(destination.pathname) : url === NEW_RELEASES ? destination.pathname.startsWith("/gp/new-releases") : destination.pathname.startsWith("/gp/bestsellers"))) throw new Error("Unexpected discovery redirect");
+  if (destination.hostname !== "www.amazon.in" || !(url === TODAY_DEALS ? /^\/(?:gp\/goldbox|deals)(?:\/|$)/.test(destination.pathname) : url === NEW_RELEASES ? destination.pathname.startsWith("/gp/new-releases") : destination.pathname.startsWith("/gp/bestsellers"))) throw new Error(`Unexpected discovery redirect: ${url} -> ${destination.hostname}${destination.pathname}`);
   if (challenge.test((await page.locator("body").innerText()).slice(0, 12000))) throw new Error("Access challenge; cloud run stopped");
   const cards = page.locator(url === TODAY_DEALS
     ? '#slots-container [data-testid="product-card"] a[href*="/dp/"], #slots-container [data-testid="deal-card"] a[href*="/dp/"]'
@@ -155,7 +155,17 @@ async function main() {
     for (const url of probe ? [TODAY_DEALS, NEW_RELEASES, SOURCES[2]] : SOURCES) {
       const source = url === TODAY_DEALS ? "todays_deals" : url === NEW_RELEASES ? "new_releases" : "bestsellers";
       console.log(`Discovering ${url === TODAY_DEALS ? "Today’s Deals" : url === NEW_RELEASES ? "Amazon New Releases" : url}`);
-      const found = await withRetry(() => discover(page, url), { maxAttempts: 2, retryable: (message) => /Discovery cards unavailable|Timeout|net::/.test(message) });
+      let found;
+      try {
+        found = await withRetry(() => discover(page, url), { maxAttempts: 2, retryable: (message) => /Discovery cards unavailable|Timeout|net::/.test(message) });
+      } catch (error) {
+        // A seasonal redirect (e.g. Today's Deals -> /events/<sale>) or an empty page on one
+        // source should not cancel the whole run; access challenges still stop everything.
+        if (!/Unexpected discovery redirect|Discovery cards unavailable|Discovery unavailable|no product links/.test(error.message)) throw error;
+        console.log(`::warning title=Discovery source skipped::${error.message.replace(/[\r\n%]/g, " ").slice(0, 300)}`);
+        discoveryCounts[url] = 0;
+        continue;
+      }
       for (const candidate of found.slice(0, 20)) {
         const sources = provenance.get(candidate) ?? [];
         if (!sources.includes(source)) sources.push(source);
@@ -213,5 +223,6 @@ async function main() {
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main().catch((error) => {
   console.error(error.message.startsWith("Cloudflare") || /Discovery|discovery|cloud|publication|Amazon merchant/.test(error.message) ? error.message : "Cloud collection failed; no successful run recorded");
+  if (process.env.GITHUB_ACTIONS) console.log(`::error title=Cloud collector::${String(error.message).replace(/[\r\n%]/g, " ").slice(0, 400)}`);
   process.exitCode = 1;
 });
