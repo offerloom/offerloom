@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useState } from "react";
 import BrandMark from "../../components/BrandMark";
 import styles from "../admin.module.css";
+/* eslint @next/next/no-html-link-for-pages: "off" -- Native navigation avoids a Vinext Link runtime error ("e is not a function"). */
 
 type AdminLoginClientProps = {
   returnTo: string;
@@ -37,8 +37,8 @@ export default function AdminLoginClient({ returnTo }: AdminLoginClientProps) {
   return (
     <main className={styles.shell}>
       <header className={styles.header}>
-        <Link className={styles.brand} href="/"><BrandMark />Offer<span>Loom</span></Link>
-        <Link href="/">Back to site</Link>
+        <a className={styles.brand} href="/"><BrandMark />Offer<span>Loom</span></a>
+        <a href="/">Back to site</a>
       </header>
       <section className={styles.intro}>
         <p>OWNER ACCESS</p>

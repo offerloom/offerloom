@@ -1,10 +1,10 @@
-import Link from "next/link";
 import BrandMark from "../components/BrandMark";
 import { requireOfferLoomAdmin } from "../lib/admin-auth";
 import { isWorkersDeployment } from "../lib/deployment";
 import AdminClient from "./AdminClient";
 import AdminSignOut from "./AdminSignOut";
 import styles from "./admin.module.css";
+/* eslint @next/next/no-html-link-for-pages: "off" -- Native navigation avoids a Vinext Link runtime error ("e is not a function"). */
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,7 @@ export default async function AdminPage() {
   const workers = await isWorkersDeployment();
   return <main className={styles.shell}>
     <header className={styles.header}>
-      <Link className={styles.brand} href="/"><BrandMark />Offer<span>Loom</span></Link>
+      <a className={styles.brand} href="/"><BrandMark />Offer<span>Loom</span></a>
       <div>
         <span>{user.email}</span>
         {workers ? <AdminSignOut /> : <a href="/signout-with-chatgpt?return_to=/">Sign out</a>}

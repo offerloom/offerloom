@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import ContentShell from "../../components/ContentShell";
 import { getBuyingGuide } from "../../lib/guides";
 import { SITE } from "../../lib/site";
+/* eslint @next/next/no-html-link-for-pages: "off" -- Native navigation avoids a Vinext Link runtime error ("e is not a function"). */
 
 type GuidePageProps = { params: Promise<{ slug: string }> };
 
@@ -38,8 +38,8 @@ export default async function GuidePage({ params }: GuidePageProps) {
         </section>
       ))}
       <p className="guideCta">
-        Ready to compare products? <Link href="/#catalog">Browse the catalogue</Link> or return to{" "}
-        <Link href="/guides">all buying guides</Link>.
+        Ready to compare products? <a href="/#catalog">Browse the catalogue</a> or return to{" "}
+        <a href="/guides">all buying guides</a>.
       </p>
     </ContentShell>
   );

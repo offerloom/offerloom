@@ -92,7 +92,7 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
           </div>
           <div className="frontDealActions">
             <a href={detailPath}>Product details</a>
-            <a className="offerCta" href={`/go/${row.merchant}/${row.listingId}`} target="_blank" rel="sponsored noopener noreferrer">{offer ? "Grab deal →" : `Check price on ${row.merchantName} →`}</a>
+            <a className="offerCta" href={`/products/${row.slug}`}>{offer ? "View deal →" : "Check price →"}</a>
           </div>
           <small>{offer ? `Confirm current price and availability on ${row.merchantName}.` : `OfferLoom’s last price check expired; confirm today’s price and availability on ${row.merchantName}.`}</small>
         </article>;
