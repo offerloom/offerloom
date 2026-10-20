@@ -9,9 +9,6 @@ on:
         description: "Parse emails without writing to the database"
         type: boolean
         default: false
-  push:
-    branches: [claude/ajio-mail-offers]
-    paths: [scripts/ajio_mail_offers.py, .github/workflows/ajio-mail-offers.yml]
 permissions: { contents: read }
 concurrency: { group: ajio-mail-offers, cancel-in-progress: false }
 jobs:
@@ -24,7 +21,7 @@ jobs:
         with: { node-version: 22 }
       - run: npm ci --no-audit --no-fund
       - name: Import offers from AJIO emails
-        run: python3 scripts/ajio_mail_offers.py ${{ (github.event_name == 'push' || inputs.dry_run) && '--dry-run' || '' }}
+        run: python3 scripts/ajio_mail_offers.py ${{ inputs.dry_run && '--dry-run' || '' }}
         env:
           AJIO_MAIL_FETCH: ${{ secrets.AJIO_MAIL_FETCH }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
