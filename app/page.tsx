@@ -213,7 +213,7 @@ export default function Home() {
       {catalogState === "error" && <p role="status">Product details could not be loaded. Please refresh to try again.</p>}
       {catalogState === "ready" && !photoProducts.length && <p>New product picks are being reviewed. Check back soon.</p>}
       {dealOfTheDay && <section className="dealOfTheDay" aria-labelledby="deal-of-the-day-heading">
-        <div className="dealOfTheDayCopy"><span className="dealOfTheDayEyebrow">TODAY’S TOP VERIFIED DISCOUNT · {Math.round(discountOf(dealOfTheDay) * 100)}% OFF</span><h2 id="deal-of-the-day-heading">Deal of the Day</h2><p>{dealOfTheDay.name}</p><div className="dealOfTheDayPrice"><strong>₹{(dealOfTheDay.offer!.price / 100).toLocaleString("en-IN")}</strong><del>₹{(dealOfTheDay.offer!.mrp! / 100).toLocaleString("en-IN")}</del></div><small>Checked {formatCheckedAt(dealOfTheDay.offer!.checkedAt)} · Confirm today’s price with the seller.</small><a href={dealOfTheDay.listings[0]?.affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">Shop this deal →</a></div>
+        <div className="dealOfTheDayCopy"><span className="dealOfTheDayEyebrow">TODAY’S TOP VERIFIED DISCOUNT · {Math.round(discountOf(dealOfTheDay) * 100)}% OFF</span><h2 id="deal-of-the-day-heading">Deal of the Day</h2><p>{dealOfTheDay.name}</p><div className="dealOfTheDayPrice"><strong>₹{(dealOfTheDay.offer!.price / 100).toLocaleString("en-IN")}</strong><del>₹{(dealOfTheDay.offer!.mrp! / 100).toLocaleString("en-IN")}</del></div><small>Checked {formatCheckedAt(dealOfTheDay.offer!.checkedAt)} · Confirm today’s price with the seller.</small><a href={dealOfTheDay.detailPath}>Compare &amp; shop this deal →</a></div>
         {dealOfTheDay.imageUrl && <a href={dealOfTheDay.detailPath!} className="dealOfTheDayImage"><img src={dealOfTheDay.imageUrl} alt={dealOfTheDay.name} loading="eager"/><span>{Math.round(discountOf(dealOfTheDay) * 100)}% OFF</span></a>}
       </section>}
       {productShelves.map((shelf) => <section className="productShelf" aria-labelledby={`${shelf.id}-heading`} key={shelf.key}>
@@ -253,7 +253,7 @@ function ProductCard({ product, discount }: { product: Product; discount: number
     <h4><a href={product.detailPath!}>{product.name}</a></h4>
     {product.offer && <div className="railProductPrice"><strong>₹{(product.offer.price / 100).toLocaleString("en-IN")}</strong>{product.offer.mrp && product.offer.mrp > product.offer.price && <del>₹{(product.offer.mrp / 100).toLocaleString("en-IN")}</del>}</div>}
     {product.offer?.checkedAt && <small className="priceCheckedAt">{formatCheckedAt(product.offer.checkedAt)}</small>}
-    <a className="offerCta" href={product.listings[0].affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">{product.offer ? "View deal →" : "Check price →"}</a>
+    <a className="offerCta" href={product.detailPath}>{product.offer ? "View deal →" : "Check price →"}</a>
   </article>;
 }
 
@@ -264,6 +264,6 @@ function CatalogProductCard({ product, discount }: { product: Product; discount:
     <h3><a href={product.detailPath!}>{product.name}</a></h3>
     {product.offer && <div className="frontDealPrice"><strong>₹{(product.offer.price / 100).toLocaleString("en-IN")}</strong>{product.offer.mrp && product.offer.mrp > product.offer.price && <del>₹{(product.offer.mrp / 100).toLocaleString("en-IN")}</del>}</div>}
     {product.offer?.checkedAt && <small>{formatCheckedAt(product.offer.checkedAt)}</small>}
-    <div className="frontDealActions"><a className="offerCta" href={product.listings[0]?.affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">{product.offer ? "View deal →" : "Check price →"}</a></div>
+    <div className="frontDealActions"><a className="offerCta" href={product.detailPath}>{product.offer ? "View deal →" : "Check price →"}</a></div>
   </article>;
 }
