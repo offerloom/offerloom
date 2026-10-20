@@ -23,8 +23,8 @@ type Row = {
 };
 
 const COLLECTIONS = {
-  new_releases: { title: "Amazon New Releases", description: "All recently released products validated by OfferLoom." },
-  bestsellers: { title: "Amazon Bestsellers", description: "All products found on Amazon bestseller category lists and validated by OfferLoom." },
+  new_releases: { title: "New Releases", description: "All recently released products validated by OfferLoom." },
+  bestsellers: { title: "Bestsellers", description: "All products found on Amazon bestseller category lists and validated by OfferLoom." },
   todays_deals: { title: "Today’s Deals", description: "All current deal products checked by OfferLoom." },
 } as const;
 
