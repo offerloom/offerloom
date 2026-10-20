@@ -4,6 +4,7 @@ import BrandMark from "../components/BrandMark";
 import AjioCampaignOffers from "../components/AjioCampaignOffers";
 import { matchesDealListing } from "../lib/deal-collections";
 import { publicOffer } from "../lib/public-offer";
+import { variantKey } from "../lib/variant-key.mjs";
 import { SITE } from "../lib/site";
 
 /* eslint @next/next/no-html-link-for-pages: "off" -- Native navigation avoids a Vinext Link runtime error on this page. */
@@ -60,7 +61,12 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
     const current = cheapestPerProduct.get(row.id);
     if (!current || (offer && (!current.offer || offer.price < current.offer.price))) cheapestPerProduct.set(row.id, { row, offer });
   }
-  const deals = [...cheapestPerProduct.values()]
+  const byVariant = new Map<string, { row: Row; offer: ReturnType<typeof publicOffer> }>();
+  for (const item of cheapestPerProduct.values()) {
+    const key = variantKey(item.row.name, item.offer?.price ?? null);
+    if (!byVariant.has(key)) byVariant.set(key, item);
+  }
+  const deals = [...byVariant.values()]
     .filter(({ row }) => matchesDealListing(row, { merchant: merchantFilter, collection: collectionKey }))
     .sort((a, b) => {
       const discount = (offer: ReturnType<typeof publicOffer>) => offer?.mrp ? 1 - offer.price / offer.mrp : -1;

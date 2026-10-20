@@ -15,8 +15,8 @@ import { orderProductCategories, productCategorySectionId } from "./lib/product-
 type Listing = { store: string; affiliateUrl?: string };
 type Offer = { price: number; mrp: number | null; checkedAt: string };
 type StoreOffer = { store: string; price: number | null };
-type Product = { storeOffers?: StoreOffer[]; addedAt?: string; offer?: Offer | null; imageUrl?: string | null; id: string | number; name: string; category: string; summary: string; specs: string[]; listings: Listing[]; detailPath?: string; collectionSources?: string[]; merchant?: string; merchantName?: string };
-type ManagedProduct = { storeOffers?: StoreOffer[]; addedAt?: string; offer?: Offer | null; imageUrl?: string | null; merchant: string; merchantName: string; id: string; name: string; category: string; summary: string; specs: string[]; outboundPath: string; detailPath: string; collectionSources?: string[] };
+type Product = { variantCount?: number; storeOffers?: StoreOffer[]; addedAt?: string; offer?: Offer | null; imageUrl?: string | null; id: string | number; name: string; category: string; summary: string; specs: string[]; listings: Listing[]; detailPath?: string; collectionSources?: string[]; merchant?: string; merchantName?: string };
+type ManagedProduct = { variantCount?: number; storeOffers?: StoreOffer[]; addedAt?: string; offer?: Offer | null; imageUrl?: string | null; merchant: string; merchantName: string; id: string; name: string; category: string; summary: string; specs: string[]; outboundPath: string; detailPath: string; collectionSources?: string[] };
 
 export default function Home() {
   const [dealCategory, setDealCategory] = useState("All");
@@ -39,6 +39,7 @@ export default function Home() {
         setManagedProducts(recentResult.value.products.map((product: ManagedProduct) => ({
           imageUrl: product.imageUrl,
           storeOffers: product.storeOffers ?? [],
+          variantCount: product.variantCount ?? 1,
           addedAt: product.addedAt,
           offer: product.offer,
           merchant: product.merchant,
@@ -300,6 +301,7 @@ function ProductCard({ product, discount }: { product: Product; discount: number
     <h4><a href={product.detailPath!}>{product.name}</a></h4>
     {product.offer && <div className="railProductPrice"><strong>₹{(product.offer.price / 100).toLocaleString("en-IN")}</strong>{product.offer.mrp && product.offer.mrp > product.offer.price && <del>₹{(product.offer.mrp / 100).toLocaleString("en-IN")}</del>}</div>}
     <StorePrices product={product} />
+    {(product.variantCount ?? 1) > 1 && <small className="moreColours">+{(product.variantCount ?? 1) - 1} more colour{(product.variantCount ?? 1) > 2 ? "s" : ""} at this price</small>}
     {product.offer?.checkedAt && <small className="priceCheckedAt">{formatCheckedAt(product.offer.checkedAt)}</small>}
     <a className="offerCta" href={product.detailPath}>{product.offer ? "Grab deal →" : "Check price →"}</a>
   </article>;
@@ -312,6 +314,7 @@ function CatalogProductCard({ product, discount }: { product: Product; discount:
     <h3><a href={product.detailPath!}>{product.name}</a></h3>
     {product.offer && <div className="frontDealPrice"><strong>₹{(product.offer.price / 100).toLocaleString("en-IN")}</strong>{product.offer.mrp && product.offer.mrp > product.offer.price && <del>₹{(product.offer.mrp / 100).toLocaleString("en-IN")}</del>}</div>}
     <StorePrices product={product} />
+    {(product.variantCount ?? 1) > 1 && <small className="moreColours">+{(product.variantCount ?? 1) - 1} more colour{(product.variantCount ?? 1) > 2 ? "s" : ""} at this price</small>}
     {product.offer?.checkedAt && <small>{formatCheckedAt(product.offer.checkedAt)}</small>}
     <div className="frontDealActions"><a className="offerCta" href={product.detailPath}>{product.offer ? "Grab deal →" : "Check price →"}</a></div>
   </article>;

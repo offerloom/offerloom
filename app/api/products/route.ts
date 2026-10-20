@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 import { publicOffer } from "../../lib/public-offer";
+import { variantKey } from "../../lib/variant-key.mjs";
 
 export async function GET(request: Request) {
   const merchantFilter = new URL(request.url).searchParams.get("merchant");
@@ -46,7 +47,19 @@ export async function GET(request: Request) {
     const better = product.offer && (!current.offer || product.offer.price < current.offer.price);
     if (better) Object.assign(current, { ...product, stores: current.stores, storeOffers: current.storeOffers, collectionSources: [...new Set([...current.collectionSources, ...product.collectionSources])] });
   }
-  return Response.json({ products: [...byProduct.values()] }, { headers: { "Cache-Control": "no-store" } });
+  // Colour variants of the same product at the same price show as one card (with a count); a different price stays separate.
+  type Grouped = NonNullable<ReturnType<typeof byProduct.get>> & { variantCount: number };
+  const byVariant = new Map<string, Grouped>();
+  for (const product of byProduct.values()) {
+    const key = variantKey(product.name, product.offer?.price ?? null);
+    const current = byVariant.get(key);
+    if (!current) byVariant.set(key, { ...product, variantCount: 1 });
+    else {
+      current.variantCount += 1;
+      if (product.storeOffers.length > current.storeOffers.length) Object.assign(current, { ...product, variantCount: current.variantCount });
+    }
+  }
+  return Response.json({ products: [...byVariant.values()] }, { headers: { "Cache-Control": "no-store" } });
 }
 
 function safeCollectionSources(value: unknown): string[] {
