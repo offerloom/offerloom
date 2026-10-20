@@ -1,20 +1,29 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { AJIO_CAMPAIGN_OFFERS } from "../app/lib/ajio-offers.ts";
+import { readFile } from "node:fs/promises";
+import { ajioCampaignHref } from "../app/lib/ajio-offers.ts";
 import { isApprovedAjioCampaignLink } from "../app/lib/ajio.ts";
 
-test("all current AJIO All Stars callouts become OfferLoom publisher-tracked campaign links", () => {
-  assert.equal(AJIO_CAMPAIGN_OFFERS.length, 14);
-  assert.equal(new Set(AJIO_CAMPAIGN_OFFERS.map((offer) => offer.shortCode)).size, 14);
-  for (const offer of AJIO_CAMPAIGN_OFFERS) {
-    const url = new URL(offer.href);
+test("email-supplied AJIO short codes become OfferLoom publisher-tracked campaign links", () => {
+  for (const code of ["womendressesunderrs599-curated-420487", "menjeansunderrs899-curated-420491", "atrs599-219284"]) {
+    const url = new URL(ajioCampaignHref(code));
     assert.equal(url.hostname, "ajiotrk.vibconnect.in");
     assert.equal(url.searchParams.get("campaign_id"), "1");
     assert.equal(url.searchParams.get("pub_id"), "1072");
     assert.equal(url.searchParams.get("p1"), "offerloom-site");
-    assert.equal(url.searchParams.get("p2"), offer.shortCode);
-    assert.equal(url.searchParams.get("url"), offer.destination);
-    assert.equal(isApprovedAjioCampaignLink(offer.href), true);
-    assert.equal(offer.validThrough, "2026-10-11");
+    assert.equal(url.searchParams.get("p2"), code);
+    assert.equal(url.searchParams.get("url"), `https://www.ajio.com/s/${code}`);
+    assert.equal(isApprovedAjioCampaignLink(ajioCampaignHref(code)), true);
   }
+  assert.equal(isApprovedAjioCampaignLink(ajioCampaignHref("not-an-offer")), false);
+});
+
+test("the AJIO mail importer only trusts DKIM-signed mailer.ajio.in messages and ajio.com/s links", async () => {
+  const script = await readFile(new URL("../scripts/ajio_mail_offers.py", import.meta.url), "utf8");
+  assert.match(script, /dkim=pass header\\\.\(\?:i\|d\)=@\?mailer\\\.ajio\\\.in/);
+  assert.match(script, /readonly=True/);
+  assert.match(script, /ajio\\\.com\/s\//);
+  const route = await readFile(new URL("../app/api/ajio-offers/route.ts", import.meta.url), "utf8");
+  assert.match(route, /isApprovedAjioCampaignLink/);
+  assert.match(route, /valid_through >= \?/);
 });

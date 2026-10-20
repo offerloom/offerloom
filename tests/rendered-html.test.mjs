@@ -52,15 +52,9 @@ test("renders the OfferLoom shopping experience", async () => {
   assert.match(html, /View all/);
   assert.doesNotMatch(html, /AJIO Fashion Deals/);
   assert.match(html, /data-autoscroll/);
-  assert.match(html, /AJIO All Stars Sale Offers/);
-  assert.match(html, /AJIO ACE · All Stars Sale · 7–11 Oct/);
-  assert.match(html, /ajioOfferArt/);
-  assert.match(html, /Denim edit|Style edit/);
-  assert.match(html, /Shop AJIO offer/);
   assert.match(html, /deals\?collection=new_releases/);
   assert.match(html, /deals\?collection=bestsellers/);
   assert.match(html, /deals\?collection=todays_deals/);
-  assert.match(html, /deals\?merchant=ajio/);
   assert.match(html, /<a href="\/deals\?collection=bestsellers">View all/);
   assert.doesNotMatch(html, /whatsapp\.com\/channel/);
   assert.match(html, /aria-roledescription="carousel"/);
