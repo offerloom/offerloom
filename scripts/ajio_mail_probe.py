@@ -30,6 +30,16 @@ for mid in ids[-4:]:
                 host = re.sub(r"^https?://([^/]+).*", r"\1", href)
                 links.append(f"{host}{re.sub(r'^https?://[^/]+', '', href)[:60]} [{text[:40]}]")
     note(f"SUBJECT {subject} | DATE {msg.get('Date')} | DKIM {dkim} | PARTS {parts}")
-    for chunk in range(0, len(links), 8):
-        note("LINKS " + " || ".join(links[chunk:chunk+8]))
+    for part in msg.walk():
+        if part.get_content_type() != "text/html": continue
+        html = part.get_payload(decode=True).decode(part.get_content_charset() or "utf-8", "replace")
+        rows = re.findall(r"<tr[^>]*>(.*?)</tr>", html, re.S | re.I)
+        shown = 0
+        for row in rows:
+            if "ajio.com/s/" in row and row.count("<tr") == 0:
+                note("ROW " + re.sub(r"<[^>]+>|&nbsp;|\s+", " ", row).strip()[:300]); shown += 1
+                if shown >= 4: break
+        if not shown:
+            i = html.find("ajio.com/s/")
+            if i > 0: note("CTX " + re.sub(r"<[^>]+>|&nbsp;|\s+", " ", html[i-600:i+80])[-400:])
 imap.logout()
