@@ -21,9 +21,10 @@ export const SOURCES = [
   { url: "https://www.flipkart.com/audio-video/headset/pr?sid=0pm,fcn&sort=recency_desc", tags: NEWEST },
   { url: "https://www.flipkart.com/wearable-smart-devices/smart-watches/pr?sid=ajy,buh&sort=recency_desc", tags: NEWEST },
 ];
-const MAX_NEW = 10, MAX_REFRESH = 40, PAUSE_MS = 5000, BUDGET_MS = 15 * 60000;
+const MAX_NEW = 10, MAX_REFRESH = 40, MATCH_PER_RUN = 12, PAUSE_MS = 5000, BUDGET_MS = 22 * 60000;
 const IMAGE_HOSTS = /^rukmini(m\d)?\d?\.flixcart\.com$/;
 const challenge = /captcha|access denied|are you a human|unusual traffic|verify you are human|something is not right/i;
+const hash = (text) => [...String(text)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const quote = (value) => `'${String(value).replaceAll("'", "''")}'`;
 const slug = (value) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
@@ -75,6 +76,11 @@ async function discover(page, url) {
   return [...new Map(hrefs.map(flipkartProduct).filter(Boolean).map((p) => [p.id, p])).values()];
 }
 
+/** Flipkart search query from an Amazon title: brand + model words, no sizes/colours noise. */
+export function searchQuery(name) {
+  return name.replace(/\(.*?\)|\[.*?\]/g, " ").replace(/[|,;:].*$/, "").replace(/[^A-Za-z0-9.\- ]+/g, " ").split(/\s+/).filter(Boolean).slice(0, 7).join(" ");
+}
+
 async function extract(page, product) {
   const response = await page.goto(product.url, { waitUntil: "domcontentloaded", timeout: 45000 });
   if (!response?.ok()) throw new Error(`Page unavailable (${response?.status() ?? "no response"})`);
@@ -109,7 +115,7 @@ export function publishSql(deals, existing, amazonProducts, now = new Date().toI
   for (const deal of deals) {
     const old = existing.get(deal.merchantProductId);
     if (old && (old.status !== "published" || old.listingStatus !== "active")) continue;
-    const match = old ? null : amazonProducts.find((p) => p.category === deal.category && matchesProduct(p.name, deal.name));
+    const match = old ? null : deal.matchProductId ? { id: deal.matchProductId } : amazonProducts.find((p) => p.category === deal.category && matchesProduct(p.name, deal.name));
     const productId = old?.productId ?? match?.id ?? `flipkart-${deal.merchantProductId}`;
     const category = slug(deal.category), payload = quote(JSON.stringify(deal));
     if (!old && !match) {
@@ -152,7 +158,7 @@ async function main() {
     amazonProducts = await rows("SELECT p.id,p.name,c.name AS category FROM products p JOIN categories c ON c.id=p.category_id JOIN merchant_listings ml ON ml.product_id=p.id AND ml.merchant='amazon' AND ml.status='active' WHERE p.status='published' AND NOT EXISTS (SELECT 1 FROM merchant_listings f WHERE f.product_id=p.id AND f.merchant='flipkart')");
   }
   const browser = await chromium.launch({ headless: true });
-  const deals = [], failures = [], discoveryCounts = {};
+  const deals = [], failures = [], discoveryCounts = {}, matched = [];
   try {
     const page = await browser.newPage();
     await page.route("**/*", (route) => {
@@ -200,17 +206,42 @@ async function main() {
       }
       await pause(PAUSE_MS);
     }
+    // Cross-store matching: look up Amazon products on Flipkart and attach a listing only on a strict match.
+    const taken = new Set([...existing.keys(), ...deals.map((d) => d.merchantProductId)]);
+    const day = Math.floor(started / 86400000);
+    const queue = amazonProducts.filter((p) => p.category !== "Books")
+      .sort((a, b) => ((hash(a.id) + day) % 997) - ((hash(b.id) + day) % 997)).slice(0, probe ? 2 : MATCH_PER_RUN);
+    for (const amazon of queue) {
+      if (Date.now() - started > BUDGET_MS) break;
+      try {
+        const results = (await discover(page, `https://www.flipkart.com/search?q=${encodeURIComponent(searchQuery(amazon.name))}`)).slice(0, 2);
+        await pause(PAUSE_MS);
+        for (const candidate of results) {
+          if (taken.has(candidate.id)) continue;
+          const deal = await extract(page, candidate);
+          await pause(PAUSE_MS);
+          if (matchesProduct(amazon.name, deal.name)) {
+            deals.push({ ...deal, discoverySources: [], matchProductId: amazon.id });
+            taken.add(candidate.id); matched.push(`${amazon.name.slice(0, 40)} ⇄ ₹${deal.price / 100}`);
+            break;
+          }
+        }
+      } catch (error) {
+        if (/Access challenge/.test(error.message)) throw error;
+      }
+    }
   } finally { await browser.close(); }
   const discount = (d) => (d.mrp ? 1 - d.price / d.mrp : 0);
-  const fresh = deals.filter((d) => !existing.has(d.merchantProductId)).sort((a, b) => discount(b) - discount(a));
+  const matches = deals.filter((d) => d.matchProductId);
+  const fresh = deals.filter((d) => !existing.has(d.merchantProductId) && !d.matchProductId).sort((a, b) => discount(b) - discount(a));
   const reservedNew = fresh.filter((d) => d.discoverySources.includes("new_releases")).slice(0, 3);
   const additions = [...new Map([...reservedNew, ...fresh].map((d) => [d.merchantProductId, d])).values()].slice(0, MAX_NEW);
   const refreshed = deals.filter((d) => existing.has(d.merchantProductId));
-  const summary = { mode: probe ? "probe" : "publish", window, discoveryCounts, validated: deals.length, added: additions.length, refreshed: refreshed.length, failed: failures.length, sample: deals.slice(0, 3).map((d) => `${d.name.slice(0, 50)} ₹${d.price / 100} mrp ₹${(d.mrp ?? 0) / 100}`) };
+  const summary = { mode: probe ? "probe" : "publish", window, discoveryCounts, validated: deals.length, added: additions.length, refreshed: refreshed.length, matchedToAmazon: matched.length, matched, failed: failures.length, sample: deals.slice(0, 3).map((d) => `${d.name.slice(0, 50)} ₹${d.price / 100} mrp ₹${(d.mrp ?? 0) / 100}`) };
   note("notice", JSON.stringify(summary));
-  if (!probe && (additions.length || refreshed.length)) {
-    const sql = publishSql([...refreshed, ...additions], existing, amazonProducts);
-    const record = `INSERT INTO sync_runs (merchant_id,status,products_seen,products_updated,error_message,started_at,finished_at) VALUES ('flipkart','succeeded',${deals.length + failures.length},${additions.length + refreshed.length},${quote(`${marker}; added=${additions.length}; refreshed=${refreshed.length}; failed=${failures.length}`)},${quote(new Date(started).toISOString())},${quote(new Date().toISOString())});`;
+  if (!probe && (additions.length || refreshed.length || matches.length)) {
+    const sql = publishSql([...refreshed, ...additions, ...matches], existing, amazonProducts);
+    const record = `INSERT INTO sync_runs (merchant_id,status,products_seen,products_updated,error_message,started_at,finished_at) VALUES ('flipkart','succeeded',${deals.length + failures.length},${additions.length + refreshed.length + matches.length},${quote(`${marker}; added=${additions.length}; refreshed=${refreshed.length}; matched=${matches.length}; failed=${failures.length}`)},${quote(new Date(started).toISOString())},${quote(new Date().toISOString())});`;
     await writeFile("outputs/flipkart-collector/publish.sql", sql + "\n" + record, { mode: 0o600 });
     await d1(["--file", "outputs/flipkart-collector/publish.sql"]);
   }

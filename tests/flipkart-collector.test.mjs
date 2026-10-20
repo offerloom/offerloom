@@ -33,3 +33,9 @@ test("a matched Amazon product gains a Flipkart listing without overwriting the 
   const fresh = publishSql([deal], new Map(), []);
   assert.match(fresh, /INSERT INTO products .*'flipkart-itm441116d221f76'/);
 });
+
+test("Flipkart search query keeps brand and model words from an Amazon title", async () => {
+  const { searchQuery } = await import("../scripts/flipkart-collector.mjs");
+  assert.equal(searchQuery("boAt Airdopes 219, 4Mics ENx, 40H Battery (Carbon Black)"), "boAt Airdopes 219");
+  assert.equal(searchQuery("Noise Twist Go Round dial Smartwatch with BT Calling | 1.39\" Display"), "Noise Twist Go Round dial Smartwatch with");
+});
