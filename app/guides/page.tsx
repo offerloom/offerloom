@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import ContentShell from "../components/ContentShell";
 import { BUYING_GUIDES } from "../lib/guides";
 import { SITE } from "../lib/site";
+/* eslint @next/next/no-html-link-for-pages: "off" -- Native navigation avoids a Vinext Link runtime error ("e is not a function"). */
 
 export const metadata: Metadata = {
   title: `Buying Guides — ${SITE.brand}`,
@@ -20,11 +20,11 @@ export default function GuidesIndexPage() {
         {BUYING_GUIDES.map((guide) => (
           <article className="guideCard" key={guide.slug}>
             <span className="guideDepartment">{guide.department}</span>
-            <h2><Link href={`/guides/${guide.slug}`}>{guide.title}</Link></h2>
+            <h2><a href={`/guides/${guide.slug}`}>{guide.title}</a></h2>
             <p>{guide.summary}</p>
             <footer>
               <span>{guide.readMinutes} min read</span>
-              <Link href={`/guides/${guide.slug}`}>Read guide →</Link>
+              <a href={`/guides/${guide.slug}`}>Read guide →</a>
             </footer>
           </article>
         ))}

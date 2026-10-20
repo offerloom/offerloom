@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import SiteFooter from "./components/SiteFooter";
 import BrandMark from "./components/BrandMark";
@@ -11,6 +10,7 @@ import SocialLinks from "./components/SocialLinks";
 import { heroCategorySlides } from "./lib/hero-categories";
 import { formatCheckedAt } from "./lib/format-checked-at";
 import { orderProductCategories, productCategorySectionId } from "./lib/product-category-navigation.mjs";
+/* eslint @next/next/no-html-link-for-pages: "off" -- Native navigation avoids a Vinext Link runtime error ("e is not a function"). */
 
 type Listing = { store: string; affiliateUrl?: string };
 type Offer = { price: number; mrp: number | null; checkedAt: string };
@@ -175,7 +175,7 @@ export default function Home() {
   return <main className="homePage" id="top">
     <header className="topbar">
       <a className="brand" href="#top" aria-label="OfferLoom home"><BrandMark /><span>Offer<span>Loom</span></span></a>
-      <nav aria-label="Main navigation"><a href="#front-deals-heading">Find products</a><Link href="/guides">Buying guides</Link><a href="#how">How it works</a></nav>
+      <nav aria-label="Main navigation"><a href="#front-deals-heading">Find products</a><a href="/guides">Buying guides</a><a href="#how">How it works</a></nav>
       <form className="headerSearch" onSubmit={search} role="search"><span aria-hidden="true">⌕</span><input value={draft} onChange={(event) => { setDraft(event.target.value); setQuery(event.target.value); }} aria-label="Search products by name or category" placeholder="Search deals"/><button aria-label="Search products">⌕</button></form>
       <div className="topbarActions">
         <SocialLinks variant="header" />
@@ -199,12 +199,12 @@ export default function Home() {
       <div className="campaignArtwork">
         {heroDeals.length ? (
           <div className={`campaignCollage campaignCollage-count-${heroDeals.length}`}>
-            {heroDeals.map((product) => <Link className="collageItem" href={product.detailPath!} key={product.id}>
+            {heroDeals.map((product) => <a className="collageItem" href={product.detailPath!} key={product.id}>
               <img src={product.imageUrl!} alt={product.name} loading="eager" />
               {product.offer?.mrp && product.offer.mrp > product.offer.price && <span className="collageBadge">{Math.round(discountOf(product) * 100)}% OFF</span>}
-            </Link>)}
+            </a>)}
           </div>
-        ) : <Link className="campaignFallbackLink" href={activeSlide.amazonUrl} target="_blank" rel="sponsored noopener noreferrer" aria-label={`Browse ${activeSlide.eyebrow} on Amazon`}><img src="/category-showcase-v1.png" width="2172" height="724" alt="Shopping inspiration featuring electronics, fashion and home essentials" fetchPriority="high"/></Link>}
+        ) : <a className="campaignFallbackLink" href={activeSlide.amazonUrl} target="_blank" rel="sponsored noopener noreferrer" aria-label={`Browse ${activeSlide.eyebrow} on Amazon`}><img src="/category-showcase-v1.png" width="2172" height="724" alt="Shopping inspiration featuring electronics, fashion and home essentials" fetchPriority="high"/></a>}
         <span>{heroDeals.length ? (heroBestDiscount > 0 ? `Up to ${heroBestDiscount}% off` : `${activeSlide.filterCategory === "All" ? "Today's" : activeSlide.filterCategory} picks`) : "Electronics. Fashion. Home."}</span>
         <small>{heroDeals.length ? "Live product picks" : "Category inspiration"}</small>
       </div>
@@ -214,7 +214,7 @@ export default function Home() {
       {catalogState === "ready" && !photoProducts.length && <p>New product picks are being reviewed. Check back soon.</p>}
       {dealOfTheDay && <section className="dealOfTheDay" aria-labelledby="deal-of-the-day-heading">
         <div className="dealOfTheDayCopy"><span className="dealOfTheDayEyebrow">TODAY’S TOP VERIFIED DISCOUNT · {Math.round(discountOf(dealOfTheDay) * 100)}% OFF</span><h2 id="deal-of-the-day-heading">Deal of the Day</h2><p>{dealOfTheDay.name}</p><div className="dealOfTheDayPrice"><strong>₹{(dealOfTheDay.offer!.price / 100).toLocaleString("en-IN")}</strong><del>₹{(dealOfTheDay.offer!.mrp! / 100).toLocaleString("en-IN")}</del></div><small>Checked {formatCheckedAt(dealOfTheDay.offer!.checkedAt)} · Confirm today’s price with the seller.</small><a href={dealOfTheDay.listings[0]?.affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">Shop this deal →</a></div>
-        {dealOfTheDay.imageUrl && <Link href={dealOfTheDay.detailPath!} className="dealOfTheDayImage"><img src={dealOfTheDay.imageUrl} alt={dealOfTheDay.name} loading="eager"/><span>{Math.round(discountOf(dealOfTheDay) * 100)}% OFF</span></Link>}
+        {dealOfTheDay.imageUrl && <a href={dealOfTheDay.detailPath!} className="dealOfTheDayImage"><img src={dealOfTheDay.imageUrl} alt={dealOfTheDay.name} loading="eager"/><span>{Math.round(discountOf(dealOfTheDay) * 100)}% OFF</span></a>}
       </section>}
       {productShelves.map((shelf) => <section className="productShelf" aria-labelledby={`${shelf.id}-heading`} key={shelf.key}>
         <div className="productShelfHeading"><div><span>{shelf.description}</span><h2 id={`${shelf.id}-heading`}>{shelf.title}</h2></div><a href={shelf.href}>View all <span aria-hidden="true">→</span></a></div>
@@ -248,9 +248,9 @@ export default function Home() {
 
 function ProductCard({ product, discount }: { product: Product; discount: number }) {
   return <article className="railProduct">
-    {product.imageUrl && <Link className="railProductImage" href={product.detailPath!}><img src={product.imageUrl} alt={product.name} loading="lazy"/>{discount > 0 && <span>{Math.round(discount * 100)}% OFF</span>}</Link>}
+    {product.imageUrl && <a className="railProductImage" href={product.detailPath!}><img src={product.imageUrl} alt={product.name} loading="lazy"/>{discount > 0 && <span>{Math.round(discount * 100)}% OFF</span>}</a>}
     <span className="categoryTag">{product.merchantName ?? (product.merchant === "ajio" ? "AJIO" : product.merchant === "myntra" ? "Myntra" : "Amazon")} · {product.category}</span>
-    <h4><Link href={product.detailPath!}>{product.name}</Link></h4>
+    <h4><a href={product.detailPath!}>{product.name}</a></h4>
     {product.offer && <div className="railProductPrice"><strong>₹{(product.offer.price / 100).toLocaleString("en-IN")}</strong>{product.offer.mrp && product.offer.mrp > product.offer.price && <del>₹{(product.offer.mrp / 100).toLocaleString("en-IN")}</del>}</div>}
     {product.offer?.checkedAt && <small className="priceCheckedAt">{formatCheckedAt(product.offer.checkedAt)}</small>}
     <a className="offerCta" href={product.listings[0].affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">{product.offer ? "View deal →" : "Check price →"}</a>
@@ -259,9 +259,9 @@ function ProductCard({ product, discount }: { product: Product; discount: number
 
 function CatalogProductCard({ product, discount }: { product: Product; discount: number }) {
   return <article className="frontDealCard">
-    {product.imageUrl ? <Link className="dealPhoto" href={product.detailPath!}><img src={product.imageUrl} alt={product.name} loading="lazy"/>{discount > 0 && <span className="dealDiscount">{Math.round(discount * 100)}% OFF</span>}</Link> : <div className="dealPhoto dealPhotoPlaceholder" aria-hidden="true">{product.category}</div>}
+    {product.imageUrl ? <a className="dealPhoto" href={product.detailPath!}><img src={product.imageUrl} alt={product.name} loading="lazy"/>{discount > 0 && <span className="dealDiscount">{Math.round(discount * 100)}% OFF</span>}</a> : <div className="dealPhoto dealPhotoPlaceholder" aria-hidden="true">{product.category}</div>}
     <span className="categoryTag">{product.merchantName ?? product.merchant ?? "OfferLoom"} · {product.category}</span>
-    <h3><Link href={product.detailPath!}>{product.name}</Link></h3>
+    <h3><a href={product.detailPath!}>{product.name}</a></h3>
     {product.offer && <div className="frontDealPrice"><strong>₹{(product.offer.price / 100).toLocaleString("en-IN")}</strong>{product.offer.mrp && product.offer.mrp > product.offer.price && <del>₹{(product.offer.mrp / 100).toLocaleString("en-IN")}</del>}</div>}
     {product.offer?.checkedAt && <small>{formatCheckedAt(product.offer.checkedAt)}</small>}
     <div className="frontDealActions"><a className="offerCta" href={product.listings[0]?.affiliateUrl} target="_blank" rel="sponsored noopener noreferrer">{product.offer ? "View deal →" : "Check price →"}</a></div>
