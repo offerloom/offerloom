@@ -81,7 +81,7 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
     <section className="frontDeals" aria-labelledby="deals-heading" style={{ marginTop: 24 }}>
       <div className="frontDealsHeading"><h2 id="deals-heading">{title}</h2><span>{deals.length} products</span></div>
       <p className="dealsIntro">{description}</p>
-      {merchantFilter && <AjioCampaignOffers />}
+      {(merchantFilter || collectionKey === "todays_deals") && <AjioCampaignOffers />}
       {!deals.length && !merchantFilter && <p>New deals are being reviewed. Check back soon.</p>}
       <div className="frontDealsGrid">{deals.map(({ row, offer }) => {
         const discountPct = offer?.mrp && offer.mrp > offer.price ? Math.round((1 - offer.price / offer.mrp) * 100) : 0;

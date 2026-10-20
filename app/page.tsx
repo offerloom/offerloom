@@ -5,7 +5,8 @@ import SiteFooter from "./components/SiteFooter";
 import BrandMark from "./components/BrandMark";
 import DealAlertsBar from "./components/DealAlertsBar";
 import DealAlertsFloat from "./components/DealAlertsFloat";
-import AjioCampaignOffers from "./components/AjioCampaignOffers";
+import AjioOfferArtwork from "./components/AjioOfferArtwork";
+import type { AjioCampaignOffer } from "./lib/ajio-offers";
 import SocialLinks from "./components/SocialLinks";
 import { heroCategorySlides } from "./lib/hero-categories";
 import { formatCheckedAt } from "./lib/format-checked-at";
@@ -26,6 +27,13 @@ export default function Home() {
   const [playing, setPlaying] = useState(false);
   const [managedProducts, setManagedProducts] = useState<Product[]>([]);
   const [catalogState, setCatalogState] = useState("loading");
+  const [ajioOffers, setAjioOffers] = useState<AjioCampaignOffer[]>([]);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/ajio-offers").then((response) => response.ok ? response.json() : { offers: [] })
+      .then((data) => { if (active) setAjioOffers(data.offers ?? []); }).catch(() => undefined);
+    return () => { active = false; };
+  }, []);
   const categoryTabsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -238,6 +246,7 @@ export default function Home() {
         <div className="productShelfHeading"><div><span>{shelf.description}</span><h2 id={`${shelf.id}-heading`}>{shelf.title}</h2></div><a href={shelf.href}>View all <span aria-hidden="true">→</span></a></div>
         {shelf.products.length ? <div className="productRail" data-autoscroll id={`${shelf.id}-rail`} role="region" aria-label={`${shelf.title} products`}>
           {shelf.products.map((product) => <ProductCard product={product} discount={discountOf(product)} key={`${product.merchant ?? "amazon"}:${product.id}`} />)}
+          {shelf.key === "todays_deals" && ajioOffers.slice(0, 8).map((offer) => <AjioOfferCard offer={offer} key={`ajio-offer:${offer.shortCode}`} />)}
         </div> : <p className="shelfEmpty">No validated products in this collection yet. Check back after the next update.</p>}
       </section>)}
       {trends.length > 0 && <section className="trendsSection" aria-labelledby="trends-heading">
@@ -265,7 +274,6 @@ export default function Home() {
           <div className="frontDealsGrid">{categoryProducts.map((product) => <CatalogProductCard product={product} discount={discountOf(product)} key={`${product.merchant ?? "amazon"}:${product.id}`} />)}</div>
         </section>;
       })}</div>
-      <AjioCampaignOffers limit={6} />
       <p className="disclosure"><strong>Affiliate and price notice:</strong> OfferLoom may earn a commission when you use eligible merchant links, at no extra cost to you. As an Amazon Associate I earn from qualifying purchases. Prices and availability can change and are confirmed on the merchant website. OfferLoom does not handle checkout, payment, shipping, cancellations, returns or refunds.</p>
     </section>
 
@@ -274,6 +282,17 @@ export default function Home() {
     <a className="backToTop" href="#top" aria-label="Go to top"><span aria-hidden="true">↑</span><span>Top</span></a>
     <SiteFooter />
   </main>;
+}
+
+/** AJIO sale callout (from AJIO's emails) shown inside Today's Deals; opens OfferLoom's AJIO offers page first. */
+function AjioOfferCard({ offer }: { offer: AjioCampaignOffer }) {
+  return <article className="railProduct ajioOfferCard">
+    <a className="railProductImage" href="/deals?merchant=ajio#ajio-offers-heading"><AjioOfferArtwork title={offer.title} /></a>
+    <span className="categoryTag">AJIO · {offer.campaign}</span>
+    <h4><a href="/deals?merchant=ajio#ajio-offers-heading">{offer.title}</a></h4>
+    <small className="priceCheckedAt">Sale ends {new Date(`${offer.validThrough}T00:00:00+05:30`).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}</small>
+    <a className="offerCta" href="/deals?merchant=ajio#ajio-offers-heading">Grab deal →</a>
+  </article>;
 }
 
 function storeLabel(product: Product) {
