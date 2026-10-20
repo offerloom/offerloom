@@ -9,7 +9,7 @@ export async function GET(request: Request) {
       c.name AS category, ml.id AS listingId, ml.merchant, m.name AS merchantName, cd.approved_payload AS approvedPayload
     FROM products p
     JOIN categories c ON c.id = p.category_id
-    JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant IN ('amazon', 'ajio') AND ml.status = 'active'
+    JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant IN ('amazon', 'ajio', 'flipkart') AND ml.status = 'active'
     JOIN merchants m ON m.id = ml.merchant AND m.status = 'active'
     LEFT JOIN collected_deals cd ON cd.product_id=p.id AND cd.id=ml.merchant || '-' || ml.merchant_product_id
     WHERE p.status = 'published' ${merchantClause}
@@ -33,7 +33,16 @@ export async function GET(request: Request) {
     outboundPath: `/go/${row.merchant}/${row.listingId}`,
     detailPath: `/products/${row.slug}`,
   }));
-  return Response.json({ products }, { headers: { "Cache-Control": "no-store" } });
+  // One card per product: keep the listing with the lowest current price, and record every store.
+  const byProduct = new Map<string, (typeof products)[number] & { stores: string[] }>();
+  for (const product of products) {
+    const current = byProduct.get(product.id as string);
+    if (!current) { byProduct.set(product.id as string, { ...product, stores: [product.merchantName as string] }); continue; }
+    current.stores.push(product.merchantName as string);
+    const better = product.offer && (!current.offer || product.offer.price < current.offer.price);
+    if (better) Object.assign(current, { ...product, stores: current.stores, collectionSources: [...new Set([...current.collectionSources, ...product.collectionSources])] });
+  }
+  return Response.json({ products: [...byProduct.values()] }, { headers: { "Cache-Control": "no-store" } });
 }
 
 function safeCollectionSources(value: unknown): string[] {

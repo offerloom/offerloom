@@ -30,7 +30,7 @@ async function findEligibleProduct(env: EnvLike) {
   const result = await env.DB.prepare(`
     SELECT p.id, p.slug, p.name, p.summary, p.image_url AS imageUrl, ml.merchant, cd.approved_payload AS approvedPayload
     FROM products p
-    JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant IN ('amazon', 'ajio') AND ml.status = 'active'
+    JOIN merchant_listings ml ON ml.product_id = p.id AND ml.merchant IN ('amazon', 'ajio', 'flipkart') AND ml.status = 'active'
     LEFT JOIN collected_deals cd ON cd.product_id = p.id AND cd.id = ml.merchant || '-' || ml.merchant_product_id
     WHERE p.status = 'published' AND p.image_url IS NOT NULL
       AND p.id NOT IN (
@@ -62,11 +62,13 @@ export async function runAutoSocialPost(env: EnvLike) {
   const priceLine = hasDiscount
     ? `₹${(offer.price / 100).toLocaleString("en-IN")} (was ₹${(offer.mrp! / 100).toLocaleString("en-IN")}, ${Math.round((1 - offer.price / offer.mrp!) * 100)}% off)`
     : `₹${(offer.price / 100).toLocaleString("en-IN")}`;
-  const merchantLabel = row.merchant === "amazon" ? "Amazon.in" : "AJIO";
+  const merchantLabel = row.merchant === "amazon" ? "Amazon.in" : row.merchant === "flipkart" ? "Flipkart" : "AJIO";
   const linkUrl = `${SITE.publicUrl}/products/${row.slug}`;
   const disclosure = row.merchant === "amazon"
     ? "#Ad — As an Amazon Associate I earn from qualifying purchases."
-    : "#Ad — OfferLoom may earn a commission from this affiliate link.";
+    : row.merchant === "flipkart"
+      ? "Price checked by OfferLoom; confirm the current price on Flipkart."
+      : "#Ad — OfferLoom may earn a commission from this affiliate link.";
 
   const caption = [
     `🔥 ${row.name}`,

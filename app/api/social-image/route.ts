@@ -4,6 +4,9 @@ const ALLOWED_IMAGE_HOSTS = new Set([
   "images-eu.ssl-images-amazon.com",
   "assets.ajio.com",
   "assets-jiocdn.ajio.com",
+  "rukminim1.flixcart.com",
+  "rukminim2.flixcart.com",
+  "rukmini1.flixcart.com",
 ]);
 
 // Instagram's media-download crawler is blocked by some merchant CDNs even when
