@@ -21,7 +21,7 @@ export const SOURCES = [
   { url: "https://www.flipkart.com/audio-video/headset/pr?sid=0pm,fcn&sort=recency_desc", tags: NEWEST },
   { url: "https://www.flipkart.com/wearable-smart-devices/smart-watches/pr?sid=ajy,buh&sort=recency_desc", tags: NEWEST },
 ];
-const MAX_NEW = 10, MAX_REFRESH = 40, MATCH_PER_RUN = 12, PAUSE_MS = 5000, BUDGET_MS = 22 * 60000;
+const MAX_NEW = 10, MAX_REFRESH = 40, MATCH_PER_RUN = 50, PAUSE_MS = 4000, BUDGET_MS = 25 * 60000;
 const IMAGE_HOSTS = /^rukmini(m\d)?\d?\.flixcart\.com$/;
 const challenge = /captcha|access denied|are you a human|unusual traffic|verify you are human|something is not right/i;
 const hash = (text) => [...String(text)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
@@ -144,8 +144,10 @@ const rows = async (sql) => JSON.parse(await d1(["--json", "--command", sql]))[0
 
 async function main() {
   const probe = process.argv.includes("--probe"), started = Date.now();
+  // --match-only: the separate matching job (Amazon products looked up on Flipkart); otherwise discovery + refresh.
+  const matchOnly = process.argv.includes("--match-only");
   const window = process.env.COLLECTION_WINDOW === "evening" ? "evening" : "morning";
-  const marker = `flipkart-browser:${new Date(started + 19800000).toISOString().slice(0, 10)}:${window}`;
+  const marker = `flipkart-${matchOnly ? "match" : "browser"}:${new Date(started + 19800000).toISOString().slice(0, 10)}:${window}`;
   await mkdir("outputs/flipkart-collector", { recursive: true });
   let existing = new Map(), amazonProducts = [];
   if (!probe) {
@@ -173,6 +175,7 @@ async function main() {
       return ["media", "font"].includes(request.resourceType()) ? route.abort() : route.continue();
     });
     const found = new Map();
+    if (!matchOnly) {
     const tagsById = new Map();
     for (const { url, tags } of SOURCES) {
       try {
@@ -212,11 +215,15 @@ async function main() {
       }
       await pause(PAUSE_MS);
     }
+    }
     // Cross-store matching: look up Amazon products on Flipkart and attach a listing only on a strict match.
     const taken = new Set([...existing.keys(), ...deals.map((d) => d.merchantProductId)]);
-    const day = Math.floor(started / 86400000);
-    const queue = amazonProducts.filter((p) => p.category !== "Books")
-      .sort((a, b) => ((hash(a.id) + day) % 997) - ((hash(b.id) + day) % 997)).slice(0, probe ? 3 : MATCH_PER_RUN);
+    // Walk the catalogue in a fixed order, 50 products per run (morning + evening ≈ 100/day), wrapping around.
+    const ordered = amazonProducts.filter((p) => p.category !== "Books").sort((a, b) => hash(a.id) - hash(b.id) || a.id.localeCompare(b.id));
+    const runIndex = Math.floor(started / 86400000) * 2 + (window === "evening" ? 1 : 0);
+    const size = probe ? 3 : matchOnly ? MATCH_PER_RUN : 0;
+    const offset = ordered.length ? (runIndex * size) % ordered.length : 0;
+    const queue = [...ordered.slice(offset), ...ordered.slice(0, offset)].slice(0, size);
     for (const amazon of queue) {
       if (Date.now() - started > BUDGET_MS) break;
       try {
