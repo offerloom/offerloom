@@ -83,7 +83,7 @@ export default function Home() {
       .slice(0, 16),
   }));
 
-  // Advance each product shelf by one card every second, looping back to the start.
+  // Advance each product shelf by one card every 2 seconds, looping back to the start.
   // Pauses while the shopper hovers, touches or focuses a shelf, and respects reduced motion.
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -106,7 +106,7 @@ export default function Home() {
         const atEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 4;
         rail.scrollTo({ left: atEnd ? 0 : rail.scrollLeft + step, behavior: "smooth" });
       }
-    }, 1000);
+    }, 2000);
     return () => { window.clearInterval(timer); cleanups.forEach((cleanup) => cleanup()); };
   }, [catalogState, managedProducts.length, query]);
 
