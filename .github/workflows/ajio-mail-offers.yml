@@ -1,0 +1,29 @@
+name: AJIO email offers
+on:
+  schedule:
+    - cron: "0 3 * * *"    # 08:30 IST
+    - cron: "30 12 * * *"  # 18:00 IST
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Parse emails without writing to the database"
+        type: boolean
+        default: false
+permissions: { contents: read }
+concurrency: { group: ajio-mail-offers, cancel-in-progress: false }
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci --no-audit --no-fund
+      - name: Import offers from AJIO emails
+        run: python3 scripts/ajio_mail_offers.py ${{ inputs.dry_run && '--dry-run' || '' }}
+        env:
+          AJIO_MAIL_FETCH: ${{ secrets.AJIO_MAIL_FETCH }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

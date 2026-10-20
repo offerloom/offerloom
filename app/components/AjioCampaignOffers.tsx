@@ -1,22 +1,36 @@
-import { AJIO_CAMPAIGN_OFFERS } from "../lib/ajio-offers";
+"use client";
+
+import { useEffect, useState } from "react";
+import type { AjioCampaignOffer } from "../lib/ajio-offers";
 import AjioOfferArtwork from "./AjioOfferArtwork";
 
+const shortDate = (iso: string) => new Date(`${iso}T00:00:00+05:30`).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
+
+/** AJIO sale callouts, imported automatically from AJIO Affiliate Support emails. */
 export default function AjioCampaignOffers({ limit }: { limit?: number }) {
   const compact = typeof limit === "number";
-  const dateParts = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()).split("/");
-  const today = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-  const currentOffers = AJIO_CAMPAIGN_OFFERS.filter((offer) => today <= offer.validThrough);
-  const offers = limit ? currentOffers.slice(0, limit) : currentOffers;
+  const [currentOffers, setCurrentOffers] = useState<AjioCampaignOffer[]>([]);
 
+  useEffect(() => {
+    let active = true;
+    fetch("/api/ajio-offers").then((response) => response.ok ? response.json() : { offers: [] })
+      .then((data) => { if (active) setCurrentOffers(data.offers ?? []); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+
+  const offers = limit ? currentOffers.slice(0, limit) : currentOffers;
   if (!offers.length) return null;
+  const campaign = offers[0].campaign;
+  const window = `${shortDate(offers[0].validFrom)} – ${shortDate(offers[0].validThrough)}`;
 
   return <section className={`ajioCampaignOffers${compact ? " ajioCampaignOffers-compact" : ""}`} aria-labelledby={compact ? "ajio-offers-home-heading" : "ajio-offers-heading"}>
     <div className="productShelfHeading">
-      <div><span>AJIO ACE · All Stars Sale · 7–11 Oct</span><h3 id={compact ? "ajio-offers-home-heading" : "ajio-offers-heading"}>AJIO All Stars Sale Offers</h3></div>
+      <div><span>AJIO ACE · {campaign} · {window}</span><h3 id={compact ? "ajio-offers-home-heading" : "ajio-offers-heading"}>{campaign} Offers</h3></div>
       {compact && <a href="/deals?merchant=ajio#ajio-offers-heading">View all {currentOffers.length} <span aria-hidden="true">→</span></a>}
     </div>
-    <p className="ajioCampaignIntro">Opening-hour and sale callouts supplied by AJIO Affiliate Support. Offers run through 11 October; terms, stock and prices may change on AJIO.</p>
-    <div className={compact ? "productRail ajioOfferRail" : "ajioOfferGrid"}>
+    <p className="ajioCampaignIntro">Sale callouts supplied by AJIO Affiliate Support, updated automatically. Offers run through {shortDate(offers[0].validThrough)}; terms, stock and prices may change on AJIO.</p>
+    <div className={compact ? "productRail ajioOfferRail" : "ajioOfferGrid"} {...(compact ? { "data-autoscroll": "" } : {})}>
       {offers.map((offer) => <article className={compact ? "railProduct ajioOfferCard" : "ajioOfferCard"} key={offer.shortCode}>
         <AjioOfferArtwork title={offer.title} />
         <span className="categoryTag">AJIO · Limited-time offer</span>
