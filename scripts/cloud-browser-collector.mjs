@@ -213,5 +213,6 @@ async function main() {
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main().catch((error) => {
   console.error(error.message.startsWith("Cloudflare") || /Discovery|discovery|cloud|publication|Amazon merchant/.test(error.message) ? error.message : "Cloud collection failed; no successful run recorded");
+  if (process.env.GITHUB_ACTIONS) console.log(`::error title=Cloud collector::${String(error.message).replace(/[\r\n%]/g, " ").slice(0, 400)}`);
   process.exitCode = 1;
 });
