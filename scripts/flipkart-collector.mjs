@@ -157,7 +157,7 @@ async function main() {
       return ["media", "font"].includes(request.resourceType()) ? route.abort() : route.continue();
     });
     const found = new Map();
-    for (const url of probe ? SOURCES.slice(0, 1) : SOURCES) {
+    for (const url of SOURCES) {
       try {
         const products = await discover(page, url);
         discoveryCounts[url.split("/pr?")[0].replace("https://www.flipkart.com/", "")] = products.length;
