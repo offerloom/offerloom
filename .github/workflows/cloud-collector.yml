@@ -111,3 +111,25 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           COLLECTION_WINDOW: ${{ inputs.window || (github.event.schedule == '30 12 * * *' && 'evening' || 'morning') }}
+
+  amazon-refresh:
+    # Second Amazon price refresh (products after the main job's first 100), so every product is re-checked daily.
+    if: github.event_name != 'push' && !inputs.probe && vars.CLOUD_COLLECTOR_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: Refresh remaining Amazon prices and publish
+        run: node scripts/cloud-browser-collector.mjs --refresh-only ${{ inputs.force && '--force' || '' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          COLLECTION_WINDOW: ${{ inputs.window || (github.event.schedule == '30 12 * * *' && 'evening' || 'morning') }}

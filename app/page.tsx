@@ -80,7 +80,8 @@ export default function Home() {
   const term = query.trim().toLowerCase();
   const frontProducts = managedProducts
     .filter((product) => !term || `${product.name} ${product.category} ${product.summary}`.toLowerCase().includes(term))
-    .sort((a, b) => discountOf(b) - discountOf(a));
+    // Products with a price comparison (sold by 2+ stores) first, then the rest; each group by discount.
+    .sort((a, b) => Number((b.storeOffers?.length ?? 0) > 1) - Number((a.storeOffers?.length ?? 0) > 1) || discountOf(b) - discountOf(a));
   const dealOfTheDay = [...managedProducts]
     .filter((product) => product.offer?.mrp && product.offer.mrp > product.offer.price)
     .sort((a, b) => discountOf(b) - discountOf(a))[0];

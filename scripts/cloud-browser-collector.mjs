@@ -123,8 +123,11 @@ async function activeMerchant() {
 
 async function main() {
   const probe = process.argv.includes("--probe"), started = Date.now();
+  // --refresh-only: second, parallel job that re-checks the products after the main job's first 100,
+  // so every Amazon product gets a fresh price each day.
+  const refreshOnly = process.argv.includes("--refresh-only");
   const collectionWindow = process.env.COLLECTION_WINDOW === "evening" ? "evening" : "morning";
-  const marker = `cloud-browser:${new Date(started + 19800000).toISOString().slice(0, 10)}:${collectionWindow}`;
+  const marker = `${refreshOnly ? "cloud-refresh" : "cloud-browser"}:${new Date(started + 19800000).toISOString().slice(0, 10)}:${collectionWindow}`;
   await mkdir("outputs/cloud-collector", { recursive: true });
   let existing = new Map();
   if (!probe) {
@@ -153,7 +156,7 @@ async function main() {
       if (request.isNavigationRequest() && !["amazon.in", "www.amazon.in"].includes(new URL(request.url()).hostname)) return route.abort();
       return ["media", "font"].includes(request.resourceType()) ? route.abort() : route.continue();
     });
-    for (const url of probe ? [TODAY_DEALS, NEW_RELEASES, SOURCES[2]] : SOURCES) {
+    for (const url of probe ? [TODAY_DEALS, NEW_RELEASES, SOURCES[2]] : refreshOnly ? [] : SOURCES) {
       const source = url === TODAY_DEALS ? "todays_deals" : url === NEW_RELEASES ? "new_releases" : "bestsellers";
       console.log(`Discovering ${url === TODAY_DEALS ? "Today’s Deals" : url === NEW_RELEASES ? "Amazon New Releases" : url}`);
       let found;
@@ -180,7 +183,7 @@ async function main() {
       await pause(5000);
     }
     discovered = uniqueProductUrls(discovered);
-    const refresh = [...existing.entries()].filter(([, row]) => row.status === "published" && row.listingStatus === "active").slice(0, 100).map(([asin]) => `https://www.amazon.in/dp/${asin}`);
+    const refresh = [...existing.entries()].filter(([, row]) => row.status === "published" && row.listingStatus === "active").slice(refreshOnly ? 100 : 0, refreshOnly ? 260 : 100).map(([asin]) => `https://www.amazon.in/dp/${asin}`);
     const newUrls = discovered.filter((url) => !existing.has(productSource(url).id)).slice(0, 34);
     const urls = probe ? discovered.slice(0, 3) : uniqueProductUrls([...newUrls, ...refresh]);
     for (const url of urls) {
