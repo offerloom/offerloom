@@ -1,5 +1,5 @@
 // Installs com.offerloom.laptop-stores: uploads deals-sheet.csv (AJIO / Myntra / Croma deals) to the live site
-// at login and every 3 hours (00:10, 03:10 … 21:10) while the Mac is on; a missed run happens on wake. Usage: node scripts/install-laptop-stores-schedule.mjs
+// at login and 12:15, 14:30, 17:30 and 20:30 while the Mac is on; a missed run happens on wake. Usage: node scripts/install-laptop-stores-schedule.mjs
 import { mkdir, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { resolve, dirname } from "node:path";
@@ -11,7 +11,7 @@ const root = resolve(import.meta.dirname, "..");
 const agent = resolve(homedir(), "Library/LaunchAgents", `${label}.plist`);
 const logs = resolve(root, "outputs/laptop-stores");
 const xml = (s) => String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
-const times = [0, 3, 6, 9, 12, 15, 18, 21].map((hour) => [hour, 10]); // every 3 hours
+const times = [[12, 15], [14, 30], [17, 30], [20, 30]];
 await mkdir(dirname(agent), { recursive: true });
 await mkdir(logs, { recursive: true });
 const plist = `<?xml version="1.0" encoding="UTF-8"?>
