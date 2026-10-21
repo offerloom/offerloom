@@ -18,9 +18,10 @@ try {
   }
 } catch { /* no secrets file */ }
 const env = { ...process.env, ...secrets, OFFERLOOM_BROWSER_CHANNEL: process.env.OFFERLOOM_BROWSER_CHANNEL || "msedge" };
+// AJIO, Myntra and Croma refuse automated (headless) browsers even from this Mac (403, 21 Oct 2026), so the
+// scheduled job uploads the hand-maintained deals-sheet.csv instead of collecting automatically.
 const steps = [
-  ["AJIO", ["scripts/ajio-collector.mjs", "--force"]],
-  ["Myntra + Croma", ["scripts/laptop-stores.mjs"]],
+  ["Deals sheet upload (AJIO / Myntra / Croma)", ["scripts/sheet-deals.mjs"]],
 ];
 
 await mkdir(resolve(root, "outputs/laptop-stores"), { recursive: true });

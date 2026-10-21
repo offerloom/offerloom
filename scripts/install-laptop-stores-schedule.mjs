@@ -1,5 +1,5 @@
-// Installs com.offerloom.laptop-stores: runs AJIO + Myntra + Croma collectors in Microsoft Edge on this Mac
-// at login and at 12:15, 14:30, 17:20 and 20:20 while logged in. Usage: node scripts/install-laptop-stores-schedule.mjs
+// Installs com.offerloom.laptop-stores: uploads deals-sheet.csv (AJIO / Myntra / Croma deals) to the live site
+// at login and every 3 hours (00:10, 03:10 … 21:10) while the Mac is on; a missed run happens on wake. Usage: node scripts/install-laptop-stores-schedule.mjs
 import { mkdir, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { resolve, dirname } from "node:path";
@@ -11,7 +11,7 @@ const root = resolve(import.meta.dirname, "..");
 const agent = resolve(homedir(), "Library/LaunchAgents", `${label}.plist`);
 const logs = resolve(root, "outputs/laptop-stores");
 const xml = (s) => String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
-const times = [[12, 15], [14, 30], [17, 20], [20, 20]];
+const times = [0, 3, 6, 9, 12, 15, 18, 21].map((hour) => [hour, 10]); // every 3 hours
 await mkdir(dirname(agent), { recursive: true });
 await mkdir(logs, { recursive: true });
 const plist = `<?xml version="1.0" encoding="UTF-8"?>
@@ -40,4 +40,4 @@ for (let attempt = 1; ; attempt++) {
     execFileSync("sleep", ["2"]);
   }
 }
-console.log(`Installed ${label}: AJIO + Myntra + Croma in Microsoft Edge at login and ${times.map(([h, m]) => `${h}:${String(m).padStart(2, "0")}`).join(", ")}. Log: outputs/laptop-stores/run.log`);
+console.log(`Installed ${label}: deals-sheet.csv upload at login and ${times.map(([h, m]) => `${h}:${String(m).padStart(2, "0")}`).join(", ")}. Log: outputs/laptop-stores/run.log`);
