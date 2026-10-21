@@ -80,7 +80,8 @@ export default function Home() {
   const term = query.trim().toLowerCase();
   const frontProducts = managedProducts
     .filter((product) => !term || `${product.name} ${product.category} ${product.summary}`.toLowerCase().includes(term))
-    .sort((a, b) => discountOf(b) - discountOf(a));
+    // Products with a price comparison (sold by 2+ stores) first, then the rest; each group by discount.
+    .sort((a, b) => Number((b.storeOffers?.length ?? 0) > 1) - Number((a.storeOffers?.length ?? 0) > 1) || discountOf(b) - discountOf(a));
   const dealOfTheDay = [...managedProducts]
     .filter((product) => product.offer?.mrp && product.offer.mrp > product.offer.price)
     .sort((a, b) => discountOf(b) - discountOf(a))[0];
@@ -302,13 +303,14 @@ function storeLabel(product: Product) {
 
 /** Prices side by side (Amazon, Flipkart, AJIO …) when a product is sold by more than one store. */
 function StorePrices({ product }: { product: Product }) {
-  const offers = (product.storeOffers ?? []).filter((offer) => offer.price);
+  const offers = product.storeOffers ?? [];
   if (offers.length < 2) return null;
   const order = ["Amazon", "Flipkart", "Croma", "AJIO"];
-  const best = Math.min(...offers.map((offer) => offer.price!));
+  const priced = offers.filter((offer) => offer.price);
+  const best = priced.length ? Math.min(...priced.map((offer) => offer.price!)) : null;
   return <ul className="storePrices" aria-label="Price by store">
-    {[...offers].sort((a, b) => order.indexOf(a.store) - order.indexOf(b.store)).map((offer) => <li key={offer.store} className={offer.price === best ? "isBest" : undefined}>
-      <span>{offer.store}</span><b>₹{(offer.price! / 100).toLocaleString("en-IN")}</b>{offer.price === best && <em>Best</em>}
+    {[...offers].sort((a, b) => order.indexOf(a.store) - order.indexOf(b.store)).map((offer) => <li key={offer.store} className={offer.price && offer.price === best && priced.length > 1 ? "isBest" : undefined}>
+      <span>{offer.store}</span>{offer.price ? <b>₹{(offer.price / 100).toLocaleString("en-IN")}</b> : <i>Check price</i>}{offer.price && offer.price === best && priced.length > 1 && <em>Best</em>}
     </li>)}
   </ul>;
 }

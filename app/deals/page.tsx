@@ -56,7 +56,9 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
 
   // A product sold by several stores appears once, at its lowest current price.
   const cheapestPerProduct = new Map<string, { row: Row; offer: ReturnType<typeof publicOffer> }>();
+  const storeCount = new Map<string, number>();
   for (const row of result.results ?? []) {
+    storeCount.set(row.id, (storeCount.get(row.id) ?? 0) + 1);
     const offer = publicOffer(row.approvedPayload);
     const current = cheapestPerProduct.get(row.id);
     if (!current || (offer && (!current.offer || offer.price < current.offer.price))) cheapestPerProduct.set(row.id, { row, offer });
@@ -70,7 +72,8 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
     .filter(({ row }) => matchesDealListing(row, { merchant: merchantFilter, collection: collectionKey }))
     .sort((a, b) => {
       const discount = (offer: ReturnType<typeof publicOffer>) => offer?.mrp ? 1 - offer.price / offer.mrp : -1;
-      return discount(b.offer) - discount(a.offer);
+      const compared = (item: { row: Row }) => Number((storeCount.get(item.row.id) ?? 0) > 1);
+      return compared(b) - compared(a) || discount(b.offer) - discount(a.offer);
     });
 
   return <main className="homePage">

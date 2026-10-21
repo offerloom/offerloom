@@ -21,7 +21,7 @@ export const SOURCES = [
   { url: "https://www.flipkart.com/audio-video/headset/pr?sid=0pm,fcn&sort=recency_desc", tags: NEWEST },
   { url: "https://www.flipkart.com/wearable-smart-devices/smart-watches/pr?sid=ajy,buh&sort=recency_desc", tags: NEWEST },
 ];
-const MAX_NEW = 10, MAX_REFRESH = 40, MATCH_PER_RUN = 50, PAUSE_MS = 4000, BUDGET_MS = 25 * 60000;
+const MAX_NEW = 10, MAX_REFRESH = 120, MATCH_PER_RUN = 50, PAUSE_MS = 4000, BUDGET_MS = 25 * 60000;
 const IMAGE_HOSTS = /^rukmini(m\d)?\d?\.flixcart\.com$/;
 const challenge = /captcha|access denied|are you a human|unusual traffic|verify you are human|something is not right/i;
 const hash = (text) => [...String(text)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
