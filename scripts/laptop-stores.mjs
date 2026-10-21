@@ -122,8 +122,9 @@ async function d1(args) {
     return stdout;
   } catch (error) {
     // Surface wrangler's own first error line (never includes the token) so auth problems are diagnosable.
-    const detail = String(error?.stderr ?? error?.stdout ?? "").split("\n").map((l) => l.trim()).find((l) => /error|auth|token|login|permission/i.test(l)) ?? "";
-    throw new Error(("Cloudflare D1 command failed; check wrangler login / CLOUDFLARE_API_TOKEN on this Mac") + (detail ? ` (${detail.slice(0, 160)})` : ""));
+    const lines = `${error?.stderr ?? ""}\n${error?.stdout ?? ""}`.split("\n").map((l) => l.trim()).filter(Boolean);
+    const detail = [error?.code, ...lines.filter((l) => /error|auth|token|login|permission|account/i.test(l)).slice(-2), ...(lines.length ? [] : [error?.message])].filter(Boolean).join(" | ").replace(/[A-Za-z0-9_-]{30,}/g, "…");
+    throw new Error(("Cloudflare D1 command failed; check wrangler login / CLOUDFLARE_API_TOKEN on this Mac") + (detail ? ` (${detail.slice(0, 300)})` : ""));
   }
 
 }
