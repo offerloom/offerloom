@@ -145,7 +145,13 @@ async function d1(args) {
   try {
     const { stdout } = await promisify(execFile)("npx", ["--no-install", "wrangler", "d1", "execute", "offerloom", "--remote", ...args], { timeout: 180000, maxBuffer: 8000000 });
     return stdout;
-  } catch { throw new Error("Cloudflare D1 command failed; check runner credentials and D1 access"); }
+  } catch (error) {
+    // Surface wrangler's own first error line (never includes the token) so auth problems are diagnosable.
+    const lines = `${error?.stderr ?? ""}\n${error?.stdout ?? ""}`.split("\n").map((l) => l.trim()).filter(Boolean);
+    const detail = [error?.code, ...lines.filter((l) => /error|auth|token|login|permission|account/i.test(l)).slice(-2), ...(lines.length ? [] : [error?.message])].filter(Boolean).join(" | ").replace(/[A-Za-z0-9_-]{30,}/g, "…");
+    throw new Error(("Cloudflare D1 command failed; check runner credentials and D1 access") + (detail ? ` (${detail.slice(0, 300)})` : ""));
+  }
+
 }
 const rows = async (sql) => JSON.parse(await d1(["--json", "--command", sql]))[0]?.results ?? [];
 

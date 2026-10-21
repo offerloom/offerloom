@@ -90,7 +90,7 @@ export function cromaFromPage(fields, product, checkedAt = new Date().toISOStrin
 }
 
 // ---------- Publish (shared) ----------
-const SUMMARY = { myntra: "Confirm current size, stock and price on Myntra before buying.", croma: "Confirm current price, stock and specifications on Croma before buying." };
+const SUMMARY = { ajio: "Confirm current size, stock and price on AJIO before buying.", myntra: "Confirm current size, stock and price on Myntra before buying.", croma: "Confirm current price, stock and specifications on Croma before buying." };
 
 export function publishSql(merchant, deals, existing, otherProducts, now = new Date().toISOString()) {
   const out = [];
@@ -109,7 +109,7 @@ export function publishSql(merchant, deals, existing, otherProducts, now = new D
       out.push(`UPDATE products SET name=${quote(deal.name)},image_url=${quote(deal.imageUrl)},updated_at=${quote(now)} WHERE id=${quote(productId)} AND status='published';`);
     }
     out.push(
-      `INSERT INTO merchant_listings (id,product_id,merchant,merchant_product_id,source_url,affiliate_url,status,last_checked_at,created_at,updated_at) VALUES (${quote(`${merchant}-${deal.merchantProductId}`)},${quote(productId)},${quote(merchant)},${quote(deal.merchantProductId)},${quote(deal.sourceUrl)},${quote(deal.sourceUrl)},'active',${quote(deal.checkedAt)},${quote(now)},${quote(now)}) ON CONFLICT(merchant,merchant_product_id) DO UPDATE SET source_url=excluded.source_url,affiliate_url=excluded.affiliate_url,last_checked_at=excluded.last_checked_at,updated_at=excluded.updated_at WHERE merchant_listings.status='active';`,
+      `INSERT INTO merchant_listings (id,product_id,merchant,merchant_product_id,source_url,affiliate_url,status,last_checked_at,created_at,updated_at) VALUES (${quote(`${merchant}-${deal.merchantProductId}`)},${quote(productId)},${quote(merchant)},${quote(deal.merchantProductId)},${quote(deal.sourceUrl)},${quote(deal.affiliateUrl ?? deal.sourceUrl)},'active',${quote(deal.checkedAt)},${quote(now)},${quote(now)}) ON CONFLICT(merchant,merchant_product_id) DO UPDATE SET source_url=excluded.source_url,affiliate_url=excluded.affiliate_url,last_checked_at=excluded.last_checked_at,updated_at=excluded.updated_at WHERE merchant_listings.status='active';`,
       `INSERT INTO collected_deals (id,payload,approved_payload,product_id,status,updated_at) VALUES (${quote(`${merchant}-${deal.merchantProductId}`)},${payload},${payload},${quote(productId)},'approved',${quote(now)}) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload,approved_payload=CASE WHEN json_array_length(json_extract(excluded.approved_payload,'$.discoverySources'))>0 THEN excluded.approved_payload ELSE json_set(excluded.approved_payload,'$.discoverySources',json(COALESCE(json_extract(collected_deals.approved_payload,'$.discoverySources'),'[]'))) END,product_id=excluded.product_id,status='approved',updated_at=excluded.updated_at;`,
     );
   }
@@ -120,7 +120,13 @@ async function d1(args) {
   try {
     const { stdout } = await promisify(execFile)("npx", ["--no-install", "wrangler", "d1", "execute", "offerloom", "--remote", ...args], { timeout: 180000, maxBuffer: 8000000 });
     return stdout;
-  } catch { throw new Error("Cloudflare D1 command failed; check wrangler login / CLOUDFLARE_API_TOKEN on this Mac"); }
+  } catch (error) {
+    // Surface wrangler's own first error line (never includes the token) so auth problems are diagnosable.
+    const lines = `${error?.stderr ?? ""}\n${error?.stdout ?? ""}`.split("\n").map((l) => l.trim()).filter(Boolean);
+    const detail = [error?.code, ...lines.filter((l) => /error|auth|token|login|permission|account/i.test(l)).slice(-2), ...(lines.length ? [] : [error?.message])].filter(Boolean).join(" | ").replace(/[A-Za-z0-9_-]{30,}/g, "…");
+    throw new Error(("Cloudflare D1 command failed; check wrangler login / CLOUDFLARE_API_TOKEN on this Mac") + (detail ? ` (${detail.slice(0, 300)})` : ""));
+  }
+
 }
 const rows = async (sql) => JSON.parse(await d1(["--json", "--command", sql]))[0]?.results ?? [];
 
