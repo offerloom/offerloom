@@ -176,7 +176,8 @@ async function main() {
     refreshUrls = [...existing.values()].filter((r) => r.status === "published" && r.listingStatus === "active").map((r) => ajioProduct(r.url)).filter(Boolean).slice(0, MAX_REFRESH);
     otherProducts = await rows("SELECT p.id,p.name,c.name AS category FROM products p JOIN categories c ON c.id=p.category_id WHERE p.status='published' AND EXISTS (SELECT 1 FROM merchant_listings o WHERE o.product_id=p.id AND o.merchant IN ('amazon','flipkart') AND o.status='active') AND NOT EXISTS (SELECT 1 FROM merchant_listings a WHERE a.product_id=p.id AND a.merchant='ajio')");
   }
-  const browser = await chromium.launch({ headless: true });
+  // On the owner's Mac this runs in Microsoft Edge (OFFERLOOM_BROWSER_CHANNEL=msedge, set by the laptop scheduler).
+  const browser = await chromium.launch({ headless: true, ...(process.env.OFFERLOOM_BROWSER_CHANNEL ? { channel: process.env.OFFERLOOM_BROWSER_CHANNEL } : {}) });
   const deals = [], failures = [], discoveryCounts = {};
   let blocked = null;
   try {
