@@ -305,7 +305,7 @@ function storeLabel(product: Product) {
 function StorePrices({ product }: { product: Product }) {
   const offers = product.storeOffers ?? [];
   if (offers.length < 2) return null;
-  const order = ["Amazon", "Flipkart", "Croma", "AJIO"];
+  const order = ["Amazon", "Flipkart", "Croma", "AJIO", "Myntra"];
   const priced = offers.filter((offer) => offer.price);
   const best = priced.length ? Math.min(...priced.map((offer) => offer.price!)) : null;
   return <ul className="storePrices" aria-label="Price by store">

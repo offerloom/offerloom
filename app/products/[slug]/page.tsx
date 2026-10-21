@@ -84,7 +84,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug:s
   </main>;
 }
 
-const MERCHANT_LABELS: Record<string, string> = { amazon: "Amazon", flipkart: "Flipkart", ajio: "AJIO" };
+const MERCHANT_LABELS: Record<string, string> = { amazon: "Amazon", flipkart: "Flipkart", ajio: "AJIO", myntra: "Myntra", croma: "Croma" };
 
 function safeSpecs(value:string):string[] { try { const parsed=JSON.parse(value); return Array.isArray(parsed)?parsed.filter((item):item is string=>typeof item==="string"):[]; } catch { return []; } }
 function formatDate(value:string):string { return new Intl.DateTimeFormat("en-IN",{dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Kolkata"}).format(new Date(value)); }
