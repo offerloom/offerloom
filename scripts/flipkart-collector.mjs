@@ -58,13 +58,42 @@ export function pickPrices(amounts) {
 
 const STOP = new Set(["with", "for", "and", "the", "of", "in", "to", "a", "an", "pack", "set", "men", "women", "black", "white", "blue"]);
 const tokens = (name) => new Set(name.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter((t) => t.length > 1 && !STOP.has(t)));
-/** Conservative cross-store match: same leading brand word and ≥75% token overlap. */
+const brandOf = (name) => name.toLowerCase().replace(/[^a-z0-9 ]+/g, " ").trim().split(/\s+/)[0] ?? "";
+// Measurements/specs that contain digits but are not model identifiers.
+const UNIT = /^\d+(\.\d+)?(mm|cm|m|h|hr|hrs|hours?|w|watt|mah|ah|gb|tb|mb|ml|l|ltr|litre|kg|g|gm|inch|in|v|hz|khz|db|pcs|pc|x|k|p|ft|mp|cores?|day|days)$/;
+const VARIANTS = new Set(["pro", "plus", "max", "lite", "mini", "ultra", "neo", "prime", "gen", "anc", "edge", "fe", "air", "nano", "turbo", "elite", "evo"]);
+const STORAGE = /^\d+(gb|tb)$/;
+const compact = (name) => name.toLowerCase().replace(/(\d)\s+(gb|tb|mm|mah|w|inch)\b/g, "$1$2");
+/** Model-number-like tokens: letters+digits ("a158wa", "airdopes141" pieces) or 3+ digit numbers; hyphens removed. */
+export function modelTokens(name) {
+  const raw = compact(name).replace(/(?<=[a-z0-9])-(?=[a-z0-9])/g, "").replace(/[^a-z0-9 ]+/g, " ").split(/\s+/);
+  return new Set(raw.filter((t) => t.length >= 2 && /\d/.test(t) && !UNIT.test(t) && (/[a-z]/.test(t) || t.length >= 3)));
+}
+const storage = (name) => new Set(compact(name).replace(/[^a-z0-9 ]+/g, " ").split(/\s+/).filter((t) => STORAGE.test(t)));
+
+/**
+ * Cross-store match. Always: same brand, and no conflicting storage sizes. Then either
+ * (a) both titles carry model numbers, they share one and neither has a different model that the other lacks
+ *     entirely, plus ≥40% word overlap; or (b) no model numbers on one side: ≥75% overlap with ≥4 shared words.
+ */
 export function matchesProduct(a, b) {
-  const brandA = a.toLowerCase().split(/\s+/)[0], brandB = b.toLowerCase().split(/\s+/)[0];
-  if (!brandA || brandA !== brandB) return false;
+  if (!brandOf(a) || brandOf(a) !== brandOf(b)) return false;
+  const sa = storage(a), sb = storage(b);
+  // Both list RAM/storage sizes: they must list the same ones (8GB+128GB ≠ 8GB+256GB).
+  if (sa.size && sb.size && (sa.size !== sb.size || [...sa].some((t) => !sb.has(t)))) return false;
   const ta = tokens(a), tb = tokens(b);
   const shared = [...ta].filter((t) => tb.has(t)).length;
-  return shared / Math.min(ta.size, tb.size) >= 0.75 && shared >= 4;
+  const overlap = shared / Math.min(ta.size, tb.size);
+  // Variant words distinguish different products that share a model number (Airdopes 141 vs 141 Pro).
+  const variants = (set) => [...set].filter((t) => VARIANTS.has(t)).sort().join(" ");
+  if (variants(ta) !== variants(tb)) return false;
+  const ma = modelTokens(a), mb = modelTokens(b);
+  if (ma.size && mb.size) {
+    const common = [...ma].filter((t) => mb.has(t));
+    if (!common.length) return false;
+    return overlap >= 0.4 && shared >= 2;
+  }
+  return overlap >= 0.75 && shared >= 4;
 }
 
 async function discover(page, url) {
@@ -78,7 +107,10 @@ async function discover(page, url) {
 
 /** Flipkart search query from an Amazon title: brand + model words, no sizes/colours noise. */
 export function searchQuery(name) {
-  return name.replace(/\(.*?\)|\[.*?\]/g, " ").replace(/[|,;:].*$/, "").replace(/[^A-Za-z0-9.\- ]+/g, " ").split(/\s+/).filter(Boolean).slice(0, 7).join(" ");
+  const words = name.replace(/\(.*?\)|\[.*?\]/g, " ").replace(/[|,;:].*$/, "").replace(/[^A-Za-z0-9.\- ]+/g, " ").split(/\s+/).filter(Boolean);
+  // Brand + words up to and including the first model-number-like word (e.g. "boAt Airdopes 219"), else 5 words.
+  const modelAt = words.findIndex((w, i) => i > 0 && modelTokens(w).size);
+  return words.slice(0, modelAt > 0 ? Math.min(modelAt + 1, 6) : 5).join(" ");
 }
 
 async function extract(page, product) {
@@ -227,7 +259,7 @@ async function main() {
     for (const amazon of queue) {
       if (Date.now() - started > BUDGET_MS) break;
       try {
-        const results = (await discover(page, `https://www.flipkart.com/search?q=${encodeURIComponent(searchQuery(amazon.name))}`)).slice(0, 2);
+        const results = (await discover(page, `https://www.flipkart.com/search?q=${encodeURIComponent(searchQuery(amazon.name))}`)).slice(0, 3);
         await pause(PAUSE_MS);
         for (const candidate of results) {
           if (taken.has(candidate.id)) continue;
