@@ -1,5 +1,5 @@
 // Installs com.offerloom.laptop-stores: runs AJIO + Myntra + Croma collectors in Microsoft Edge on this Mac
-// at login and at 09:20, 13:20, 17:20 and 21:20 while logged in. Usage: node scripts/install-laptop-stores-schedule.mjs
+// at login and at 12:15, 14:30, 17:20 and 20:20 while logged in. Usage: node scripts/install-laptop-stores-schedule.mjs
 import { mkdir, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { resolve, dirname } from "node:path";
@@ -11,7 +11,7 @@ const root = resolve(import.meta.dirname, "..");
 const agent = resolve(homedir(), "Library/LaunchAgents", `${label}.plist`);
 const logs = resolve(root, "outputs/laptop-stores");
 const xml = (s) => String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
-const times = [[9, 20], [13, 20], [17, 20], [21, 20]];
+const times = [[12, 15], [14, 30], [17, 20], [20, 20]];
 await mkdir(dirname(agent), { recursive: true });
 await mkdir(logs, { recursive: true });
 const plist = `<?xml version="1.0" encoding="UTF-8"?>
