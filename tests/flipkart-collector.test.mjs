@@ -37,5 +37,16 @@ test("a matched Amazon product gains a Flipkart listing without overwriting the 
 test("Flipkart search query keeps brand and model words from an Amazon title", async () => {
   const { searchQuery } = await import("../scripts/flipkart-collector.mjs");
   assert.equal(searchQuery("boAt Airdopes 219, 4Mics ENx, 40H Battery (Carbon Black)"), "boAt Airdopes 219");
-  assert.equal(searchQuery("Noise Twist Go Round dial Smartwatch with BT Calling | 1.39\" Display"), "Noise Twist Go Round dial Smartwatch with");
+  assert.equal(searchQuery("Noise Twist Go Round dial Smartwatch with BT Calling | 1.39\" Display"), "Noise Twist Go Round dial");
+});
+
+test("model-number matching catches real matches and rejects variants", async () => {
+  const { matchesProduct: m, modelTokens } = await import("../scripts/flipkart-collector.mjs");
+  assert.ok(modelTokens("Casio Vintage A-158WA-1Q Digital Watch").has("a158wa1q"));
+  assert.equal(m("Casio Vintage A158WA-1Q Digital Grey Dial Unisex Watch Silver Metal Strap (D011)", "CASIO A158WA-1Q Vintage Digital Watch - For Men & Women"), true);
+  assert.equal(m("boAt Airdopes 219, 4Mics ENx, 40H Battery, Bluetooth Earbuds", "boAt Airdopes 219 with 4 Mics ENx Tech, 40 Hours Playback Bluetooth Headset"), true);
+  assert.equal(m("boAt Airdopes 141 Bluetooth Earbuds 42H Playtime", "boAt Airdopes 141 Pro Bluetooth Earbuds 45H Playtime"), false);
+  assert.equal(m("Samsung Galaxy M35 5G (8GB RAM, 128GB Storage)", "SAMSUNG Galaxy M35 5G (256 GB) (8 GB RAM)"), false);
+  assert.equal(m("Samsung Galaxy M35 5G (8GB RAM, 128GB Storage)", "SAMSUNG Galaxy M35 5G (128 GB) (8 GB RAM)"), true);
+  assert.equal(m("Noise Twist Go Smartwatch", "boAt Twist Go Smartwatch"), false);
 });
