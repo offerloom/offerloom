@@ -41,7 +41,7 @@ export function money(text) {
 }
 
 const HOME_KEYWORDS = /\b(container|containers|bottle|bottles|cookware|kitchen|storage jar|jars?|cooktop|induction|utensil|dinnerware|cutlery|casserole|tiffin|lunch box|flask|garbage bags?|trash bags?|weighing (machine|scale)|laptop table|foldable laptop table|breakfast table|tableware|cleaning sponge|scrub sponge|bathroom hand shower|bidet sprayer)\b/i;
-const APPAREL_KEYWORDS = /\b(trousers?|pants?|leggings?|shirts?|t-?shirts?|tshirts?|blouses?|tops?|tunics?|jackets?|coats?|dress(?:es)?|sarees?|kurtas?|kurtis?|jeans|salwar|clothing|apparel|salwar suit|suit set)\b/i;
+const APPAREL_KEYWORDS = /\b(trousers?|pants?|leggings?|shirts?|t-?shirts?|tshirts?|blouses?|tops?|tunics?|jackets?|coats?|dress(?:es)?|sarees?|kurtas?|kurtis?|jeans|salwar|clothing|apparel|salwar suit|suit set|shorts|bermudas?|cargos?|track ?pants?|trackpants?|joggers?|tracksuits?|pyjamas?|pajamas?|nightwear|night suits?|nightdress|loungewear|hoodies?|sweatshirts?|sweaters?|cardigans?|pullovers?|blazers?|waistcoats?|vests?|innerwear|briefs|boxers?|trunks|bras?|lingerie|panties|socks|skirts?|palazzos?|capris?|jumpsuits?|dungarees?|co-?ord|lehengas?|dupattas?|sherwanis?|kurta sets?|ethnic wear|polos?|caps?|scarves|stoles?|gloves)\b/i;
 const FASHION_KEYWORDS = /\b(backpack|bag|handbag|wallet|shoe|shoes|footwear|sneaker|sandal|luggage|suitcases?|trolley bags?)\b/i;
 const BEAUTY_KEYWORDS = /\b(sunscreen|face ?wash|skincare|moisturi[sz]er|serum|shampoo|conditioner|lipstick|makeup|cosmetic|spf)\b/i;
 const SPORTS_KEYWORDS = /\b(yoga mat|resistance bands?|dumbbells?|gym|fitness|foam roller|exercise|workout)\b/i;
@@ -68,7 +68,8 @@ export function categorize(merchant, name, id = "") {
   if (/\b(phone cases?|phone covers?|flip cases?|flip covers?|tablet cases?)\b/i.test(name)) return "Electronics";
   if (ELECTRONICS_KEYWORDS.test(name)) return "Electronics";
   if (FASHION_KEYWORDS.test(name)) return "Fashion";
-  return "Electronics";
+  // Unknown products go to "Other" rather than being mislabelled as Electronics.
+  return "Other";
 }
 
 // Selector lists are tried in priority order and the first element with real digits wins.

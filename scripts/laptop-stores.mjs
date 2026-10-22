@@ -47,7 +47,7 @@ export function myntraFromListing(products, checkedAt = new Date().toISOString()
     if (!mrp || mrp <= price || 1 - price / mrp < MIN_DISCOUNT) continue;
     if (Number(p.ratingCount) >= MIN_RATING_COUNT && Number(p.rating) < MIN_RATING) continue;
     const name = String(p.productName).slice(0, 200);
-    out.push({ merchant: "myntra", merchantProductId: product.id, sourceUrl: product.url, name, brand: p.brand ?? null, imageUrl: image, price, mrp, currency: "INR", category: categorize("myntra", name) === "Electronics" ? "Fashion" : categorize("myntra", name), checkedAt });
+    out.push({ merchant: "myntra", merchantProductId: product.id, sourceUrl: product.url, name, brand: p.brand ?? null, imageUrl: image, price, mrp, currency: "INR", category: (["Electronics", "Other"].includes(categorize("myntra", name)) ? "Fashion" : categorize("myntra", name)), checkedAt });
   }
   return out;
 }
@@ -60,7 +60,7 @@ export function myntraFromPdp(d, product, checkedAt = new Date().toISOString()) 
   const image = myntraImage(d.media?.albums?.[0]?.images?.[0]?.imageURL ?? "");
   if (!price || !image || !d.name) throw new Error("Missing title, image or price");
   const name = String(d.name).slice(0, 200);
-  return { merchant: "myntra", merchantProductId: product.id, sourceUrl: product.url, name, brand: d.brand?.name ?? null, imageUrl: image, price, mrp: mrp && mrp > price ? mrp : null, currency: "INR", category: categorize("myntra", name) === "Electronics" ? "Fashion" : categorize("myntra", name), checkedAt };
+  return { merchant: "myntra", merchantProductId: product.id, sourceUrl: product.url, name, brand: d.brand?.name ?? null, imageUrl: image, price, mrp: mrp && mrp > price ? mrp : null, currency: "INR", category: (["Electronics", "Other"].includes(categorize("myntra", name)) ? "Fashion" : categorize("myntra", name)), checkedAt };
 }
 
 // ---------- Croma ----------
