@@ -40,14 +40,14 @@ export function money(text) {
   return Number.isSafeInteger(value) && value > 0 && value < 100000000 ? value : null;
 }
 
-const HOME_KEYWORDS = /\b(container|containers|bottle|bottles|cookware|kitchen|storage jar|jars?|cooktop|induction|utensil|dinnerware|cutlery|casserole|tiffin|lunch box|flask|garbage bags?|trash bags?|weighing (machine|scale)|laptop table|foldable laptop table|breakfast table|tableware|cleaning sponge|scrub sponge|bathroom hand shower|bidet sprayer)\b/i;
+const HOME_KEYWORDS = /\b(container|containers|bottle|bottles|cookware|kitchen|storage jar|jars?|cooktop|induction|utensil|dinnerware|cutlery|casserole|tiffin|lunch box|flask|garbage bags?|trash bags?|weighing (machine|scale)|laptop table|foldable laptop table|breakfast table|tableware|cleaning sponge|scrub sponge|bathroom hand shower|bidet sprayer|umbrellas?|curtains?|blackout|bedsheets?|bed sheets?|pillows?|cushions?|mattress(?:es)?|comforters?|blankets?|towels?|doormats?|rugs?|carpets?|lamps?|led lights?|string lights?|night lights?|ceiling lights?|bulbs?|decor|wall art|clocks?|hangers?|organi[sz]ers?|freshener|air purifier|mops?|brooms?|buckets?|dustbins?|detergents?|cleaners?|frother|mixer|grinder|blender|kettle|toaster|steam iron|dry iron|iron box|vacuum|fans?|heaters?|geysers?|water purifier|chopping|knife|knives|pan|tawa|pressure cooker|plates?|bowls?|mugs?|cups?|glasses|candles?|planters?|pots?)\b/i;
 const APPAREL_KEYWORDS = /\b(trousers?|pants?|leggings?|shirts?|t-?shirts?|tshirts?|blouses?|tops?|tunics?|jackets?|coats?|dress(?:es)?|sarees?|kurtas?|kurtis?|jeans|salwar|clothing|apparel|salwar suit|suit set|shorts|bermudas?|cargos?|track ?pants?|trackpants?|joggers?|tracksuits?|pyjamas?|pajamas?|nightwear|night suits?|nightdress|loungewear|hoodies?|sweatshirts?|sweaters?|cardigans?|pullovers?|blazers?|waistcoats?|vests?|innerwear|briefs|boxers?|trunks|bras?|lingerie|panties|socks|skirts?|palazzos?|capris?|jumpsuits?|dungarees?|co-?ord|lehengas?|dupattas?|sherwanis?|kurta sets?|ethnic wear|polos?|caps?|scarves|stoles?|gloves)\b/i;
 const FASHION_KEYWORDS = /\b(backpack|bag|handbag|wallet|shoe|shoes|footwear|sneaker|sandal|luggage|suitcases?|trolley bags?)\b/i;
 const BEAUTY_KEYWORDS = /\b(sunscreen|face ?wash|skincare|moisturi[sz]er|serum|shampoo|conditioner|lipstick|makeup|cosmetic|spf)\b/i;
-const SPORTS_KEYWORDS = /\b(yoga mat|resistance bands?|dumbbells?|gym|fitness|foam roller|exercise|workout)\b/i;
+const SPORTS_KEYWORDS = /\b(yoga mat|resistance bands?|resistance tubes?|dumbbells?|kettlebells?|gym|fitness|foam roller|exercise|workout|treadmill|walkpad|cycle|bicycle|skipping rope|football|cricket|badminton|racket|racquet|shuttlecock|basketball|volleyball|skates?|swimming|sports?)\b/i;
 const BOOKS_KEYWORDS = /\b(paperback|hardcover|hardback|a novel by|book set|books?:|books?)\b|\(english\)/i;
 const AUTO_KEYWORDS = /\b(car mount|dashboard|car holder|car mobile holder|windshield|dash ?cam|car accessor|car air freshener|automotive|car bike cleaning)\b/i;
-const ELECTRONICS_KEYWORDS = /\b(smart ?phones?|mobile phones?|phone cases?|phone covers?|flip cases?|flip covers?|tablet cases?|smart ?watches?|smart ?watch|smartwatches|digital .*watch|watches|laptops?|earbuds?|headphones?|earphones?|chargers?|power banks?|bluetooth|wireless|usb|type[- ]?c|hdmi|keyboard|mouse|computer|microphones?|karaoke|speakers?|electronics?)\b/i;
+const ELECTRONICS_KEYWORDS = /\b(smart ?phones?|mobile phones?|phone cases?|phone covers?|flip cases?|flip covers?|tablet cases?|back covers?|back cases?|mobile covers?|screen guards?|tempered glass|smart ?watches?|smart ?watch|smartwatches|digital .*watch|watches|laptops?|earbuds?|headphones?|earphones?|chargers?|power banks?|bluetooth|wireless|usb|type[- ]?c|hdmi|keyboard|mouse|computer|microphones?|karaoke|speakers?|electronics?)\b/i;
 const TOYS_KEYWORDS = /\b(board game|card game|strategy game|puzzle|jigsaw|action figure|building blocks|soft toy|stuffed toy|remote control car|rc car|toys?|kids laptop learning toy|computer toys)\b/i;
 
 export function categorize(merchant, name, id = "") {
@@ -65,7 +65,7 @@ export function categorize(merchant, name, id = "") {
   if (APPAREL_KEYWORDS.test(name)) return "Fashion";
   if (/\b(backpacks?|luggage|suitcases?|trolley bags?)\b/i.test(name)) return "Fashion";
   if (SPORTS_KEYWORDS.test(name)) return "Sports";
-  if (/\b(phone cases?|phone covers?|flip cases?|flip covers?|tablet cases?)\b/i.test(name)) return "Electronics";
+  if (/\b(phone cases?|phone covers?|flip cases?|flip covers?|tablet cases?|back covers?|back cases?|mobile covers?|screen guards?|tempered glass)\b/i.test(name)) return "Electronics";
   if (ELECTRONICS_KEYWORDS.test(name)) return "Electronics";
   if (FASHION_KEYWORDS.test(name)) return "Fashion";
   // Unknown products go to "Other" rather than being mislabelled as Electronics.

@@ -27,6 +27,10 @@ test("all-numeric (ISBN-10) Amazon ASINs are categorised as Books even without b
   assert.equal(categorize("amazon", "Lymio Men Shorts || Cotton Short for Men || with Pocket", "B000000010"), "Fashion");
   assert.equal(categorize("flipkart", "Solid Men Black Track Pants Joggers", "itm0000000000a"), "Fashion");
   assert.equal(categorize("amazon", "Men's Hooded Sweatshirt Winter Hoodie", "B000000011"), "Fashion");
+  assert.equal(categorize("amazon", "Zemic Umbrella, UV Big Size Umbrella for Sun and Rain", "B000000012"), "Home");
+  assert.equal(categorize("amazon", "Amazon Basics - Room Darkening Blackout Door Curtain", "B000000013"), "Home");
+  assert.equal(categorize("amazon", "TheGiftKart Ultra-Hybrid Crystal Clear Back Cover Case for iPhone", "B000000014"), "Electronics");
+  assert.equal(categorize("amazon", "PowerMax Fitness TDM-96B 4HP DC Treadmill for Home", "B000000015"), "Sports");
   assert.equal(categorize("amazon", "Portronics Car Mobile Phone Holder for Dashboard", "B0B6HM36Z8"), "Auto");
 });
 
