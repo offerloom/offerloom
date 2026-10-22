@@ -56,13 +56,20 @@ export function dealFromRow(record, fallbackCheckedAt) {
   return { merchant: store, merchantProductId: product.id, sourceUrl: product.url, affiliateUrl: config.link(product), name, brand: name.split(/\s+/)[0], imageUrl, price, mrp: mrpValue && mrpValue > price ? mrpValue : null, currency: "INR", category, checkedAt, discoverySources: ["todays_deals"] };
 }
 
-async function d1(args) {
-  try {
-    const { stdout } = await promisify(execFile)("npx", ["--no-install", "wrangler", "d1", "execute", "offerloom", "--remote", ...args], { timeout: 180000, maxBuffer: 8000000 });
-    return stdout;
-  } catch (error) {
-    const lines = `${error?.stderr ?? ""}\n${error?.stdout ?? ""}`.split("\n").map((l) => l.trim()).filter(Boolean);
-    throw new Error(`Cloudflare D1 command failed (${[error?.code, ...lines.slice(-2)].filter(Boolean).join(" | ").replace(/[A-Za-z0-9_-]{30,}/g, "…").slice(0, 300)})`);
+// The Mac often runs this right after login/wake, before the network is up, so D1 calls retry
+// (30 s, then 90 s) and the error keeps wrangler's own message text (long tokens masked).
+async function d1(args, delays = [30000, 90000]) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      const { stdout } = await promisify(execFile)("npx", ["--no-install", "wrangler", "d1", "execute", "offerloom", "--remote", ...args], { timeout: 180000, maxBuffer: 8000000 });
+      return stdout;
+    } catch (error) {
+      if (attempt < delays.length) { console.log(`D1 call failed (attempt ${attempt + 1}); retrying in ${delays[attempt] / 1000}s`); await new Promise((r) => setTimeout(r, delays[attempt])); continue; }
+      const text = `${error?.stderr ?? ""}\n${error?.stdout ?? ""}`;
+      const message = [...text.matchAll(/"(?:message|text)"\s*:\s*"([^"]{3,200})"/g)].map((m) => m[1]).slice(-2);
+      const lines = text.split("\n").map((l) => l.trim()).filter((l) => l.length > 3 && /[a-z]/i.test(l)).slice(-2);
+      throw new Error(`Cloudflare D1 command failed (${[...(message.length ? message : lines)].join(" | ").replace(/[A-Za-z0-9_-]{30,}/g, "…").slice(0, 300) || error?.code})`);
+    }
   }
 }
 const rows = async (sql) => JSON.parse(await d1(["--json", "--command", sql]))[0]?.results ?? [];
