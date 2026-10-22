@@ -156,7 +156,10 @@ export function publishSql(deals, existing, amazonProducts, now = new Date().toI
         `INSERT INTO products (id,category_id,name,slug,summary,image_url,specs_json,status,source,created_at,updated_at,published_at) VALUES (${quote(productId)},(SELECT id FROM categories WHERE slug=${quote(category)}),${quote(deal.name)},${quote(`${slug(deal.name)}-${productId}`)},'Confirm current price, stock and specifications on Flipkart before buying.',${quote(deal.imageUrl)},'[]','published','browser_auto',${quote(now)},${quote(now)},${quote(now)}) ON CONFLICT(id) DO NOTHING;`,
       );
     } else if (old && productId.startsWith("flipkart-")) {
-      out.push(`UPDATE products SET name=${quote(deal.name)},image_url=${quote(deal.imageUrl)},updated_at=${quote(now)} WHERE id=${quote(productId)} AND status='published';`);
+      out.push(
+        `INSERT INTO categories (id,name,slug,position,created_at) VALUES (${quote(`cat-${category}`)},${quote(deal.category)},${quote(category)},0,${quote(now)}) ON CONFLICT(slug) DO NOTHING;`,
+        `UPDATE products SET name=${quote(deal.name)},image_url=${quote(deal.imageUrl)},category_id=(SELECT id FROM categories WHERE slug=${quote(category)}),updated_at=${quote(now)} WHERE id=${quote(productId)} AND status='published';`,
+      );
     }
     out.push(
       `INSERT INTO merchant_listings (id,product_id,merchant,merchant_product_id,source_url,affiliate_url,status,last_checked_at,created_at,updated_at) VALUES (${quote(`flipkart-${deal.merchantProductId}`)},${quote(productId)},'flipkart',${quote(deal.merchantProductId)},${quote(deal.sourceUrl)},${quote(deal.sourceUrl)},'active',${quote(deal.checkedAt)},${quote(now)},${quote(now)}) ON CONFLICT(merchant,merchant_product_id) DO UPDATE SET source_url=excluded.source_url,affiliate_url=excluded.affiliate_url,last_checked_at=excluded.last_checked_at,updated_at=excluded.updated_at WHERE merchant_listings.status='active';`,

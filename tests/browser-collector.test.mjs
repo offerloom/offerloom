@@ -23,7 +23,10 @@ test("collector stops at challenges before extracting product details", async ()
 test("all-numeric (ISBN-10) Amazon ASINs are categorised as Books even without book keywords in the title", () => {
   assert.equal(categorize("amazon", "Atomic Habits: Tiny Changes, Remarkable Results", "1847941834"), "Books");
   assert.equal(categorize("amazon", "Atomic Habits: Tiny Changes, Remarkable Results", "935543135X"), "Books");
-  assert.equal(categorize("amazon", "Atomic Habits: Tiny Changes, Remarkable Results", "B0B6HM36Z8"), "Electronics");
+  assert.equal(categorize("amazon", "Atomic Habits: Tiny Changes, Remarkable Results", "B0B6HM36Z8"), "Other");
+  assert.equal(categorize("amazon", "Lymio Men Shorts || Cotton Short for Men || with Pocket", "B000000010"), "Fashion");
+  assert.equal(categorize("flipkart", "Solid Men Black Track Pants Joggers", "itm0000000000a"), "Fashion");
+  assert.equal(categorize("amazon", "Men's Hooded Sweatshirt Winter Hoodie", "B000000011"), "Fashion");
   assert.equal(categorize("amazon", "Portronics Car Mobile Phone Holder for Dashboard", "B0B6HM36Z8"), "Auto");
 });
 

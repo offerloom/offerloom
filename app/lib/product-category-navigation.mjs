@@ -1,4 +1,4 @@
-const CATEGORY_ORDER = ["Electronics", "Fashion", "Sports", "Home", "Toys", "Books", "Beauty", "Auto"];
+const CATEGORY_ORDER = ["Electronics", "Fashion", "Sports", "Home", "Toys", "Books", "Beauty", "Auto", "Other"];
 
 export function orderProductCategories(categories) {
   const uniqueCategories = [...new Set(categories.filter((category) => typeof category === "string" && category.trim()))];
