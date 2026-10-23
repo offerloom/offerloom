@@ -1,4 +1,4 @@
-export const SOCIAL_PLATFORMS = ["facebook", "instagram"] as const;
+export const SOCIAL_PLATFORMS = ["facebook", "instagram", "telegram"] as const;
 
 export type SocialPlatform = (typeof SOCIAL_PLATFORMS)[number];
 

@@ -33,6 +33,7 @@ type SocialPostsPanelProps = {
 const platformLabels: Record<SocialPlatform, string> = {
   facebook: "Facebook (Meta)",
   instagram: "Instagram (Meta)",
+  telegram: "Telegram",
 };
 
 export default function SocialPostsPanel({ busy, setBusy, setMessage }: SocialPostsPanelProps) {

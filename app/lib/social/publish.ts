@@ -87,6 +87,35 @@ async function publishInstagram(caption: string, imageUrl: string, secrets: Soci
   return { platform: "instagram", status: "published", externalId: publishData.id, message: "Published to Instagram." };
 }
 
+/** Telegram Bot API: photo + caption with a "View deal" button, sent to every configured chat.
+ * TELEGRAM_CHANNEL_ID may list several chats (channels or groups the bot was added to), comma-separated. */
+async function publishTelegram(caption: string, imageUrl: string, secrets: SocialSecrets, linkUrl?: string): Promise<PublishResult> {
+  const chats = String(secrets.telegramChannelId ?? "").split(",").map((chat) => chat.trim()).filter(Boolean).slice(0, 20);
+  if (!secrets.telegramBotToken || !chats.length) {
+    return { platform: "telegram", status: "skipped", message: "Telegram bot token or chat ID is not configured." };
+  }
+  const sent: string[] = [], failed: string[] = [];
+  for (const chat of chats) {
+    const body: Record<string, unknown> = { chat_id: chat, photo: imageUrl, caption: caption.slice(0, 1024) };
+    if (linkUrl) body.reply_markup = { inline_keyboard: [[{ text: "View deal on OfferLoom", url: linkUrl }]] };
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${secrets.telegramBotToken}/sendPhoto`, {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
+      });
+      const data = await response.json() as { ok?: boolean; description?: string; result?: { message_id?: number } };
+      if (response.ok && data.ok) sent.push(`${chat}:${data.result?.message_id ?? ""}`);
+      else failed.push(`${chat} (${String(data.description ?? response.status).slice(0, 120)})`);
+    } catch (error) {
+      failed.push(`${chat} (${error instanceof Error ? error.message.slice(0, 120) : "request failed"})`);
+    }
+    // Telegram allows ~1 message/second per bot across chats; stay well under it.
+    if (chats.length > 1) await new Promise((resolve) => setTimeout(resolve, 1500));
+  }
+  if (!sent.length) return { platform: "telegram", status: "failed", message: `Telegram: ${failed.join("; ")}` };
+  return { platform: "telegram", status: "published", externalId: sent.join(","),
+    message: failed.length ? `Published to ${sent.length} Telegram chat(s); failed: ${failed.join("; ")}` : `Published to ${sent.length} Telegram chat(s).` };
+}
+
 export async function publishToPlatforms(
   platforms: SocialPlatform[],
   captionFor: string | ((platform: SocialPlatform) => string),
@@ -105,6 +134,7 @@ export async function publishToPlatforms(
     try {
       if (platform === "facebook") results.push(await publishFacebook(caption, imageUrl, secrets, linkUrl));
       if (platform === "instagram") results.push(await publishInstagram(caption, imageUrl, secrets));
+      if (platform === "telegram") results.push(await publishTelegram(caption, imageUrl, secrets, linkUrl));
     } catch (error) {
       results.push({
         platform,
