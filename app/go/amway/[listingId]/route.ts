@@ -4,7 +4,7 @@ import { env } from "cloudflare:workers";
 export function isAmwayProductUrl(value: string): boolean {
   try {
     const url = new URL(value);
-    return url.protocol === "https:" && url.hostname === "www.amway.in" && !url.port && !url.username && !url.search && !url.hash
+    return url.protocol === "https:" && url.hostname === "www.amway.in" && !url.port && !url.username && !url.hash && [...url.searchParams.keys()].every((key) => ["an", "utm_medium", "utm_campaign", "utm_source"].includes(key))
       && /^\/[a-z0-9-]+\/p\/\d{4,10}ID$/.test(url.pathname);
   } catch { return false; }
 }

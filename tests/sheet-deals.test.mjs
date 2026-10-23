@@ -31,8 +31,9 @@ test("amway rows: canonical product URL, Amway photo, Amway category", async () 
   const { amwayProduct, dealFromRow } = await import("../scripts/sheet-deals.mjs");
   assert.equal(amwayProduct("https://www.amway.in/all-plant-protein-powder/p/308467ID").id, "308467ID");
   assert.equal(amwayProduct("https://evil.example/all-plant-protein-powder/p/308467ID"), null);
-  const deal = dealFromRow({ store: "amway", product_url: "https://www.amway.in/all-plant-protein-powder/p/308467ID", name: "Nutrilite All Plant Protein 1kg", price: "4500", mrp: "", image_url: "https://media.amway.in/x.jpg" }, new Date().toISOString());
+  const deal = dealFromRow({ store: "amway", product_url: "https://www.amway.in/all-plant-protein-powder/p/308467ID", name: "Glister Multi-Action Toothpaste 200g", price: "4500", mrp: "", image_url: "https://media.amway.in/x.jpg" }, new Date().toISOString());
   assert.equal(deal.category, "Amway");
-  assert.equal(deal.affiliateUrl, "https://www.amway.in/all-plant-protein-powder/p/308467ID");
+  assert.ok(deal.affiliateUrl.startsWith("https://www.amway.in/all-plant-protein-powder/p/308467ID?an="));
+  assert.throws(() => dealFromRow({ store: "amway", product_url: "https://www.amway.in/a/p/308467ID", name: "Nutrilite Protein", price: "1", image_url: "https://media.amway.in/x.jpg" }, new Date().toISOString()));
   assert.throws(() => dealFromRow({ store: "amway", product_url: "https://www.amway.in/a/p/308467ID", name: "Nutrilite", price: "1", image_url: "https://evil.example/x.jpg" }, new Date().toISOString()));
 });

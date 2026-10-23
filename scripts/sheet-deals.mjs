@@ -21,11 +21,16 @@ export function amwayProduct(href) {
   } catch { return null; }
 }
 
+// The owner's ABO share parameters (from the Amway app's share bar), added to every Amway link so orders are credited.
+export const AMWAY_SHARE = "an=BKmmGhza4i5DtLNAdrForNLYoknYRF-TL86t1lKqhuU%3D&utm_medium=sharebar&utm_campaign=in_en_43007025640461_133485049&utm_source=copy";
+// Only these Amway brands are listed for now (owner's choice, 23 Oct 2026).
+export const AMWAY_BRANDS = /^(persona|glister|satinique)\b/i;
+
 export const COLUMNS = ["store", "product_url", "name", "price", "mrp", "image_url", "category", "checked_at"];
 const STORES = {
   ajio: { parse: ajioProduct, images: /^(assets|assets-jiocdn)\.ajio\.com$/, link: (p) => aceLink(p) },
   myntra: { parse: myntraProduct, images: /(^|\.)myntassets\.com$/, link: (p) => p.url },
-  amway: { parse: amwayProduct, images: /(^|\.)amway\.(in|com)$|(^|\.)amwayglobal\.com$/, link: (p) => p.url },
+  amway: { parse: amwayProduct, images: /(^|\.)amway\.(in|com)$|(^|\.)amwayglobal\.com$/, link: (p) => `${p.url}?${AMWAY_SHARE}` },
   croma: { parse: cromaProduct, images: /(^|\.)tatacroma\.com$|(^|\.)croma\.com$/, link: (p) => p.url },
 };
 
@@ -60,6 +65,7 @@ export function dealFromRow(record, fallbackCheckedAt) {
   if (!imageUrl) throw new Error(`image must be a ${store} product photo URL`);
   const name = String(record.name ?? "").trim().slice(0, 200);
   if (name.length < 3) throw new Error("missing name");
+  if (store === "amway" && !AMWAY_BRANDS.test(name)) throw new Error("Amway rows must be Persona, Glister or Satinique (name must start with the brand)");
   const checked = Date.parse(String(record.checked_at ?? "").trim());
   const checkedAt = Number.isFinite(checked) ? new Date(checked).toISOString() : fallbackCheckedAt;
   if (Date.parse(checkedAt) > Date.now() + 5 * 60000) throw new Error("checked_at is in the future");
