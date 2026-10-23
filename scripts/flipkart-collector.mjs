@@ -22,6 +22,8 @@ export const SOURCES = [
   { url: "https://www.flipkart.com/wearable-smart-devices/smart-watches/pr?sid=ajy,buh&sort=recency_desc", tags: NEWEST },
 ];
 const MAX_NEW = 10, MAX_REFRESH = 120, MATCH_PER_RUN = 50, PAUSE_MS = 4000, BUDGET_MS = 25 * 60000;
+// The match job runs inside a 30-minute GitHub job that also installs Chrome; stop matching at 18 min so it always publishes.
+const MATCH_BUDGET_MS = 18 * 60000;
 const IMAGE_HOSTS = /^rukmini(m\d)?\d?\.flixcart\.com$/;
 const challenge = /captcha|access denied|are you a human|unusual traffic|verify you are human|something is not right/i;
 const hash = (text) => [...String(text)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
@@ -260,7 +262,7 @@ async function main() {
     const offset = ordered.length ? (runIndex * size) % ordered.length : 0;
     const queue = [...ordered.slice(offset), ...ordered.slice(0, offset)].slice(0, size);
     for (const amazon of queue) {
-      if (Date.now() - started > BUDGET_MS) break;
+      if (Date.now() - started > (matchOnly ? MATCH_BUDGET_MS : BUDGET_MS)) { note("notice", "Match time budget reached; publishing what was matched"); break; }
       try {
         const results = (await discover(page, `https://www.flipkart.com/search?q=${encodeURIComponent(searchQuery(amazon.name))}`)).slice(0, 3);
         await pause(PAUSE_MS);
