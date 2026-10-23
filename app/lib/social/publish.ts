@@ -87,6 +87,21 @@ async function publishInstagram(caption: string, imageUrl: string, secrets: Soci
   return { platform: "instagram", status: "published", externalId: publishData.id, message: "Published to Instagram." };
 }
 
+/** Telegram Bot API: photo + caption with a "View deal" button, to the configured group or channel. */
+async function publishTelegram(caption: string, imageUrl: string, secrets: SocialSecrets, linkUrl?: string): Promise<PublishResult> {
+  if (!secrets.telegramBotToken || !secrets.telegramChannelId) {
+    return { platform: "telegram", status: "skipped", message: "Telegram bot token or chat ID is not configured." };
+  }
+  const body: Record<string, unknown> = { chat_id: secrets.telegramChannelId, photo: imageUrl, caption: caption.slice(0, 1024) };
+  if (linkUrl) body.reply_markup = { inline_keyboard: [[{ text: "View deal on OfferLoom", url: linkUrl }]] };
+  const response = await fetch(`https://api.telegram.org/bot${secrets.telegramBotToken}/sendPhoto`, {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
+  });
+  const data = await response.json() as { ok?: boolean; description?: string; result?: { message_id?: number } };
+  if (!response.ok || !data.ok) return { platform: "telegram", status: "failed", message: `Telegram: ${String(data.description ?? response.status).slice(0, 200)}` };
+  return { platform: "telegram", status: "published", externalId: String(data.result?.message_id ?? ""), message: "Published to Telegram." };
+}
+
 export async function publishToPlatforms(
   platforms: SocialPlatform[],
   captionFor: string | ((platform: SocialPlatform) => string),
@@ -105,6 +120,7 @@ export async function publishToPlatforms(
     try {
       if (platform === "facebook") results.push(await publishFacebook(caption, imageUrl, secrets, linkUrl));
       if (platform === "instagram") results.push(await publishInstagram(caption, imageUrl, secrets));
+      if (platform === "telegram") results.push(await publishTelegram(caption, imageUrl, secrets, linkUrl));
     } catch (error) {
       results.push({
         platform,

@@ -89,7 +89,8 @@ export async function runAutoSocialPost(env: EnvLike) {
     body: row.summary,
     linkUrl,
     imageUrl: proxiedImageUrl,
-    platforms: ["facebook", "instagram"],
+    // Telegram joins the same daily post once its bot token and chat ID secrets are set.
+    platforms: env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHANNEL_ID ? ["facebook", "instagram", "telegram"] : ["facebook", "instagram"],
     mode: "publish_now",
     productId: row.id,
     captionOverride: caption,
