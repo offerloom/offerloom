@@ -104,7 +104,9 @@ export default function Home() {
     { key: "spotlight", title: "In the Spotlight", description: "Compared across stores and big-ticket steals", id: "spotlight", href: "/deals",
       products: [...withPhoto.filter((product) => (product.storeOffers?.length ?? 0) > 1),
         ...withPhoto.filter((product) => (product.storeOffers?.length ?? 0) <= 1 && (product.offer?.price ?? 0) >= 100000 && discountOf(product) >= 0.4)].slice(0, 16) },
-  ];
+    { key: "amway", title: "Amway", description: "Nutrilite, Artistry, Glister and more — order from our Amway store", id: "amway", href: "/deals",
+      products: withPhoto.filter((product) => product.merchant === "amway" || product.storeOffers?.some((offer) => offer.store === "amway")).slice(0, 16) },
+  ].filter((shelf) => shelf.products.length);
   const trends = productCategories.map((category) => {
     const items = withPhoto.filter((product) => product.category === category);
     return { category, count: items.length, image: items[0]?.imageUrl, best: items.length ? Math.round(discountOf(items[0]) * 100) : 0 };
