@@ -11,10 +11,26 @@ import { categorize } from "./browser-collector.mjs";
 import { myntraProduct, cromaProduct, publishSql } from "./laptop-stores.mjs";
 import { ajioProduct, aceLink } from "./ajio-collector.mjs";
 
+/** Amway India product pages: https://www.amway.in/<slug>/p/<digits>ID (sold by the owner as an ABO). */
+export function amwayProduct(href) {
+  try {
+    const url = new URL(href);
+    const match = url.pathname.match(/^\/([a-z0-9-]+)\/p\/(\d{4,10}ID)$/i);
+    if (url.protocol !== "https:" || !/^(www\.)?amway\.in$/.test(url.hostname) || !match) return null;
+    return { id: match[2].toUpperCase(), url: `https://www.amway.in/${match[1].toLowerCase()}/p/${match[2].toUpperCase()}` };
+  } catch { return null; }
+}
+
+// The owner's ABO share parameters (from the Amway app's share bar), added to every Amway link so orders are credited.
+export const AMWAY_SHARE = "an=BKmmGhza4i5DtLNAdrForNLYoknYRF-TL86t1lKqhuU%3D&utm_medium=sharebar&utm_campaign=in_en_43007025640461_133485049&utm_source=copy";
+// Only these Amway brands are listed for now (owner's choice, 23 Oct 2026).
+export const AMWAY_BRANDS = /^(persona|glister|satinique)\b/i;
+
 export const COLUMNS = ["store", "product_url", "name", "price", "mrp", "image_url", "category", "checked_at"];
 const STORES = {
   ajio: { parse: ajioProduct, images: /^(assets|assets-jiocdn)\.ajio\.com$/, link: (p) => aceLink(p) },
   myntra: { parse: myntraProduct, images: /(^|\.)myntassets\.com$/, link: (p) => p.url },
+  amway: { parse: amwayProduct, images: /(^|\.)amway\.(in|com)$|(^|\.)amwayglobal\.com$/, link: (p) => `${p.url}?${AMWAY_SHARE}` },
   croma: { parse: cromaProduct, images: /(^|\.)tatacroma\.com$|(^|\.)croma\.com$/, link: (p) => p.url },
 };
 
@@ -39,7 +55,7 @@ const rupees = (value) => { const v = Math.round(Number(String(value ?? "").repl
 export function dealFromRow(record, fallbackCheckedAt) {
   const store = String(record.store ?? "").trim().toLowerCase();
   const config = STORES[store];
-  if (!config) throw new Error(`unknown store "${record.store}" (use ajio, myntra or croma)`);
+  if (!config) throw new Error(`unknown store "${record.store}" (use ajio, myntra, croma or amway)`);
   const product = config.parse(String(record.product_url ?? "").trim());
   if (!product) throw new Error(`not a ${store} product URL`);
   const price = rupees(record.price), mrpValue = rupees(record.mrp);
@@ -49,10 +65,11 @@ export function dealFromRow(record, fallbackCheckedAt) {
   if (!imageUrl) throw new Error(`image must be a ${store} product photo URL`);
   const name = String(record.name ?? "").trim().slice(0, 200);
   if (name.length < 3) throw new Error("missing name");
+  if (store === "amway" && !AMWAY_BRANDS.test(name)) throw new Error("Amway rows must be Persona, Glister or Satinique (name must start with the brand)");
   const checked = Date.parse(String(record.checked_at ?? "").trim());
   const checkedAt = Number.isFinite(checked) ? new Date(checked).toISOString() : fallbackCheckedAt;
   if (Date.parse(checkedAt) > Date.now() + 5 * 60000) throw new Error("checked_at is in the future");
-  const category = String(record.category ?? "").trim() || (store === "croma" ? categorize("croma", name) : "Fashion");
+  const category = String(record.category ?? "").trim() || (store === "croma" ? categorize("croma", name) : store === "amway" ? "Amway" : "Fashion");
   return { merchant: store, merchantProductId: product.id, sourceUrl: product.url, affiliateUrl: config.link(product), name, brand: name.split(/\s+/)[0], imageUrl, price, mrp: mrpValue && mrpValue > price ? mrpValue : null, currency: "INR", category, checkedAt, discoverySources: ["todays_deals"] };
 }
 

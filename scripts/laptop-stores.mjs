@@ -90,7 +90,7 @@ export function cromaFromPage(fields, product, checkedAt = new Date().toISOStrin
 }
 
 // ---------- Publish (shared) ----------
-const SUMMARY = { ajio: "Confirm current size, stock and price on AJIO before buying.", myntra: "Confirm current size, stock and price on Myntra before buying.", croma: "Confirm current price, stock and specifications on Croma before buying." };
+const SUMMARY = { ajio: "Confirm current size, stock and price on AJIO before buying.", myntra: "Confirm current size, stock and price on Myntra before buying.", croma: "Confirm current price, stock and specifications on Croma before buying.", amway: "Sold by an authorised Amway Business Owner. Confirm current price and stock on Amway before ordering." };
 
 export function publishSql(merchant, deals, existing, otherProducts, now = new Date().toISOString()) {
   const out = [];

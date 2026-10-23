@@ -87,7 +87,6 @@ export default function Home() {
     .sort((a, b) => discountOf(b) - discountOf(a))[0];
   const productShelves = [
     { key: "todays_deals", title: "Today’s Deals", description: "Current deals checked by OfferLoom", id: "todays-deals", href: "/deals?collection=todays_deals" },
-    { key: "new_releases", title: "New Releases", description: "Recently released finds", id: "new-releases", href: "/deals?collection=new_releases" },
     { key: "bestsellers", title: "Bestsellers", description: "Popular picks from bestseller lists", id: "bestsellers", href: "/deals?collection=bestsellers" },
   ].map((shelf) => ({
     ...shelf,
@@ -95,20 +94,11 @@ export default function Home() {
       .filter((product) => product.collectionSources?.includes(shelf.key))
       .slice(0, 16),
   }));
-  // Extra mixed-store sections, built from the same live catalogue (Amazon + Flipkart + AJIO).
+  // Amway (owner's ABO store): one auto-scrolling row per brand.
   const withPhoto = frontProducts.filter((product) => product.imageUrl && product.offer);
-  const extraShelves = [
-    { key: "top_deals", title: "Top Deals", description: "Biggest verified discounts across all stores", id: "top-deals", href: "/deals", products: withPhoto.slice(0, 16) },
-    { key: "new_deals", title: "New Deals", description: "Just added to OfferLoom", id: "new-deals", href: "/deals",
-      products: [...withPhoto].sort((a, b) => (b.addedAt ?? "").localeCompare(a.addedAt ?? "")).slice(0, 16) },
-    { key: "spotlight", title: "In the Spotlight", description: "Compared across stores and big-ticket steals", id: "spotlight", href: "/deals",
-      products: [...withPhoto.filter((product) => (product.storeOffers?.length ?? 0) > 1),
-        ...withPhoto.filter((product) => (product.storeOffers?.length ?? 0) <= 1 && (product.offer?.price ?? 0) >= 100000 && discountOf(product) >= 0.4)].slice(0, 16) },
-  ];
-  const trends = productCategories.map((category) => {
-    const items = withPhoto.filter((product) => product.category === category);
-    return { category, count: items.length, image: items[0]?.imageUrl, best: items.length ? Math.round(discountOf(items[0]) * 100) : 0 };
-  }).filter((trend) => trend.image).slice(0, 8);
+  const amwayItems = withPhoto.filter((product) => product.merchant === "amway" || product.storeOffers?.some((offer) => offer.store === "amway"));
+  const amwayRows = ["Persona", "Glister", "Satinique"].map((brand) => ({ brand, products: amwayItems.filter((product) => product.name.toLowerCase().startsWith(brand.toLowerCase())).slice(0, 16) }))
+    .filter((row) => row.products.length);
 
   // Advance each product shelf by one card every 2 seconds, looping back to the start.
   // Pauses while the shopper hovers, touches or focuses a shelf, and respects reduced motion.
@@ -250,18 +240,15 @@ export default function Home() {
           {shelf.key === "todays_deals" && ajioOffers.slice(0, 8).map((offer) => <AjioOfferCard offer={offer} key={`ajio-offer:${offer.shortCode}`} />)}
         </div> : <p className="shelfEmpty">No validated products in this collection yet. Check back after the next update.</p>}
       </section>)}
-      {trends.length > 0 && <section className="trendsSection" aria-labelledby="trends-heading">
-        <div className="productShelfHeading"><div><span>Popular categories right now</span><h2 id="trends-heading">Trends You May Like</h2></div></div>
-        <div className="trendGrid">{trends.map((trend) => <button type="button" className="trendTile" key={trend.category} onClick={() => goToCategory(trend.category)}>
-          <img src={trend.image!} alt="" loading="lazy" /><strong>{trend.category}</strong><small>{trend.best > 0 ? `Up to ${trend.best}% off` : `${trend.count} deals`}</small>
-        </button>)}</div>
+      {amwayRows.length > 0 && <section className="productShelf" aria-labelledby="amway-heading">
+        <div className="productShelfHeading"><div><span>Persona, Glister and Satinique, ordered from our Amway store</span><h2 id="amway-heading">Amway</h2></div></div>
+        {amwayRows.map((row) => <div key={row.brand}>
+          <h3 className="amwayBrand">{row.brand}</h3>
+          <div className="productRail" data-autoscroll id={`amway-${row.brand.toLowerCase()}-rail`} role="region" aria-label={`Amway ${row.brand} products`}>
+            {row.products.map((product) => <ProductCard product={product} discount={discountOf(product)} key={`amway:${product.id}`} />)}
+          </div>
+        </div>)}
       </section>}
-      {extraShelves.filter((shelf) => shelf.products.length).map((shelf) => <section className="productShelf" aria-labelledby={`${shelf.id}-heading`} key={shelf.key}>
-        <div className="productShelfHeading"><div><span>{shelf.description}</span><h2 id={`${shelf.id}-heading`}>{shelf.title}</h2></div><a href={shelf.href}>View all <span aria-hidden="true">→</span></a></div>
-        <div className="productRail" data-autoscroll id={`${shelf.id}-rail`} role="region" aria-label={`${shelf.title} products`}>
-          {shelf.products.map((product) => <ProductCard product={product} discount={discountOf(product)} key={`${shelf.key}:${product.id}`} />)}
-        </div>
-      </section>)}
       <div className="frontDealsHeading"><div><span className="catalogEyebrow">Browse the full OfferLoom catalogue</span><h2 id="front-deals-heading">All products, sorted by discount</h2></div><span>{catalogState === "loading" ? "Loading products…" : `${frontProducts.length} of ${managedProducts.length} products`}</span></div>
       <div className="dealCategoryTabs" ref={categoryTabsRef} role="group" aria-label="Jump to product category">{dealCategories.map((item) => <button key={item} onClick={() => goToCategory(item)} aria-pressed={dealCategory === item}>{item === "All" ? "All picks" : item}</button>)}</div>
       {catalogState === "ready" && managedProducts.length > 0 && !frontProducts.length && <div className="emptyState"><strong>No matching products</strong><p>Try another search or clear it.</p><button onClick={clearSearch}>Show all products</button></div>}
