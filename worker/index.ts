@@ -2,6 +2,7 @@
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
 import { runAutoSocialPost } from "../app/lib/social/auto-post";
+import { runBrandPost } from "../app/lib/social/brand-post";
 import { processDueSocialPosts } from "../app/lib/social/service";
 import { getSocialScheduleTask } from "../app/lib/social/schedule.mjs";
 
@@ -64,6 +65,12 @@ const worker = {
       console.log("Scheduled social posts processed:", { cron: event.cron, count: posts.length, posts });
       const failed = posts.filter((post) => post.status === "failed");
       if (failed.length) throw new Error(`Social retry cron failed for posts: ${failed.map((post) => post.id).join(", ")}`);
+      return;
+    }
+
+    if (task === "brand-post") {
+      const brand = await runBrandPost(env);
+      console.log("Brand post:", { skipped: "skipped" in brand ? brand.skipped : undefined, index: "index" in brand ? brand.index : undefined, results: "post" in brand ? brand.post?.publishResults : undefined });
       return;
     }
 
