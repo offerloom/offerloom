@@ -18,7 +18,7 @@ test("configured cron expressions are documented and unknown triggers cannot aut
     readFile(new URL("../worker/index.ts", import.meta.url), "utf8"),
   ]);
 
-  assert.match(wrangler, /crons = \["30 1 \* \* \*", "30 11 \* \* \*", "0 \* \* \* \*"\]/);
+  assert.match(wrangler, /crons = \["30 1 \* \* \*", "30 11 \* \* \*", "30 6 \* \* \*", "0 \* \* \* \*"\]/);
   assert.match(wrangler, /Auto-post daily at 7:00 AM and 5:00 PM IST; retry failed channels and drain due posts hourly/);
   assert.match(worker, /if \(task === "ignore"\)[\s\S]*?return;/);
   assert.match(worker, /if \(task === "process-due"\)/);
@@ -28,7 +28,7 @@ test("configured cron expressions are documented and unknown triggers cannot aut
 
 test("Facebook is primary, both Meta channels are attempted, and both are required", async () => {
   const types = await readFile(new URL("../app/lib/social/types.ts", import.meta.url), "utf8");
-  assert.match(types, /SOCIAL_PLATFORMS = \["facebook", "instagram"\]/);
+  assert.match(types, /SOCIAL_PLATFORMS = \["facebook", "instagram", "telegram"\]/);
   assert.deepEqual(prioritizeFacebook(["instagram", "facebook"]), ["facebook", "instagram"]);
   assert.equal(isSocialPublishSuccessful([
     { platform: "facebook", status: "published" },
@@ -48,7 +48,7 @@ test("Facebook is primary, both Meta channels are attempted, and both are requir
   const publish = await readFile(new URL("../app/lib/social/publish.ts", import.meta.url), "utf8");
   const autoPost = await readFile(new URL("../app/lib/social/auto-post.ts", import.meta.url), "utf8");
   assert.match(publish, /for \(const platform of prioritizeFacebook\(platforms\)\)/);
-  assert.match(autoPost, /platforms: \["facebook", "instagram"\]/);
+  assert.match(autoPost, /platforms: [^\n]*\["facebook", "instagram"\]/);
   assert.doesNotMatch(publish, /shouldSkipInstagramAfterFacebookFailure/);
   assert.doesNotMatch(publish, /whatsapp_channel|youtube_community|publishX/);
 });
